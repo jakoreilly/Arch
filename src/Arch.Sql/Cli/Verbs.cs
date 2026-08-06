@@ -6,6 +6,22 @@ namespace Arch.Sql.Cli;
 
 internal static class Verbs
 {
+    /// <summary>The dispatch chain that was Program.cs's entire body — extracted so
+    /// Arch.Cli's back-compat "arch sql &lt;args&gt;" verb can be a true drop-in for
+    /// standalone archsql, not just its default (no-verb) path. Note: the top-level
+    /// "connect" verb is also reachable directly as "arch connect ..." from Arch.Cli,
+    /// matching plan.md's own empty-state example text — that dispatch lives in
+    /// Arch.Cli.Program, not here, but ends up calling RunConnect all the same.</summary>
+    internal static int Run(string[] args)
+    {
+        if (args.Length > 0 && args[0] == "--from-model") { return RunFromModel(args); }
+        if (args.Length > 0 && args[0] == "--format") { return RunFormat(args); }
+        if (args.Length > 0 && args[0] == "connect") { return RunConnect(args); }
+        if (args.Length > 0 && args[0] == "impact") { return RunImpact(args); }
+        if (args.Length > 0 && args[0] == "diff") { return RunDiff(args); }
+        return RunDefault(args);
+    }
+
     public static int RunDefault(string[] args)
     {
         var options = CliOptions.Parse(args, out var exitCode);

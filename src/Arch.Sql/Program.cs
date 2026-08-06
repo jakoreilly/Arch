@@ -8,9 +8,4 @@
 //        archsql connect (--conn-file <path> | --env) [--out <dir>] [--timeout <sec>] ...
 using Arch.Sql.Cli;
 
-if (args.Length > 0 && args[0] == "--from-model") { return Verbs.RunFromModel(args); }
-if (args.Length > 0 && args[0] == "--format") { return Verbs.RunFormat(args); }
-if (args.Length > 0 && args[0] == "connect") { return Verbs.RunConnect(args); }
-if (args.Length > 0 && args[0] == "impact") { return Verbs.RunImpact(args); }
-if (args.Length > 0 && args[0] == "diff") { return Verbs.RunDiff(args); }
-return Verbs.RunDefault(args);
+return Verbs.Run(args);

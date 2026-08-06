@@ -20,6 +20,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- See the matching comment in Arch.Code.csproj. -->
+    <InternalsVisibleTo Include="Arch.Cli" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Arch.Core\Arch.Core.csproj" />
     <!-- See the matching comment in Arch.Code.csproj. -->
     <Using Include="Arch.Core.Web" />

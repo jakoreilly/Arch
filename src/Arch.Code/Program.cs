@@ -6,7 +6,4 @@
 // Usage: archdiagram <path-to-project> [--out <dir>] [--no-open] [--max-nodes <n>] [--exclude <dirname>]...
 using Arch.Code.Cli;
 
-if (args.Length > 0 && args[0] == "--landscape") { return Verbs.RunLandscape(args); }
-if (args.Length > 0 && args[0] == "--diff") { return Verbs.RunDiff(args); }
-if (args.Length > 0 && args[0] == "--from-model") { return Verbs.RunFromModel(args); }
-return Verbs.RunDefault(args);
+return Verbs.Run(args);

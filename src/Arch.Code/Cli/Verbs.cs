@@ -13,6 +13,17 @@ namespace Arch.Code.Cli;
 /// independently scored by the self-scan instead.</summary>
 internal static class Verbs
 {
+    /// <summary>The dispatch chain that was Program.cs's entire body — extracted so
+    /// Arch.Cli's back-compat "arch code &lt;args&gt;" verb can be a true drop-in for
+    /// standalone archdiagram, not just its default (no-verb) path.</summary>
+    internal static int Run(string[] args)
+    {
+        if (args.Length > 0 && args[0] == "--landscape") { return RunLandscape(args); }
+        if (args.Length > 0 && args[0] == "--diff") { return RunDiff(args); }
+        if (args.Length > 0 && args[0] == "--from-model") { return RunFromModel(args); }
+        return RunDefault(args);
+    }
+
     /// <summary>Usage: archdiagram --landscape &lt;parent-dir&gt; [--out &lt;dir&gt;] [--no-open]
     /// Cross-references every site-*/model.json under &lt;parent-dir&gt; into a parent viewer.</summary>
     internal static int RunLandscape(string[] args)
