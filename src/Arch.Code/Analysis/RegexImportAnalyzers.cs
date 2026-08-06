@@ -149,6 +149,19 @@ public sealed class CppImportAnalyzer : RegexImportAnalyzer
     protected override IEnumerable<string> FindImports(string content) => MatchGroup1(Include, content);
 }
 
+/// <summary>The regex import analyzers as one shared list, so detection (content-based
+/// dispatch in Arch.Cli) and real analysis (Pipeline.BuildModel) can never drift apart
+/// on which extensions count as "source code."</summary>
+public static class LanguageAnalyzers
+{
+    public static readonly IReadOnlyList<ILanguageAnalyzer> All =
+    [
+        new CSharpUsingAnalyzer(), new TsJsImportAnalyzer(), new PythonImportAnalyzer(),
+        new PowerShellImportAnalyzer(), new GoImportAnalyzer(), new JavaImportAnalyzer(),
+        new RustImportAnalyzer(), new RubyImportAnalyzer(), new PhpImportAnalyzer(), new CppImportAnalyzer(),
+    ];
+}
+
 /// <summary>Catch-all for languages/files we recognise but don't extract imports from.</summary>
 public sealed class KnownFileAnalyzer : ILanguageAnalyzer
 {

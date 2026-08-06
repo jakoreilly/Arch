@@ -6,7 +6,7 @@ public sealed record FileEntry(string AbsPath, string RelPath, string Extension,
 
 public static class SqlFileScanner
 {
-    private static readonly string[] SqlExtensions = [".sql", ".ddl", ".tsql", ".psql"];
+    internal static readonly string[] SqlExtensions = [".sql", ".ddl", ".tsql", ".psql"];
     private static readonly string[] AlwaysSkipDirs = [".git", "bin", "obj", "node_modules"];
 
     public static List<FileEntry> Scan(string root, IReadOnlyList<string> exclude, List<string> diagnostics)

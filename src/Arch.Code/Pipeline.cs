@@ -25,7 +25,7 @@ public static class Pipeline
     /// <see cref="AnalyzeOne"/> call — none of them mutate instance state.</summary>
     private sealed record Analyzers(
         CSharpSyntaxAnalyzer CSharp, CSharpUsingAnalyzer CSharpFallback,
-        List<ILanguageAnalyzer> Regex, KnownFileAnalyzer Known);
+        IReadOnlyList<ILanguageAnalyzer> Regex, KnownFileAnalyzer Known);
 
     /// <summary>Everything <see cref="AnalyzeOne"/> learns about a single file. No shared
     /// mutable state — safe to compute on any thread. The caller assigns the slug and merges
@@ -45,11 +45,7 @@ public static class Pipeline
 
         var analyzers = new Analyzers(
             new CSharpSyntaxAnalyzer(), new CSharpUsingAnalyzer(),
-            [
-                new TsJsImportAnalyzer(), new PythonImportAnalyzer(), new PowerShellImportAnalyzer(),
-                new GoImportAnalyzer(), new JavaImportAnalyzer(), new RustImportAnalyzer(),
-                new RubyImportAnalyzer(), new PhpImportAnalyzer(), new CppImportAnalyzer(),
-            ],
+            LanguageAnalyzers.All,
             new KnownFileAnalyzer());
 
         // Parallel map: each file is read + analysed independently (CPU-bound Roslyn/regex
