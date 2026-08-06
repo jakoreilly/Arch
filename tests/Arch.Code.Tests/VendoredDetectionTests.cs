@@ -5,7 +5,7 @@ namespace Arch.Code.Tests;
 public class VendoredDetectionTests
 {
     [Theory]
-    [InlineData("src/ArchDiagram/Site/assets/lib/mermaid.min.js", true)]
+    [InlineData("src/Arch.Code/Site/assets/lib/mermaid.min.js", true)]
     [InlineData("assets/lib/3d-force-graph.min.js", true)]
     [InlineData("wwwroot/css/site.min.css", true)]
     [InlineData("app/main.bundle.js", true)]
