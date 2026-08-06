@@ -138,7 +138,8 @@ public static class PackagesPage
             {
                 sb.Append($"<div style=\"margin:.3rem 0\"><span class=\"badge\">database</span> <strong>{Html.Encode(db.Label)}</strong> "
                         + $"<span class=\"filter-count\">{Html.Encode(db.Server)}{(db.Catalog.Length > 0 ? " / " + Html.Encode(db.Catalog) : "")}</span> "
-                        + "<a href=\"config.html\" style=\"font-size:.8rem\">Config &amp; Secrets →</a></div>");
+                        + "<a href=\"config.html\" style=\"font-size:.8rem\">Config &amp; Secrets →</a>"
+                        + CrossLinkFragment(db.SqlLink) + "</div>");
             }
             foreach (var t in integ)
             {
@@ -147,6 +148,28 @@ public static class PackagesPage
             }
             sb.Append("</div>");
         }
+    }
+
+    /// <summary>Phase 6: the cross-layer join outcome for one database, rendered as a trailing
+    /// fragment on its existing "Config &amp; Secrets" row rather than a new element — see
+    /// plan.md, "# Phase 6" UX spec. "" when SqlLink is null (no sql provider ran alongside this
+    /// one, or this database had no catalog to join on), which is what keeps every run before
+    /// Phase 6 — and every code-only run since — byte-identical.</summary>
+    private static string CrossLinkFragment(SqlCrossLink? link)
+    {
+        if (link is null) { return ""; }
+        if (!link.Matched)
+        {
+            return " <span class=\"note\" style=\"display:inline\">not in this scan. Add its scripts with "
+                + "<code>arch &lt;repo&gt; &lt;sql-folder&gt;</code>, or <code>arch connect</code> to read it live.</span>";
+        }
+        var count = link.ObjectCount.ToString("N0");
+        if (link.Verified)
+        {
+            return $" <a href=\"{Html.Encode(link.Href)}\" style=\"font-size:.8rem\">{count} objects in this catalog →</a>";
+        }
+        return " <span class=\"note\" style=\"display:inline\">matched by name only (no server recorded in this connection string)</span> "
+            + $"<a href=\"{Html.Encode(link.Href)}\" style=\"font-size:.8rem\">{count} objects →</a>";
     }
 
     private static void Tile(StringBuilder sb, string num, string label, bool warn = false)

@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using Arch.Code.Cli;
+using Arch.Code.Graph;
 using Arch.Core.Detection;
 using Arch.Sql.Cli;
+using Arch.Sql.Model;
 
 namespace Arch.Cli;
 
@@ -59,13 +61,18 @@ public static class Runner
         var sw = Stopwatch.StartNew();
         var links = new List<HubPage.Link>();
         var anyFailed = false;
+        object? codeResult = null;
+        object? sqlResult = null;
+        string[]? codeArgs = null;
         foreach (var (provider, detection) in applying)
         {
             var providerOutDir = combined ? Path.Combine(outDir, provider.Id) : outDir;
             var providerArgs = BuildProviderArgs(args, providerOutDir);
             try
             {
-                provider.Generate(sourceFull, providerOutDir, providerArgs);
+                var model = provider.Generate(sourceFull, providerOutDir, providerArgs);
+                if (provider.Id == "code") { codeResult = model; codeArgs = providerArgs; }
+                if (provider.Id == "sql") { sqlResult = model; }
                 var (title, icon) = DisplayInfo(provider.Id);
                 links.Add(new HubPage.Link(provider.Id, title, icon, detection.Summary));
             }
@@ -75,6 +82,16 @@ public static class Runner
                 Console.Error.WriteLine($"  {provider.Id,-4} FAILED — {ex.Message}");
             }
         }
+
+        // Phase 6: only meaningful when both a code and a sql provider ran and succeeded in the
+        // same (necessarily combined-mode) run — re-renders the code site with each detected
+        // database's cross-link outcome attached. See CrossLink.Apply's own doc comment for why
+        // this is a cheap no-op when the code side found no databases at all.
+        if (codeResult is ProjectModel codeModel && sqlResult is SqlModel sqlModel && codeArgs is not null)
+        {
+            CrossLink.Apply(codeModel, sqlModel, codeArgs, "../sql");
+        }
+
         sw.Stop();
 
         if (links.Count == 0)
