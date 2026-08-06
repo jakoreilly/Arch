@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace Arch.Sql.Site;
 
 /// <summary>Shared page shell: sidebar navigation, breadcrumbs, theme toggle, local asset
@@ -16,31 +14,7 @@ public static class PageTemplate
         ("Reference", [("config.html", "Config & Secrets", "🔑")]),
     ];
 
-    /// <param name="relRoot">"" for root pages, "../" for pages under files/.</param>
-    /// <param name="searchIndexHtml">The Ctrl+K palette's window.ARCH_SEARCH_INDEX script tag
-    /// (SearchIndex.ScriptTag); "" disables search on this page (kept optional so every existing
-    /// caller keeps compiling).</param>
-    public static string Render(string title, string siteName, string activeHref, string relRoot, string breadcrumbsHtml, string bodyHtml, string searchIndexHtml = "")
-    {
-        var nav = new StringBuilder();
-        foreach (var (section, items) in NavSections)
-        {
-            nav.Append($"<div class=\"nav-section\">{Html.Encode(section)}</div>\n");
-            foreach (var (href, navTitle, icon) in items)
-            {
-                var active = href == activeHref ? " class=\"active\"" : "";
-                nav.Append($"<a href=\"{relRoot}{href}\"{active}><span class=\"nav-icon\">{icon}</span>{Html.Encode(navTitle)}</a>\n");
-            }
-        }
-
-        return $$"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{Html.Encode(title)}} — {{Html.Encode(siteName)}}</title>
-<link rel="stylesheet" href="{{relRoot}}assets/site.css">
+    private const string PrePaintScript = """
 <script>
 (function () {
   var t = null;
@@ -49,41 +23,24 @@ public static class PageTemplate
   document.documentElement.setAttribute("data-theme", t);
 })();
 </script>
-</head>
-<body>
-<div class="layout">
-  <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
-  <div class="nav-overlay" id="nav-overlay" hidden></div>
-  <aside class="sidebar" id="sidebar">
-    <div class="brand"><span class="brand-mark">◆</span><div><div class="brand-name">ArchSql</div><div class="brand-sub">{{Html.Encode(siteName)}}</div></div></div>
-    <button class="btn search-open" id="search-open" type="button" title="Search objects (Ctrl+K)">🔍 Search <kbd>Ctrl K</kbd></button>
-    <nav>
-{{nav}}    </nav>
-    <div class="sidebar-foot">
-      <button class="btn theme-toggle" id="theme-toggle" type="button" title="Switch between light and dark theme">◐ Theme</button>
-    </div>
-  </aside>
-  <main class="content">
-    <div class="breadcrumbs">{{breadcrumbsHtml}}</div>
-{{bodyHtml}}
-  </main>
-</div>
-<div class="hover-tip" id="hover-tip" hidden></div>
-<div class="explain-pop" id="explain-pop" hidden role="dialog" aria-label="Explanation"></div>
-<script type="application/json" id="arch-glossary">{{Glossary.Json()}}</script>
-<div class="palette-overlay" id="palette" hidden data-rel-root="{{relRoot}}">
-  <div class="palette">
-    <input type="text" id="palette-input" placeholder="Search objects…" autocomplete="off" spellcheck="false">
-    <ul class="palette-results" id="palette-results"></ul>
-    <div class="palette-foot">↑↓ navigate · Enter open · Esc close</div>
-  </div>
-</div>
-{{searchIndexHtml}}
-<script src="{{relRoot}}assets/lib/mermaid.min.js"></script>
-<script src="{{relRoot}}assets/site.js"></script>
-</body>
-</html>
 """;
+
+    /// <param name="relRoot">"" for root pages, "../" for pages under files/.</param>
+    /// <param name="searchIndexHtml">The Ctrl+K palette's window.ARCH_SEARCH_INDEX script tag
+    /// (SearchIndex.ScriptTag); "" disables search on this page (kept optional so every existing
+    /// caller keeps compiling).</param>
+    public static string Render(string title, string siteName, string activeHref, string relRoot, string breadcrumbsHtml, string bodyHtml, string searchIndexHtml = "")
+    {
+        var shell = new ShellOptions
+        {
+            Brand = "ArchSql",
+            Nav = NavSections,
+            SearchButtonTitle = "Search objects (Ctrl+K)",
+            SearchInputPlaceholder = "Search objects…",
+            ExtraHead = PrePaintScript,
+            ExtraScripts = $"{searchIndexHtml}\n<script src=\"{relRoot}assets/lib/mermaid.min.js\"></script>",
+        };
+        return PageShell.Render(shell, title, siteName, activeHref, relRoot, breadcrumbsHtml, bodyHtml);
     }
 
     /// <summary>One interactive diagram card: toolbar (zoom/reset/PNG), pan/zoom stage, the
