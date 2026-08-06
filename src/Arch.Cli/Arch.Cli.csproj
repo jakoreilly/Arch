@@ -17,4 +17,15 @@
     <ProjectReference Include="..\Arch.Sql\Arch.Sql.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- CrossLink is internal (Cli/ is not this product's public surface); Arch.Cli.Tests needs
+         it directly to exercise the verified (Server+Catalog) join branch, which nothing reachable
+         through Runner.Run can produce today — arch connect and arch <path> are separate, mutually
+         exclusive entry points, so no CLI invocation ever builds a live-connected SqlModel and a
+         code scan in the same run (see continue.md's Phase 6 findings). Arch.Cli.Tests has no
+         AssemblyName override, so its assembly identity is its project name — no
+         InternalsVisibleTo-matches-assembly-not-project-name trap here (see Phase 5 findings). -->
+    <InternalsVisibleTo Include="Arch.Cli.Tests" />
+  </ItemGroup>
+
 </Project>

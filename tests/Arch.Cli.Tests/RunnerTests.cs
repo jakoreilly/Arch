@@ -125,4 +125,30 @@ public class RunnerTests : IDisposable
         Assert.True(File.Exists(Path.Combine(_outDir, "code", "assets", "site.css")));
         Assert.True(File.Exists(Path.Combine(_outDir, "sql", "assets", "site.css")));
     }
+
+    /// <summary>End-to-end through the real CLI (Runner.Run, not CrossLink directly): the
+    /// fixture's own folder is named "ShopTest", one detected database's catalog is "SHOPTEST"
+    /// (same name, different case — the Phase 6 DoD's case-mismatch check) and the sql side is a
+    /// plain file scan, so this can only ever be an unverified, catalog-name-only match. A second
+    /// database ("OtherDb") has no matching catalog in this scan at all, exercising the "not in
+    /// this scan" branch in the same run. A fake credential is embedded on purpose to prove the
+    /// generated site never renders it.</summary>
+    [Fact]
+    public void Combined_fixture_with_databases_renders_both_join_outcomes_and_leaks_no_secret()
+    {
+        var (exitCode, _) = RunCaptured(Path.Combine(FixturesRoot, "CrossLink", "ShopTest"), "--out", _outDir, "--no-open");
+        Assert.Equal(0, exitCode);
+
+        var packages = File.ReadAllText(Path.Combine(_outDir, "code", "packages.html"));
+        Assert.Contains("matched by name only (no server recorded in this connection string)", packages);
+        Assert.Contains("objects →", packages);
+        Assert.Contains("../sql/objects.html?catalog=SHOPTEST", packages);
+        Assert.Contains("not in this scan", packages);
+        Assert.Contains("arch connect", packages);
+
+        var allText = string.Join('\n', Directory.EnumerateFiles(_outDir, "*", SearchOption.AllDirectories)
+            .Where(f => f.EndsWith(".html", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            .Select(File.ReadAllText));
+        Assert.DoesNotMatch("(?i)password=|pwd=", allText);
+    }
 }
