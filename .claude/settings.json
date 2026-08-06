@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build *)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet run --project src/Arch.Code *)",
+      "Bash(dotnet run --project src/Arch.Sql *)",
+      "Bash(dotnet run --project src/Arch.Cli *)",
+      "PowerShell(dotnet build *)",
+      "PowerShell(dotnet test *)",
+      "Bash(bash tools/golden.sh)",
+      "Bash(bash tools/golden.sh accept)",
+      "Bash(diff *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git stash list)",
+      "Bash(git check-ignore *)",
+      "Bash(file *)"
+    ]
+  }
+}
