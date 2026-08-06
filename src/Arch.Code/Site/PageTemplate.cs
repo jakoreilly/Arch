@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using Arch.Code.Graph;
 using Arch.Code.Rendering;
+using Arch.Core.Serialization;
 
 namespace Arch.Code.Site;
 
@@ -71,7 +72,7 @@ public static class PageTemplate
         // not configured; the viewer then offers an in-browser prompt instead.
         var sourceLinkScript = sourceLink is null
             ? ""
-            : $"<script>window.ARCH_SOURCELINK={JsonSerializer.Serialize(sourceLink, ModelJsonWriter.Options)};</script>\n";
+            : $"<script>window.ARCH_SOURCELINK={JsonSerializer.Serialize(sourceLink, ModelJson.Options)};</script>\n";
 
         return $$"""
 <!DOCTYPE html>

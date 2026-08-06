@@ -8,8 +8,8 @@ namespace Arch.Code.Rendering;
 /// <summary>Exports the refactoring backlog and any failed scorecard signal as a SARIF 2.1.0
 /// log, for code-scanning dashboards (GitHub code scanning, Azure DevOps, etc.). SARIF is
 /// case-sensitive on every property name, so this uses its own JsonSerializerOptions rather
-/// than <see cref="ModelJsonWriter.Options"/> (which camel-cases via a naming policy that would
-/// corrupt SARIF's exact-cased schema keys like "$schema").</summary>
+/// than <see cref="Arch.Core.Serialization.ModelJson.Options"/> (which camel-cases via a naming
+/// policy that would corrupt SARIF's exact-cased schema keys like "$schema").</summary>
 public static class SarifWriter
 {
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };

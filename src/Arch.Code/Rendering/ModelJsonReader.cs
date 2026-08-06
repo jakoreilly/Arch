@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Arch.Code.Graph;
+using Arch.Core.Serialization;
 
 namespace Arch.Code.Rendering;
 
@@ -12,7 +13,7 @@ public static class ModelJsonReader
     public static ProjectModel Read(string path)
     {
         var json = File.ReadAllText(path);
-        return JsonSerializer.Deserialize<ProjectModel>(json, ModelJsonWriter.Options)
+        return JsonSerializer.Deserialize<ProjectModel>(json, ModelJson.Options)
             ?? throw new InvalidDataException($"'{path}' did not contain a valid ArchDiagram model.");
     }
 }

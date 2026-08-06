@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using Arch.Code.Graph;
 using Arch.Code.Rendering;
+using Arch.Core.Serialization;
 
 namespace Arch.Code.Site;
 
@@ -66,7 +67,7 @@ public static class GraphDataWriter
             nodes,
             edges,
         };
-        return JsonSerializer.Serialize(payload, ModelJsonWriter.Options);
+        return JsonSerializer.Serialize(payload, ModelJson.Options);
     }
 
     /// <summary>Does this file look like automated-test code? Delegates to the single

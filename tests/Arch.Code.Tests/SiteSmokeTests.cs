@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Arch.Code.Cli;
 using Arch.Code.Graph;
 using Arch.Code.Site;
+using Arch.Core.Serialization;
 
 namespace Arch.Code.Tests;
 
@@ -72,7 +73,7 @@ public class SiteSmokeTests : IDisposable
     public void Model_json_round_trips()
     {
         var json = File.ReadAllText(Path.Combine(_outDir, "model.json"));
-        var back = JsonSerializer.Deserialize<ProjectModel>(json, Rendering.ModelJsonWriter.Options);
+        var back = JsonSerializer.Deserialize<ProjectModel>(json, ModelJson.Options);
         Assert.NotNull(back);
         Assert.Equal(_model.Files.Count, back!.Files.Count);
         Assert.Equal(_model.Calls.Count, back.Calls.Count);
