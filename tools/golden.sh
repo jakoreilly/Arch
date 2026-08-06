@@ -20,10 +20,17 @@ rm -rf "$WORK"; mkdir -p "$WORK"
 
 dotnet build Arch.slnx --nologo -v q >/dev/null
 
-# The two values that legitimately change between runs and would otherwise make every
-# comparison fail: the generation timestamp stamped into pages, and the absolute source
-# path written verbatim into model.json. Normalised here rather than by adding a
-# --deterministic flag to the tools, which would be production surface added for a test.
+# The values that legitimately change between runs and would otherwise make every
+# comparison fail: the generation timestamp stamped into pages, the absolute source path
+# written verbatim into model.json, and the repository commit count. Normalised here
+# rather than by adding a --deterministic flag to the tools, which would be production
+# surface added for a test.
+#
+# The commit count is the subtle one. The code fixture lives INSIDE this repository, so
+# GitHistory.Analyze reports *Arch's own* commit total into the Evolution page and
+# model.json - a number that increments with every commit made while working the plan.
+# Left alone it makes the golden fail on the next commit no matter what changed, which
+# trains you to run `accept` reflexively and destroys the net's whole value.
 normalise() {
   local dir="$1"
   # Three spellings of the same root have to be caught, because `pwd` in Git Bash is the
@@ -48,6 +55,8 @@ normalise() {
         -e "s#$esc_root#<ROOT>#g" \
         -e 's#[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}[ T][0-9]\{2\}:[0-9]\{2\}\(:[0-9]\{2\}\)\?#<TIMESTAMP>#g' \
         -e 's#[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}#<DATE>#g' \
+        -e 's#"totalCommits": [0-9]\{1,\}#"totalCommits": <COMMITS>#g' \
+        -e 's#<div class="num">[0-9]\{1,\}</div><div class="lbl">Commits in history</div>#<div class="num">\&lt;COMMITS\&gt;</div><div class="lbl">Commits in history</div>#g' \
         "$f"
     done
 }
