@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Arch.Code.Site;
+namespace Arch.Core.Web;
 
 /// <summary>Single source of truth for the plain-language + technical explanations behind the
 /// ⓘ "explain" affordances. Each term has a <c>Simple</c> line (for a newcomer) and a
@@ -48,6 +48,15 @@ public static class Glossary
             "The shortest sequence of imports from an entry point (a file nothing else imports) to a key file. Reading it left-to-right shows how the code reaches that file."),
         ["layering"] = new("Whether dependencies flow one way, top layer down to foundation.",
             "In a layered architecture the top (UI/API) may depend on lower layers (domain/core) but never the reverse. An 'upward' dependency breaks the contract and couples the foundation to detail above it."),
+        // ArchSql-only terms, folded in when the core was extracted (see plan.md Phase 4). Its
+        // "fan-in"/"fan-out" duplicated the two above with schema wording instead of code wording;
+        // the code wording wins since it is the version 9 live call sites already render.
+        ["cyclomatic-sql"] = new(
+            "A count of decision points (IF/WHILE/CASE) in a procedure's body — a rough idea of how many test cases it needs.",
+            "Cyclomatic complexity applied to T-SQL control flow. Higher means more independent paths through the procedure, and more branches a test suite has to cover."),
+        ["shallow-parse"] = new(
+            "This file's dialect wasn't fully parsed, so what you see here is best-effort.",
+            "Only T-SQL is deep-parsed via ScriptDom in v1. MySQL and PostgreSQL files are detected and inventoried, but their objects and dependencies come from shallow pattern matching and may be incomplete."),
     };
 
     public static string Json() =>

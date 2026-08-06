@@ -1,4 +1,4 @@
-using Arch.Code.Site;
+using Arch.Core.Web;
 
 namespace Arch.Code.Tests;
 
