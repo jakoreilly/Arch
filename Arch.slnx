@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Arch.Code/Arch.Code.csproj" />
+    <Project Path="src/Arch.Sql/Arch.Sql.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Arch.Code.Tests/Arch.Code.Tests.csproj" />
+    <Project Path="tests/Arch.Sql.Tests/Arch.Sql.Tests.csproj" />
+  </Folder>
+</Solution>
