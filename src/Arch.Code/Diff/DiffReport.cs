@@ -13,7 +13,7 @@ public static class DiffReport
     public static string Write(ModelDiff.Result diff, string outDir, string generatedOn)
     {
         Directory.CreateDirectory(outDir);
-        SiteAssets.CopyTo(outDir);
+        SiteAssets.CopyTo(outDir, "assets-code");
 
         var body = Body(diff, generatedOn);
         var crumbs = Html.Crumbs((null, "Diff"));

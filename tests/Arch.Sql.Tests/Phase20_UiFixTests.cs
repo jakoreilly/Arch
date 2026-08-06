@@ -48,7 +48,7 @@ public class Phase20_UiFixTests
     [Fact]
     public void SiteCss_DefinesHeatTileWrappingRules()
     {
-        var css = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Arch.Sql", "Site", "assets", "site.css"));
+        var css = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Arch.Core", "Web", "assets", "site.css"));
         Assert.Contains(".heat-tile", css);
         Assert.Contains("overflow-wrap: anywhere", css);
     }
@@ -56,7 +56,7 @@ public class Phase20_UiFixTests
     [Fact]
     public void SiteJs_NeighborhoodEmitsAdjacencyForHoverHighlight()
     {
-        var js = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Arch.Sql", "Site", "assets", "site.js"));
+        var js = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Arch.Core", "Web", "assets", "site.js"));
         Assert.Contains("script.adjacency", js);
         Assert.Contains("adjEl.textContent = JSON.stringify(adjacency)", js);
     }

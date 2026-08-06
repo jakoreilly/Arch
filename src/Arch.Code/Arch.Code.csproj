@@ -23,8 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Viewer assets ship next to the exe and are copied into every generated site. -->
-    <None Include="Site\assets\**" CopyToOutputDirectory="PreserveNewest" Link="assets\%(RecursiveDir)%(Filename)%(Extension)" TargetPath="assets\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Provider-only assets (site.css/site.js/lib are Arch.Core's now). Land in their own
+         build-output folder, not "assets" — Arch.Core's tree already claims that name via its
+         own CopyToOutputDirectory items, and SiteAssets.CopyTo layers this one on top at
+         generation time instead of relying on MSBuild to merge two same-named output dirs. -->
+    <None Include="Site\assets\**" CopyToOutputDirectory="PreserveNewest" Link="assets-code\%(RecursiveDir)%(Filename)%(Extension)" TargetPath="assets-code\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

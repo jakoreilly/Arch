@@ -16,7 +16,7 @@ public static class SiteGenerator
     {
         Directory.CreateDirectory(outDir);
         Directory.CreateDirectory(Path.Combine(outDir, "files"));
-        SiteAssets.CopyTo(outDir);
+        SiteAssets.CopyTo(outDir, "assets-code");
 
         // Computed once: fan-in/out, call indexes, scorecard, metrics, importance ranking and
         // the 3D graph payload. Every page below reuses this instead of recomputing its own

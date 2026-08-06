@@ -41,7 +41,7 @@ public class Phase18_ActivityPolishTests
     [Fact]
     public void SiteJs_HasSortableTableEngine()
     {
-        var js = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Arch.Sql", "Site", "assets", "site.js"));
+        var js = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Arch.Core", "Web", "assets", "site.js"));
         Assert.Contains("table.sortable", js);
         Assert.Contains("table-more", js);
     }

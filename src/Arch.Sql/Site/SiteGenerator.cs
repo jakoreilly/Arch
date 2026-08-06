@@ -3,8 +3,6 @@ using Arch.Sql.Model;
 using Arch.Sql.Rendering;
 using Arch.Sql.Site.Pages;
 
-using System.Reflection;
-
 namespace Arch.Sql.Site;
 
 /// <summary>Orchestrates static-site output: one WritePage call per page (UTF-8 no BOM,
@@ -16,7 +14,7 @@ public static class SiteGenerator
     public static string? Generate(SqlModel model, string outDir, int maxNodes, List<Analysis.SchemaChange>? drift = null)
     {
         Directory.CreateDirectory(outDir);
-        CopyAssetTree(outDir);
+        SiteAssets.CopyTo(outDir, "assets-sql");
         var ctx = SiteContext.Build(model);
         // Write the search index and graph/object-detail payloads once as shared assets; every
         // page references them by src (O(pages) bytes instead of inlining into each page).
@@ -72,23 +70,4 @@ public static class SiteGenerator
         File.WriteAllText(Path.Combine(outDir, fileName), html, Utf8NoBom);
     }
 
-    private static void CopyAssetTree(string outDir)
-    {
-        var baseDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        if (baseDir is null) { return; }
-
-        var sourceAssetsDir = Path.Combine(baseDir, "assets");
-        if (!Directory.Exists(sourceAssetsDir)) { return; }
-
-        var targetAssetsDir = Path.Combine(outDir, "assets");
-        Directory.CreateDirectory(targetAssetsDir);
-
-        foreach (var file in Directory.GetFiles(sourceAssetsDir, "*", SearchOption.AllDirectories))
-        {
-            var rel = Path.GetRelativePath(sourceAssetsDir, file);
-            var target = Path.Combine(targetAssetsDir, rel);
-            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-            File.Copy(file, target, overwrite: true);
-        }
-    }
 }

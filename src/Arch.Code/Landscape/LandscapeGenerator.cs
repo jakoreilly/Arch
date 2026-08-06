@@ -21,7 +21,7 @@ public static class LandscapeGenerator
     public static string Generate(LandscapeModel model, string outDir, int maxNodes, string generatedOn, string? displayName = null)
     {
         Directory.CreateDirectory(outDir);
-        SiteAssets.CopyTo(outDir);
+        SiteAssets.CopyTo(outDir, "assets-code");
         // Empty search index so the shared template's Ctrl+K palette loads without error on file://.
         File.WriteAllText(Path.Combine(outDir, "assets", "search-index.js"), "window.ARCH_SEARCH_INDEX = [];\n", Utf8NoBom);
 

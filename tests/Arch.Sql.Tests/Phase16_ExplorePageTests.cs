@@ -19,7 +19,7 @@ public class Phase16_ExplorePageTests
     [Fact]
     public void SiteJs_DefinesSqlFlavouredVerbAliases()
     {
-        var js = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Arch.Sql", "Site", "assets", "site.js"));
+        var js = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Arch.Core", "Web", "assets", "site.js"));
         Assert.Contains("VERB_ALIASES", js);
         Assert.Contains("referencedby:", js);
         Assert.Contains("affects:", js);

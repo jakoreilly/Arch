@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Shared viewer assets. Providers overlay their own on top (see SiteAssets).
-         Empty until the asset relocation commit; the glob is inert until then. -->
+    <!-- Shared viewer assets (site.css, site.js, the vendored mermaid/3d-force-graph libs).
+         Providers overlay their own provider-only assets on top — see SiteAssets.CopyTo. -->
     <None Include="Web\assets\**" CopyToOutputDirectory="PreserveNewest" Link="assets\%(RecursiveDir)%(Filename)%(Extension)" TargetPath="assets\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
