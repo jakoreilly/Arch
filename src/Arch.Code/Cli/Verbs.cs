@@ -132,12 +132,15 @@ internal static class Verbs
         return 0;
     }
 
-    /// <summary>The default path: scan a source folder and generate its site.</summary>
-    internal static int RunDefault(string[] args)
+    /// <summary>The shared core of the default path: scan, build the model, generate the
+    /// site, optionally write SARIF. Shared with Arch.Cli's CodeAnalysisProvider, so
+    /// there is exactly one place that builds a site from a folder scan. Deliberately
+    /// does not open a browser or evaluate --fail-on (RunDefault-only concerns) and does
+    /// not catch Pipeline.BuildModel's exceptions — RunDefault lets a crash propagate
+    /// exactly as it always has; Arch.Cli's orchestrator catches it instead, for its own
+    /// partial-failure UX.</summary>
+    internal static (ProjectModel Model, string IndexPath) BuildAndGenerate(CliOptions options)
     {
-        var options = CliOptions.Parse(args, out var exitCode);
-        if (options is null) { return exitCode; }
-
         Console.Error.WriteLine($"archdiagram: scanning {options.SourcePath}");
         var model = Pipeline.BuildModel(options);
         Console.Error.WriteLine($"archdiagram: {model.Files.Count} files, {model.Projects.Count} projects, " +
@@ -154,6 +157,17 @@ internal static class Verbs
             SarifWriter.Write(model, sarifFullPath);
             Console.Error.WriteLine($"archdiagram: SARIF log written to {sarifFullPath}");
         }
+
+        return (model, indexPath);
+    }
+
+    /// <summary>The default path: scan a source folder and generate its site.</summary>
+    internal static int RunDefault(string[] args)
+    {
+        var options = CliOptions.Parse(args, out var exitCode);
+        if (options is null) { return exitCode; }
+
+        var (model, indexPath) = BuildAndGenerate(options);
 
         if (options.Open)
         {

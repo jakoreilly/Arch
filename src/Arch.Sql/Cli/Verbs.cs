@@ -13,21 +13,16 @@ internal static class Verbs
         return BuildAndEmit(options);
     }
 
-    /// <summary>Builds the model from the configured source (file scan or live connection) and
-    /// writes the model.json, site, SARIF, and evaluates CI gates. Shared verbatim by the default
-    /// and connect verbs so both paths behave identically once a source is chosen.</summary>
-    private static int BuildAndEmit(CliOptions options)
+    /// <summary>Builds the model from the configured source (file scan or live connection),
+    /// writes model.json, computes drift against a baseline if given, generates the site, and
+    /// optionally writes SARIF. Shared with Arch.Cli's SqlAnalysisProvider, so there is exactly
+    /// one place that turns a CliOptions into a generated site. Deliberately does not evaluate
+    /// --fail-on or open a browser (BuildAndEmit-only concerns) and does not catch any
+    /// exception — BuildAndEmit wraps the call in its own try/catch, same as it always has;
+    /// Arch.Cli's orchestrator catches around its own call instead, for its partial-failure UX.</summary>
+    internal static (Model.SqlModel Model, string? IndexPath) BuildAndGenerate(CliOptions options)
     {
-        Model.SqlModel model;
-        try
-        {
-            model = Pipeline.BuildModel(options);
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"error: {Redact.Message(ex.Message)}");
-            return 1;
-        }
+        var model = Pipeline.BuildModel(options);
 
         Directory.CreateDirectory(options.OutDir);
         var modelPath = Path.Combine(options.OutDir, "model.json");
@@ -54,6 +49,30 @@ internal static class Verbs
         {
             SarifWriter.Write(model, options.SarifPath);
             Console.Error.WriteLine($"Wrote {options.SarifPath}");
+        }
+
+        return (model, indexPath);
+    }
+
+    /// <summary>Shared verbatim by the default and connect verbs so both paths behave
+    /// identically once a source is chosen. Note: the try/catch below now covers all of
+    /// BuildAndGenerate (model.json write, drift, site generation, SARIF), not just
+    /// Pipeline.BuildModel as before this method was split out — a deliberate widening,
+    /// since those steps failing is exactly as much "the run failed" as the scan failing,
+    /// and nothing in the golden fixtures or test suite exercises that boundary either
+    /// way. Any failure now exits cleanly with a message instead of an unhandled crash.</summary>
+    private static int BuildAndEmit(CliOptions options)
+    {
+        Model.SqlModel model;
+        string? indexPath;
+        try
+        {
+            (model, indexPath) = BuildAndGenerate(options);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"error: {Redact.Message(ex.Message)}");
+            return 1;
         }
 
         if (options.FailOn.Count > 0)

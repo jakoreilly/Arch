@@ -154,7 +154,7 @@ public sealed class CppImportAnalyzer : RegexImportAnalyzer
 /// on which extensions count as "source code."</summary>
 public static class LanguageAnalyzers
 {
-    public static readonly IReadOnlyList<ILanguageAnalyzer> All =
+    public static readonly IReadOnlyList<RegexImportAnalyzer> All =
     [
         new CSharpUsingAnalyzer(), new TsJsImportAnalyzer(), new PythonImportAnalyzer(),
         new PowerShellImportAnalyzer(), new GoImportAnalyzer(), new JavaImportAnalyzer(),
