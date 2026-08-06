@@ -327,19 +327,43 @@ public static class ConnectionStringNormalizer
         return Convert.ToHexStringLower(bytes);
     }
 
+    /// <summary>Same-machine aliases SQL Server accepts in place of a real hostname — all mean
+    /// "this machine," so they must fold to one canonical form or a Server=. connection string
+    /// would never join to a Server=localhost one naming the identical instance.</summary>
+    private static readonly Dictionary<string, string> LocalHostAliases = new(StringComparer.Ordinal)
+    {
+        ["."] = "localhost",
+        ["(local)"] = "localhost",
+        ["127.0.0.1"] = "localhost",
+        ["::1"] = "localhost",
+    };
+
     /// <summary>Canonicalize a SQL host so trivial differences don't split one database into
-    /// two: lowercase, strip a protocol prefix (<c>tcp:</c>, <c>np:</c>), and drop a trailing
-    /// <c>,port</c>. Conservative — it does not touch instance names or domain suffixes.</summary>
+    /// two: lowercase, strip a protocol prefix (<c>tcp:</c>, <c>np:</c>), drop a trailing
+    /// <c>,port</c>, and fold same-machine aliases (<c>.</c>, <c>(local)</c>, <c>127.0.0.1</c>)
+    /// to one form. Conservative beyond that — it does not touch instance names or domain
+    /// suffixes (<c>MACHINE\SQLEXPRESS</c> stays as-is; resolving it to a real hostname isn't
+    /// safe to do without a network round-trip).</summary>
     private static string CanonicalHost(string? server)
     {
         if (string.IsNullOrWhiteSpace(server)) { return ""; }
         var s = server.Trim().ToLowerInvariant();
+        // Alias check first: "::1" would otherwise be mistaken for a "np:1"-style protocol
+        // prefix by the colon-strip below and mangled into ":1".
+        if (LocalHostAliases.TryGetValue(s, out var alias)) { return alias; }
         var colon = s.IndexOf(':');           // "tcp:host" / "np:host" -> "host"
         if (colon is >= 0 and <= 4) { s = s[(colon + 1)..]; }
         var comma = s.IndexOf(',');           // "host,1433" -> "host"
         if (comma >= 0) { s = s[..comma]; }
-        return s.Trim();
+        s = s.Trim();
+        return LocalHostAliases.GetValueOrDefault(s, s);
     }
+
+    /// <summary>Public entry point for cross-product joins (Phase 6 — Arch.Cli matches a
+    /// DbNode.Server against an Arch.Sql model's Server). Same canonicalization
+    /// <see cref="NormalizeAndHash"/> already applies internally, exposed so the join reuses it
+    /// instead of adding a second normalizer (plan.md GOTCHA (server-name-forms)).</summary>
+    public static string CanonicalizeHost(string? server) => CanonicalHost(server);
 
     /// <summary>True when the connection string embeds a credential (a password/user-id pair
     /// with a non-empty value) — a secret committed to source. The value is not returned.</summary>

@@ -31,6 +31,15 @@ public sealed record SqlModel
     /// indexes). Available=false for file scans and for logins lacking DMV permission. Appended
     /// after Crud and before SchemaVersion to keep declaration order stable for round-tripping.</summary>
     public RuntimeStats Runtime { get; init; } = new();
+    /// <summary>Data Source of the live connection this model was built from ("" for a file
+    /// scan). Never a credential — only `connect` populates it, from the same connection string
+    /// ArchSql already treats as a secret elsewhere; this field carries none of it. Additive,
+    /// Phase 6: lets Arch.Cli's cross-layer join match a live SQL model to a code-side
+    /// connection-string reference by Server+Catalog, not catalog name alone.</summary>
+    public string Server { get; init; } = "";
+    /// <summary>Initial Catalog of the live connection this model was built from ("" for a file
+    /// scan — RootName is the unverified fallback there, see Arch.Cli's join). Additive, Phase 6.</summary>
+    public string Catalog { get; init; } = "";
     /// <summary>model.json contract version. Absent/0 in v1 files; ModelJsonReader upgrades on load
     /// via ModelUpgrader. Appended LAST on every record so byte-identical round-tripping
     /// (reflection serialization preserves declaration order) is never disturbed by future fields.</summary>

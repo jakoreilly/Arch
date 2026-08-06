@@ -186,4 +186,29 @@ public sealed record DbNode
     public required string Label { get; init; }
     public string Server { get; init; } = "";
     public string Catalog { get; init; } = "";
+    /// <summary>Phase 6 cross-layer join outcome against an Arch.Sql model from the same
+    /// combined-mode run. Null when no join was attempted — the standalone exe, single-provider
+    /// Arch.Cli runs, and any run where the sql provider didn't apply all leave this null, which
+    /// is what keeps their rendered output byte-identical to before Phase 6. Additive field.</summary>
+    public SqlCrossLink? SqlLink { get; init; }
+}
+
+/// <summary>Phase 6: what Arch.Cli's cross-layer join found for one DbNode, set only when both a
+/// code and a sql provider ran in the same invocation. See plan.md, "# Phase 6".</summary>
+public sealed record SqlCrossLink
+{
+    /// <summary>Relative href to the matched catalog's SQL object list, or "" when Matched is
+    /// false (nothing to link to).</summary>
+    public required string Href { get; init; }
+    /// <summary>Object count in the joined SQL model — since Arch.Sql analyzes one source per
+    /// run, this is the whole catalog's object count, not a filtered subset.</summary>
+    public required int ObjectCount { get; init; }
+    /// <summary>True when this database was found in the sql provider's model (by a verified or
+    /// unverified match); false when the sql provider ran but covered a different catalog — the
+    /// "not in this scan" case.</summary>
+    public required bool Matched { get; init; }
+    /// <summary>True when the match is on Server+Catalog (the sql side came from a live/known
+    /// connection); false when it matched by catalog name only, an unverified guess (see plan.md
+    /// GOTCHA (server-name-forms)). Meaningless when Matched is false.</summary>
+    public bool Verified { get; init; }
 }

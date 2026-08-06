@@ -62,4 +62,33 @@ public class ConnectionStringNormalizerTests
     {
         Assert.Equal(64, H("Server=db1;Database=orders;").Length);
     }
+
+    [Theory]
+    [InlineData(".")]
+    [InlineData("(local)")]
+    [InlineData("127.0.0.1")]
+    [InlineData("::1")]
+    [InlineData("LOCALHOST")]
+    public void Same_machine_aliases_all_canonicalize_to_localhost(string alias)
+    {
+        Assert.Equal("localhost", ConnectionStringNormalizer.CanonicalizeHost(alias));
+    }
+
+    [Fact]
+    public void Same_machine_aliases_join_despite_different_spellings()
+    {
+        Assert.Equal(
+            H("Server=.;Database=orders;"),
+            H("Server=localhost;Database=orders;"));
+        Assert.Equal(
+            H("Server=(local);Database=orders;"),
+            H("Server=127.0.0.1;Database=orders;"));
+    }
+
+    [Fact]
+    public void Instance_name_suffix_is_left_alone()
+    {
+        // Conservative: MACHINE\SQLEXPRESS is not resolved to a bare hostname.
+        Assert.Equal("machine\\sqlexpress", ConnectionStringNormalizer.CanonicalizeHost("MACHINE\\SQLEXPRESS"));
+    }
 }

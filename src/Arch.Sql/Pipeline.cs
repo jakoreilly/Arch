@@ -4,6 +4,7 @@ using Arch.Sql.Analysis;
 using Arch.Sql.Cli;
 using Arch.Sql.Live;
 using Arch.Sql.Model;
+using Microsoft.Data.SqlClient;
 
 namespace Arch.Sql;
 
@@ -82,6 +83,8 @@ public static class Pipeline
             : dialectLoc.Count == 1 ? dialectLoc.Keys.First()
             : "mixed";
 
+        var (connServer, connCatalog) = ExtractServerCatalog(options.ConnectionString);
+
         var model = new SqlModel
         {
             RootName = rootName,
@@ -93,6 +96,8 @@ public static class Pipeline
             Diagnostics = diagnostics,
             DialectLoc = dialectLoc,
             Dialect = overallDialect,
+            Server = connServer,
+            Catalog = connCatalog,
             SchemaVersion = SchemaVersions.Current,
         };
 
@@ -122,6 +127,21 @@ public static class Pipeline
 
         model = model with { Findings = SqlRules.Run(model) };
         return model;
+    }
+
+    /// <summary>Server (Data Source) and catalog (Initial Catalog) of a live connection, for
+    /// SqlModel.Server/Catalog — Phase 6's cross-layer join needs to know which physical database
+    /// a `connect`-built model came from. "" for a file scan (connectionString is null) or an
+    /// unparseable string; parsing must never throw. Never reads or returns any credential.</summary>
+    private static (string Server, string Catalog) ExtractServerCatalog(string? connectionString)
+    {
+        if (connectionString is null) { return ("", ""); }
+        try
+        {
+            var builder = new SqlConnectionStringBuilder(connectionString);
+            return (builder.DataSource, builder.InitialCatalog);
+        }
+        catch (ArgumentException) { return ("", ""); }
     }
 
     /// <summary>Drops objects matching any exclude pattern (by name or full id) and every FK/
