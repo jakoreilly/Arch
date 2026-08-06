@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Arch.Code.Graph;
+using Arch.Core.Serialization;
 
 namespace Arch.Code.Landscape;
 
@@ -8,8 +9,6 @@ namespace Arch.Code.Landscape;
 /// landscape output dir. Unreadable/unparseable sites are skipped with a diagnostic.</summary>
 public static class SiteDiscovery
 {
-    private static readonly JsonSerializerOptions ReadOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
     public static List<SiteRef> Discover(string parentDir, string landscapeOutDir, List<string> diagnostics, ISet<string>? onlyFolderNames = null)
     {
         var sites = new List<SiteRef>();
@@ -23,7 +22,7 @@ public static class SiteDiscovery
             if (!File.Exists(jsonPath)) { continue; }
             try
             {
-                var model = JsonSerializer.Deserialize<ProjectModel>(File.ReadAllText(jsonPath), ReadOptions);
+                var model = JsonSerializer.Deserialize<ProjectModel>(File.ReadAllText(jsonPath), ModelJson.Options);
                 if (model is null) { diagnostics.Add($"Skipped {jsonPath}: deserialized to null."); continue; }
                 var href = Path.GetRelativePath(landscapeOutDir, Path.Combine(dir, "index.html")).Replace('\\', '/');
                 sites.Add(new SiteRef(id, model, href));
