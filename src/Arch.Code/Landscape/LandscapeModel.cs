@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Landscape;
+namespace Arch.Code.Landscape;
 
 /// <summary>One discovered site: its folder id, the loaded model, and a relative
 /// href (from the landscape output dir) to that site's index.html.</summary>

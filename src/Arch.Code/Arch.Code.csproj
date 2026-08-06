@@ -6,8 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>archdiagram</AssemblyName>
-    <!-- Namespaces are renamed in Phase 3; pinned here so the move stays a pure copy. -->
-    <RootNamespace>ArchDiagram</RootNamespace>
+    <RootNamespace>Arch.Code</RootNamespace>
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 

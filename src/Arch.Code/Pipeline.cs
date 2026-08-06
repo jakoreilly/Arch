@@ -1,11 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
-using ArchDiagram.Analysis;
-using ArchDiagram.Cli;
-using ArchDiagram.Graph;
-using ArchDiagram.Scanning;
+using Arch.Code.Analysis;
+using Arch.Code.Cli;
+using Arch.Code.Graph;
+using Arch.Code.Scanning;
 
-namespace ArchDiagram;
+namespace Arch.Code;
 
 public static class Pipeline
 {

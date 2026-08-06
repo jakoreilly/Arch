@@ -1,7 +1,7 @@
 using System.Text.Json;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Loads an optional <c>archdiagram.layers.json</c> sidecar from the source root: an
 /// ordered (top-to-bottom) list of architectural layers and the namespace/module prefixes that

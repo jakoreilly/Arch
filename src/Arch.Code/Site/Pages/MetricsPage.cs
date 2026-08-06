@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Text;
-using ArchDiagram.Analysis;
-using ArchDiagram.Graph;
+using Arch.Code.Analysis;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 /// <summary>Architecture Metrics: Robert C. Martin's module-level Instability / Abstractness /
 /// Distance-from-the-main-sequence, propagation cost, and dependency cycles. All server-rendered

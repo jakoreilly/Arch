@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Maps raw import strings back onto files in the scanned set.
 /// Unresolved imports become external-package edges (capped later for display).</summary>

@@ -1,4 +1,4 @@
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public static class FixturePaths
 {

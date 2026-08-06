@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Deterministic, template-generated prose (no LLM, no network) describing a
 /// codebase and its folders, composed only from data already in the model. Clauses are

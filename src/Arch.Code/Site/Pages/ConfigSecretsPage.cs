@@ -1,7 +1,7 @@
 using System.Text;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 /// <summary>Config &amp; secrets review: every connection string the scan found (with the file
 /// it lives in), which of them embed credentials committed to source, and the config files

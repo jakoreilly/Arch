@@ -1,7 +1,7 @@
-using ArchDiagram.Graph;
-using ArchDiagram.Rendering;
+using Arch.Code.Graph;
+using Arch.Code.Rendering;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class MermaidRendererTests
 {
@@ -22,14 +22,14 @@ public class MermaidRendererTests
         Assert.Equal(1, d.ShownNodes);
         Assert.Equal(10, d.TotalNodes);
 
-        var html = ArchDiagram.Site.PageTemplate.DiagramBlock("x", d, "png");
+        var html = Arch.Code.Site.PageTemplate.DiagramBlock("x", d, "png");
         Assert.Contains("diagram-trim", html);
         Assert.Contains("Showing", html);
 
         // A non-trimmed diagram carries no banner.
         var full = MermaidRenderer.Render([new DiagramNode("a", "A", "file")], []);
         Assert.False(full.Trimmed);
-        Assert.DoesNotContain("diagram-trim", ArchDiagram.Site.PageTemplate.DiagramBlock("y", full, "png"));
+        Assert.DoesNotContain("diagram-trim", Arch.Code.Site.PageTemplate.DiagramBlock("y", full, "png"));
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public class DependencyControlsTests
     [Fact]
     public void Dependencies_page_emits_layer_toggles_and_highlight_filter()
     {
-        var html = ArchDiagram.Site.Pages.DependenciesPage.Body(SampleModel(), maxNodes: 100);
+        var html = Arch.Code.Site.Pages.DependenciesPage.Body(SampleModel(), maxNodes: 100);
         Assert.Contains("id=\"dep-internal\"", html);
         Assert.Contains("id=\"dep-external\"", html);
         Assert.Contains("id=\"dep-filter\"", html);
@@ -113,7 +113,7 @@ public class DependencyControlsTests
     [Fact]
     public void Graph_page_emits_import_toggle_and_filter()
     {
-        var html = ArchDiagram.Site.Pages.GraphPage.Body(SampleModel());
+        var html = Arch.Code.Site.Pages.GraphPage.Body(SampleModel());
         Assert.Contains("id=\"g3d-imports\"", html);
         Assert.Contains("id=\"g3d-filter\"", html);
     }

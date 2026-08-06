@@ -1,11 +1,11 @@
-using ArchDiagram.Analysis;
-using ArchDiagram.Diff;
-using ArchDiagram.Graph;
-using ArchDiagram.Landscape;
-using ArchDiagram.Rendering;
-using ArchDiagram.Site;
+using Arch.Code.Analysis;
+using Arch.Code.Diff;
+using Arch.Code.Graph;
+using Arch.Code.Landscape;
+using Arch.Code.Rendering;
+using Arch.Code.Site;
 
-namespace ArchDiagram.Cli;
+namespace Arch.Code.Cli;
 
 /// <summary>The four things <c>archdiagram</c> can do, one method each — extracted from
 /// Program.cs's top-level statements, which had synthesized a single "&lt;main&gt;" member

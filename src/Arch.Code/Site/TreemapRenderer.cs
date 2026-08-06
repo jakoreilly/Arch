@@ -1,8 +1,8 @@
 using System.Globalization;
 using System.Text;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site;
+namespace Arch.Code.Site;
 
 /// <summary>Renders a deterministic, offline, theme-aware squarified treemap as inline SVG:
 /// one rectangle per file, sized by lines of code, coloured by language, linking to the file

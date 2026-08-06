@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Layer analysis over the module graph. Two modes: (1) <b>declared</b> — when a layers
 /// sidecar assigns modules to named, ordered layers, every cross-module edge is checked and any

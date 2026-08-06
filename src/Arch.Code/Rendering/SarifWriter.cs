@@ -1,9 +1,9 @@
 using System.Text;
 using System.Text.Json;
-using ArchDiagram.Analysis;
-using ArchDiagram.Graph;
+using Arch.Code.Analysis;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Rendering;
+namespace Arch.Code.Rendering;
 
 /// <summary>Exports the refactoring backlog and any failed scorecard signal as a SARIF 2.1.0
 /// log, for code-scanning dashboards (GitHub code scanning, Azure DevOps, etc.). SARIF is

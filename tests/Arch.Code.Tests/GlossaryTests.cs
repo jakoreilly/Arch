@@ -1,6 +1,6 @@
-using ArchDiagram.Site;
+using Arch.Code.Site;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class GlossaryTests
 {

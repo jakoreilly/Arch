@@ -1,10 +1,10 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using ArchDiagram.Cli;
-using ArchDiagram.Graph;
-using ArchDiagram.Site;
+using Arch.Code.Cli;
+using Arch.Code.Graph;
+using Arch.Code.Site;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class SiteSmokeTests : IDisposable
 {

@@ -1,4 +1,4 @@
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Heuristic: does a file look like automated-test code? Used to keep tests out of the
 /// busy displays by default (they can be toggled back on in the viewer). Conservative — matches

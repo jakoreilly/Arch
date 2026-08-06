@@ -4,7 +4,7 @@
 // All diagrams pan/zoom and export to PNG. Nothing is fetched at runtime.
 //
 // Usage: archdiagram <path-to-project> [--out <dir>] [--no-open] [--max-nodes <n>] [--exclude <dirname>]...
-using ArchDiagram.Cli;
+using Arch.Code.Cli;
 
 if (args.Length > 0 && args[0] == "--landscape") { return Verbs.RunLandscape(args); }
 if (args.Length > 0 && args[0] == "--diff") { return Verbs.RunDiff(args); }

@@ -1,4 +1,4 @@
-namespace ArchDiagram.Site;
+namespace Arch.Code.Site;
 
 /// <summary>Copies the viewer assets (css, js, mermaid lib) that ship next to the
 /// exe into a generated site's assets/ folder. Shared by SiteGenerator and the

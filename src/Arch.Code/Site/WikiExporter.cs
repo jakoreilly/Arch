@@ -1,7 +1,7 @@
 using System.Text;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site;
+namespace Arch.Code.Site;
 
 /// <summary>Exports the analysis for a wiki. Current output target: Confluence
 /// Storage Format (XHTML with ac:/ri: macros) — this is NOT portable to other

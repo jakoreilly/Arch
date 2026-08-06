@@ -1,7 +1,7 @@
 using System.Text;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 /// <summary>Orientation page: what each section of the site shows, how to read the
 /// diagrams (embedded legend), the limits of the static/heuristic analysis, keyboard

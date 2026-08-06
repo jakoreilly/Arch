@@ -1,8 +1,8 @@
 using System.Text;
-using ArchDiagram.Landscape.Pages;
-using ArchDiagram.Site;
+using Arch.Code.Landscape.Pages;
+using Arch.Code.Site;
 
-namespace ArchDiagram.Landscape;
+namespace Arch.Code.Landscape;
 
 /// <summary>Writes the landscape (parent) site: shared assets, an overview graph,
 /// a shared-databases matrix, and an interconnections page. Everything is relative-

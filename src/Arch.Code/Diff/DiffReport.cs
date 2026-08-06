@@ -1,8 +1,8 @@
 using System.Text;
-using ArchDiagram.Analysis;
-using ArchDiagram.Site;
+using Arch.Code.Analysis;
+using Arch.Code.Site;
 
-namespace ArchDiagram.Diff;
+namespace Arch.Code.Diff;
 
 /// <summary>Writes a single self-contained HTML report for a <see cref="ModelDiff.Result"/>,
 /// reusing the same page shell and component set as the main site (no new CSS selectors).</summary>

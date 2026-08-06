@@ -1,8 +1,8 @@
-using ArchDiagram.Cli;
-using ArchDiagram.Rendering;
-using ArchDiagram.Site;
+using Arch.Code.Cli;
+using Arch.Code.Rendering;
+using Arch.Code.Site;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 /// <summary>Proves model.json is a complete archive: scan → write model.json → read it back →
 /// the regenerated site matches the original, with no access to the source tree.</summary>

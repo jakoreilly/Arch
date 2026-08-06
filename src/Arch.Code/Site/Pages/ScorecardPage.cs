@@ -1,8 +1,8 @@
 using System.Text;
-using ArchDiagram.Analysis;
-using ArchDiagram.Graph;
+using Arch.Code.Analysis;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 /// <summary>A one-page architecture scorecard: headline signals each graded ok / watch / fail
 /// against fixed thresholds, with an overall grade. The artifact to bring to an architecture

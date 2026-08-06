@@ -1,4 +1,4 @@
-namespace ArchDiagram.Cli;
+namespace Arch.Code.Cli;
 
 public sealed record CliOptions
 {

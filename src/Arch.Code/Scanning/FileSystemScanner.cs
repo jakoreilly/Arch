@@ -1,4 +1,4 @@
-namespace ArchDiagram.Scanning;
+namespace Arch.Code.Scanning;
 
 public sealed record FileEntry(string AbsPath, string RelPath, string Extension, long SizeBytes);
 

@@ -1,4 +1,4 @@
-namespace ArchDiagram.Graph;
+namespace Arch.Code.Graph;
 
 public enum NodeShape { Box, Database, Rounded, Hexagon }
 

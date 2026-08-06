@@ -1,4 +1,4 @@
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Heuristic: does a file look like a vendored / third-party / minified asset rather
 /// than first-party source? These files (bundled libraries, minified JS/CSS) are large and

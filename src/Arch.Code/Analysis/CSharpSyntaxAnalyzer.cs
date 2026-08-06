@@ -3,9 +3,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using ArchDiagram.Scanning;
+using Arch.Code.Scanning;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 public sealed class CSharpSyntaxAnalyzer : ILanguageAnalyzer
 {

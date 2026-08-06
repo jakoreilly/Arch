@@ -1,9 +1,9 @@
 using System.Text;
 using System.Text.Json;
-using ArchDiagram.Analysis;
-using ArchDiagram.Graph;
+using Arch.Code.Analysis;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 /// <summary>Layering &amp; dependency-direction view. With a declared layers contract it checks
 /// every cross-module dependency and flags upward ones (a lower layer depending on a higher one);

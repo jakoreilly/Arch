@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
-using ArchDiagram.Scanning;
+using Arch.Code.Scanning;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Tier-1 import extraction. Each analyzer returns raw import strings;
 /// ImportResolver later maps them back to files in the scanned set.</summary>

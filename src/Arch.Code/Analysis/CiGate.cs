@@ -1,4 +1,4 @@
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>CI-mode quality gates: maps a short, stable flag name to the scorecard row it
 /// reads (see <see cref="ScorecardBuilder"/>). The scorecard already grades every signal

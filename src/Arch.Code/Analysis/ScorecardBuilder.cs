@@ -1,7 +1,7 @@
 using System.Globalization;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Rolls the individual analyses up into a one-page architecture scorecard: a handful of
 /// headline signals, each graded ok / watch / fail against a fixed threshold, plus an overall

@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Quantitative, module-level architecture metrics computed from the same module
 /// clustering as the Modules page (so the two never disagree). Pure and deterministic.

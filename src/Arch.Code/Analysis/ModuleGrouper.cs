@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Clusters files into modules and aggregates the import edges between whole
 /// modules — the mid-level view between the per-file Dependencies page and the whole-project

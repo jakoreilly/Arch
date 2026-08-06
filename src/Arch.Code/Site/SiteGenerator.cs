@@ -1,9 +1,9 @@
 using System.Text;
-using ArchDiagram.Graph;
-using ArchDiagram.Rendering;
-using ArchDiagram.Site.Pages;
+using Arch.Code.Graph;
+using Arch.Code.Rendering;
+using Arch.Code.Site.Pages;
 
-namespace ArchDiagram.Site;
+namespace Arch.Code.Site;
 
 /// <summary>Writes the complete static site: shared assets, overview + drill-down
 /// pages, one page per file, and model.json. Everything is relative-path only.</summary>

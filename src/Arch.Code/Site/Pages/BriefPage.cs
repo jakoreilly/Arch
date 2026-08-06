@@ -1,8 +1,8 @@
 using System.Text;
-using ArchDiagram.Analysis;
-using ArchDiagram.Graph;
+using Arch.Code.Analysis;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 /// <summary>A one-page, printable executive brief: what the system is, its size and stack, its
 /// health grade, integration points, and the top things to fix — assembled from the same analyses

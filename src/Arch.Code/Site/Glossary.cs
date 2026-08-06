@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace ArchDiagram.Site;
+namespace Arch.Code.Site;
 
 /// <summary>Single source of truth for the plain-language + technical explanations behind the
 /// ⓘ "explain" affordances. Each term has a <c>Simple</c> line (for a newcomer) and a

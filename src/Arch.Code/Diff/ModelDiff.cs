@@ -1,7 +1,7 @@
-using ArchDiagram.Analysis;
-using ArchDiagram.Graph;
+using Arch.Code.Analysis;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Diff;
+namespace Arch.Code.Diff;
 
 /// <summary>Compares two ProjectModel snapshots (typically two model.json archives from
 /// different points in time) and reports what changed. Diffs files by RelPath — never by

@@ -1,4 +1,4 @@
-namespace ArchDiagram.Graph;
+namespace Arch.Code.Graph;
 
 /// <summary>Keeps every emitted diagram readable: caps node count by keeping the
 /// highest-degree nodes and collapsing the rest into one dashed aggregate node,

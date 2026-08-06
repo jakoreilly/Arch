@@ -1,9 +1,9 @@
 using System.Text;
-using ArchDiagram.Analysis;
-using ArchDiagram.Graph;
-using ArchDiagram.Rendering;
+using Arch.Code.Analysis;
+using Arch.Code.Graph;
+using Arch.Code.Rendering;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 /// <summary>The module-level view: files grouped into modules (namespace or top-level
 /// folder), a module-to-module dependency diagram, and a coupling matrix. Sits between the

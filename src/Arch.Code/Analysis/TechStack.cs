@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Recognises frameworks/libraries from NuGet package names and external import targets,
 /// mapping each to a human category (Web, Data access, Messaging, …). Lets an architect see the

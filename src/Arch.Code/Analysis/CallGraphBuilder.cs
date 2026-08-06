@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Heuristic cross-file call graph: an invocation matches a declared method
 /// when name AND arity match. No semantic model exists (syntax-only parsing), so:

@@ -1,4 +1,4 @@
-namespace ArchDiagram.Site;
+namespace Arch.Code.Site;
 
 /// <summary>Deterministic per-language colours, shared by the Overview language bar and the
 /// Structure treemap so a language reads the same colour everywhere. Unknown languages cycle

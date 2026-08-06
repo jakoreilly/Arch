@@ -1,7 +1,7 @@
 using System.Text;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 public static class StructurePage
 {

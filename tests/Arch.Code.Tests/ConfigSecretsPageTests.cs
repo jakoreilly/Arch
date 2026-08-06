@@ -1,8 +1,8 @@
-using ArchDiagram.Graph;
-using ArchDiagram.Scanning;
-using ArchDiagram.Site.Pages;
+using Arch.Code.Graph;
+using Arch.Code.Scanning;
+using Arch.Code.Site.Pages;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class ConfigSecretsPageTests
 {

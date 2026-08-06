@@ -1,7 +1,7 @@
 using System.Text.Json;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Rendering;
+namespace Arch.Code.Rendering;
 
 /// <summary>Loads a previously-written <c>model.json</c> back into a <see cref="ProjectModel"/>,
 /// using the same options as <see cref="ModelJsonWriter"/>. Because the whole site is generated

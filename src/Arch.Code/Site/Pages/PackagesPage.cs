@@ -1,7 +1,7 @@
 using System.Text;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 /// <summary>External-dependency (SBOM-lite) view: every NuGet package the projects reference,
 /// which projects use it, its declared version(s), and — the reviewer's headline — packages

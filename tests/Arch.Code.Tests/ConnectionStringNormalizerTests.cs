@@ -1,6 +1,6 @@
-using ArchDiagram.Scanning;
+using Arch.Code.Scanning;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class ConnectionStringNormalizerTests
 {

@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Author-written descriptions loaded from an optional
 /// <c>archdiagram.descriptions.json</c> sidecar. When present, these override the heuristic

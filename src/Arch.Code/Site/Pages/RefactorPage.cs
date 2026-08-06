@@ -1,8 +1,8 @@
 using System.Text;
-using ArchDiagram.Analysis;
-using ArchDiagram.Graph;
+using Arch.Code.Analysis;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 /// <summary>The prioritised refactoring backlog: every finding across the analyses, ranked by
 /// severity, each with why it matters, a concrete tip, and a link to the detail. The single

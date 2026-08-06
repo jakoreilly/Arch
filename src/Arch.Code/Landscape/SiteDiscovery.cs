@@ -1,7 +1,7 @@
 using System.Text.Json;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Landscape;
+namespace Arch.Code.Landscape;
 
 /// <summary>Finds every immediate subfolder of the parent dir that contains a
 /// model.json, loads it, and returns a SiteRef with a relative href from the

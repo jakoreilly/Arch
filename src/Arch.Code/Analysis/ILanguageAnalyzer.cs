@@ -1,6 +1,6 @@
-using ArchDiagram.Scanning;
+using Arch.Code.Scanning;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Everything a language analyzer could learn from one file.</summary>
 public sealed record FileFacts

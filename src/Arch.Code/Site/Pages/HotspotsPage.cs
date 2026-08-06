@@ -1,7 +1,7 @@
 using System.Text;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 /// <summary>Metrics page: coupling hotspots (fan-in/fan-out), biggest files,
 /// most-used external packages, and every TODO/FIXME marker found in comments.

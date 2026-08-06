@@ -1,4 +1,4 @@
-namespace ArchDiagram.Site;
+namespace Arch.Code.Site;
 
 /// <summary>Maps a complexity score to a human severity band ("level n") and a
 /// badge CSS modifier. Cyclomatic and cognitive share the same coarse bands, kept

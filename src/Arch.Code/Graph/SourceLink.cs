@@ -1,4 +1,4 @@
-namespace ArchDiagram.Graph;
+namespace Arch.Code.Graph;
 
 /// <summary>How to turn a repo-relative file path (+ optional line) into a
 /// clickable source URL. Serialized into model.json so the offline viewer can

@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Landscape;
+namespace Arch.Code.Landscape;
 
 /// <summary>Pure join logic: given the already-loaded sites, derive the cross-site
 /// links. No filesystem access — fully unit-testable.</summary>

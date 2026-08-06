@@ -1,8 +1,8 @@
 using System.Text;
 using System.Text.Json;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site;
+namespace Arch.Code.Site;
 
 /// <summary>Writes assets/search-index.js — a plain JS assignment (not JSON fetched
 /// at runtime, which fails on file://) holding every file, type and method so the

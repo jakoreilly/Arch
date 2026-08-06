@@ -1,7 +1,7 @@
 using System.Text;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 /// <summary>Explore page: a client-side query console over the dependency model embedded in the
 /// page. The full node/edge payload (the same one the 3D graph uses) is inlined as

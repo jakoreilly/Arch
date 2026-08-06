@@ -1,7 +1,7 @@
-using ArchDiagram.Analysis;
-using ArchDiagram.Graph;
+using Arch.Code.Analysis;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class ModuleGrouperTests
 {

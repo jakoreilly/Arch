@@ -1,9 +1,9 @@
 using System.Text;
 using System.Text.Json;
-using ArchDiagram.Graph;
-using ArchDiagram.Rendering;
+using Arch.Code.Graph;
+using Arch.Code.Rendering;
 
-namespace ArchDiagram.Site;
+namespace Arch.Code.Site;
 
 public static class Html
 {

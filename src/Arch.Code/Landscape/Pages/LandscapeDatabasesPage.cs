@@ -1,7 +1,7 @@
 using System.Text;
-using ArchDiagram.Site;
+using Arch.Code.Site;
 
-namespace ArchDiagram.Landscape.Pages;
+namespace Arch.Code.Landscape.Pages;
 
 public static class LandscapeDatabasesPage
 {

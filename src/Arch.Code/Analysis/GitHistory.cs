@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Reads git history for the scanned tree in a single <c>git log</c> pass and aggregates,
 /// per file, how many commits touched it, how many distinct authors, who the principal author is,

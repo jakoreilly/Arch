@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>A heuristic 0–100 maintainability score per file, blending three risk drivers we can
 /// measure syntactically: size (LOC), peak method complexity (cognitive), and coupling (fan-in +

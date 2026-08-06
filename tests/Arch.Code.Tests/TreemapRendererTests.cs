@@ -1,9 +1,9 @@
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using ArchDiagram.Graph;
-using ArchDiagram.Site;
+using Arch.Code.Graph;
+using Arch.Code.Site;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class TreemapRendererTests
 {

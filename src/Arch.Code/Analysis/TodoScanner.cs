@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Finds TODO/FIXME/HACK/BUG/XXX markers in source comments. Line-based and
 /// cheap: a marker only counts when it follows a real comment-lead token

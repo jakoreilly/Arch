@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Ranks files by how central they are to understanding the codebase, so a
 /// newcomer knows what to read first. Pure and deterministic: score is a weighted blend of

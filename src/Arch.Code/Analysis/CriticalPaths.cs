@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Finds a representative "how do you get here" path through the internal dependency
 /// graph to a key file: the shortest chain from an entry point (a file nothing else imports,

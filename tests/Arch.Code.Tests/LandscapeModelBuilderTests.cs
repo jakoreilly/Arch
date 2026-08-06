@@ -1,7 +1,7 @@
-using ArchDiagram.Graph;
-using ArchDiagram.Landscape;
+using Arch.Code.Graph;
+using Arch.Code.Landscape;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class LandscapeModelBuilderTests
 {

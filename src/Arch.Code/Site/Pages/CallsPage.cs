@@ -1,8 +1,8 @@
 using System.Text;
-using ArchDiagram.Graph;
-using ArchDiagram.Rendering;
+using Arch.Code.Graph;
+using Arch.Code.Rendering;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 public static class CallsPage
 {

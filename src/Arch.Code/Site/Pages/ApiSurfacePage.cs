@@ -1,7 +1,7 @@
 using System.Text;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site.Pages;
+namespace Arch.Code.Site.Pages;
 
 /// <summary>Public API surface — the contract other code can depend on — grouped by namespace,
 /// plus "critical paths": how execution/dependencies reach the most central files. Public types

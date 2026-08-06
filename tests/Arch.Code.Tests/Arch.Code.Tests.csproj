@@ -5,8 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <!-- Namespaces are renamed in Phase 3; pinned here so the move stays a pure copy. -->
-    <RootNamespace>ArchDiagram.Tests</RootNamespace>
+    <RootNamespace>Arch.Code.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

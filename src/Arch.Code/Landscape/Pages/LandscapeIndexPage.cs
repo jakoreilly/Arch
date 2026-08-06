@@ -1,9 +1,9 @@
 using System.Text;
-using ArchDiagram.Graph;
-using ArchDiagram.Rendering;
-using ArchDiagram.Site;
+using Arch.Code.Graph;
+using Arch.Code.Rendering;
+using Arch.Code.Site;
 
-namespace ArchDiagram.Landscape.Pages;
+namespace Arch.Code.Landscape.Pages;
 
 public static class LandscapeIndexPage
 {

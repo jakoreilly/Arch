@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site;
+namespace Arch.Code.Site;
 
 /// <summary>Aggregates every value pages used to recompute independently from the model,
 /// built exactly once per site generation. Field values equal the old per-page computations

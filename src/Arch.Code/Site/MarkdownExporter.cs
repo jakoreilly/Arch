@@ -1,7 +1,7 @@
 using System.Text;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Site;
+namespace Arch.Code.Site;
 
 /// <summary>Writes ARCHITECTURE.md next to the site — a self-contained markdown
 /// summary with embedded Mermaid blocks that renders natively on GitHub/GitLab,

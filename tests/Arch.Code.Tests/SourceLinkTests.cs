@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class SourceLinkTests
 {

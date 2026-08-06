@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Aggregates findings from every analysis into one prioritised, actionable backlog: what
 /// to fix, why it matters, and a concrete refactoring tip, each linking to the page with the detail.

@@ -1,6 +1,6 @@
-using ArchDiagram.Cli;
+using Arch.Code.Cli;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class PipelineTests
 {

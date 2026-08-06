@@ -1,6 +1,6 @@
-using ArchDiagram.Analysis;
+using Arch.Code.Analysis;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class VendoredDetectionTests
 {

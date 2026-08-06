@@ -1,7 +1,7 @@
 using System.Text.Json;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Rendering;
+namespace Arch.Code.Rendering;
 
 public static class ModelJsonWriter
 {

@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>Derives a one-line "purpose" for each file — heuristically, never by
 /// guessing beyond the evidence. Priority: file-head comment > first XML summary

@@ -1,6 +1,6 @@
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Analysis;
+namespace Arch.Code.Analysis;
 
 /// <summary>The first-party view of a codebase: files that are neither tests nor vendored/
 /// minified assets. Size and language figures built from this describe the project's own code,

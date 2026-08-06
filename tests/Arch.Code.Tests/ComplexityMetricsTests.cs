@@ -1,8 +1,8 @@
-using ArchDiagram.Analysis;
-using ArchDiagram.Graph;
-using ArchDiagram.Scanning;
+using Arch.Code.Analysis;
+using Arch.Code.Graph;
+using Arch.Code.Scanning;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class ComplexityMetricsTests
 {

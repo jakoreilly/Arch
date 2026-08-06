@@ -1,10 +1,10 @@
 using System.Text;
-using ArchDiagram.Graph;
+using Arch.Code.Graph;
 
-namespace ArchDiagram.Rendering;
+namespace Arch.Code.Rendering;
 
 // DiagramNode/DiagramEdge/Diagram/NodeShape are the diagram data model and live in
-// ArchDiagram.Graph (Graph/DiagramModel.cs) so the Graph layer (GraphReducer) can use
+// Arch.Code.Graph (Graph/DiagramModel.cs) so the Graph layer (GraphReducer) can use
 // them without depending on Rendering — keeping the module dependency one-way.
 
 /// <summary>Pure model -> mermaid flowchart text. Deterministic aliases (n001... in

@@ -1,7 +1,7 @@
-using ArchDiagram.Graph;
-using ArchDiagram.Site.Pages;
+using Arch.Code.Graph;
+using Arch.Code.Site.Pages;
 
-namespace ArchDiagram.Tests;
+namespace Arch.Code.Tests;
 
 public class PackagesPageTests
 {

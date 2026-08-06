@@ -1,13 +1,13 @@
-using ArchDiagram.Graph;
-using ArchDiagram.Rendering;
+using Arch.Code.Graph;
+using Arch.Code.Rendering;
 
-namespace ArchDiagram.Site;
+namespace Arch.Code.Site;
 
 /// <summary>The two whole-project architecture diagrams (projects+databases, and the
 /// folder-level fallback for repos with no .csproj) — shared by the interactive Overview/
-/// Dependencies pages (ArchDiagram.Site.Pages) AND the Markdown/wiki exporters
-/// (ArchDiagram.Site), which is exactly why this lives in ArchDiagram.Site rather than
-/// ArchDiagram.Site.Pages: putting it in Pages would make the exporters (a lower/sibling
+/// Dependencies pages (Arch.Code.Site.Pages) AND the Markdown/wiki exporters
+/// (Arch.Code.Site), which is exactly why this lives in Arch.Code.Site rather than
+/// Arch.Code.Site.Pages: putting it in Pages would make the exporters (a lower/sibling
 /// layer) depend upward into Pages, breaking the Stable Dependencies Principle the same
 /// way SiteGenerator once did before it moved to the root namespace. TreemapRenderer.cs is
 /// the existing precedent for a diagram builder living here for the same reason.</summary>
@@ -83,7 +83,7 @@ public static class ArchitectureDiagrams
     }
 
     // Duplicated from DependenciesPage.TopFolder (private there) rather than referenced —
-    // this file must not depend on ArchDiagram.Site.Pages at all (see the class doc comment).
+    // this file must not depend on Arch.Code.Site.Pages at all (see the class doc comment).
     private static string TopFolder(FileNode f)
     {
         var idx = f.RelPath.IndexOf('/');

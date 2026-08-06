@@ -1,4 +1,4 @@
-namespace ArchDiagram.Graph;
+namespace Arch.Code.Graph;
 
 /// <summary>Root of everything ArchDiagram learned about a scanned folder.
 /// Serialized verbatim to model.json so other tools can reuse the analysis.</summary>
