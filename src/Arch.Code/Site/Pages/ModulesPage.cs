@@ -116,7 +116,11 @@ public static class ModulesPage
                 if (row.Key == col.Key) { sb.Append("<td class=\"zero\">·</td>"); continue; }
                 var n = graph.Edges.GetValueOrDefault((row.Key, col.Key));
                 if (n == 0) { sb.Append("<td class=\"zero\"></td>"); continue; }
-                var pct = 12 + (int)(63.0 * n / max);   // deterministic heatmap intensity
+                // Deterministic heatmap intensity. The 52% ceiling is set by contrast, not
+                // taste: each cell carries a readable number, and --text on a 75% --accent
+                // tint measured 2.98:1 in the dark theme (AA wants 4.5). At 52% both themes
+                // clear it — dark 4.75, light 7.1 — and the ramp is still clearly graded.
+                var pct = 12 + (int)(40.0 * n / max);
                 sb.Append($"<td style=\"background:color-mix(in srgb, var(--accent) {pct}%, transparent)\" title=\"{Html.Encode(row.Key)} → {Html.Encode(col.Key)}: {n}\">{n:N0}</td>");
             }
             sb.Append("</tr>");
