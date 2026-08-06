@@ -11,6 +11,16 @@
   --ok: #2e7d32;
   --warn: #b7791f;
   --danger: #c0392b;
+  /* "Ink" = the same semantic meaning, darkened enough to stay readable as TEXT on its
+     own tinted badge. The base hues above stay put because they are used as fills, chart
+     marks and borders, where the vivid value is what carries the signal; only text-on-tint
+     needs the darker value. Measured against the three grounds a badge can sit on
+     (panel #fff, page #f4f6f9, sunken #eef1f5) — every pair below clears WCAG AA 4.5:1,
+     which the base hues did not (warn was 2.75:1 at worst). */
+  --accent-ink: #2a659c;
+  --ok-ink: #236526;
+  --warn-ink: #7f5300;
+  --danger-ink: #a52c1f;
   --shadow: 0 1px 3px rgba(16, 30, 54, .08), 0 4px 14px rgba(16, 30, 54, .06);
   --diagram-bg: #ffffff;
   color-scheme: light;
@@ -27,6 +37,13 @@
   --ok: #6fbf73;
   --warn: #d9a441;
   --danger: #e07362;
+  /* On the dark ground the tints are dark, so "ink" lightens instead of darkens. Only
+     --danger-ink actually had to move (4.1:1 → 5.2:1); the other three already cleared AA
+     and are aliased unchanged so every component can name the ink token unconditionally. */
+  --accent-ink: #6aa9dd;
+  --ok-ink: #6fbf73;
+  --warn-ink: #d9a441;
+  --danger-ink: #ef9484;
   --shadow: 0 1px 3px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .3);
   --diagram-bg: #151a21; /* mermaid re-renders with its dark theme; keep the canvas dark too */
   color-scheme: dark;
@@ -44,6 +61,28 @@ body {
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 code { font-family: "Cascadia Code", Consolas, monospace; font-size: .9em; background: var(--bg-sunken); padding: .1em .35em; border-radius: 4px; }
+
+/* ---- Accessibility baseline ---- */
+/* One visible keyboard-focus ring for everything focusable. :focus-visible (not :focus)
+   so a mouse click doesn't leave a ring behind. No border-radius here on purpose —
+   setting it would reshape the element itself; the outline already follows whatever
+   radius the component defines. Components that want a different ring (.explain,
+   .filter-input, .metrics-scatter [data-tip]) override it by specificity, as before. */
+:where(a, button, select, summary, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* Transitions across this sheet are all short affordance feedback (hover, pan, reveal),
+   so there is nothing to preserve for users who ask for less motion — cut them all
+   rather than curating a list that new rules would silently fall out of. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 .layout { display: flex; min-height: 100vh; }
 
@@ -65,7 +104,7 @@ code { font-family: "Cascadia Code", Consolas, monospace; font-size: .9em; backg
   border-radius: 8px; color: var(--text); font-weight: 500;
 }
 .sidebar nav a:hover { background: var(--bg-sunken); text-decoration: none; }
-.sidebar nav a.active { background: var(--accent-soft); color: var(--accent); }
+.sidebar nav a.active { background: var(--accent-soft); color: var(--accent-ink); }
 .nav-icon { width: 1.2em; text-align: center; opacity: .8; }
 .nav-section { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--text-soft);
   font-weight: 700; padding: .6rem .6rem .2rem; margin-top: .2rem; }
@@ -77,15 +116,17 @@ code { font-family: "Cascadia Code", Consolas, monospace; font-size: .9em; backg
 .breadcrumbs { font-size: .85rem; color: var(--text-soft); margin-bottom: 1rem; }
 .crumb-here { color: var(--text); font-weight: 600; }
 .crumb-sep { opacity: .5; }
-h1 { font-size: 1.6rem; margin: .25rem 0 .5rem; }
-h2 { font-size: 1.15rem; margin: 1.75rem 0 .6rem; }
+/* text-wrap: balance evens out the last line of a wrapped heading — page titles here are
+   generated from type and file names, so they wrap at lengths nobody chose by hand. */
+h1 { font-size: 1.6rem; margin: .25rem 0 .5rem; text-wrap: balance; }
+h2 { font-size: 1.15rem; margin: 1.75rem 0 .6rem; text-wrap: balance; }
 .lede { color: var(--text-soft); margin: 0 0 1.25rem; max-width: 72ch; }
 
 /* ---- Cards, tiles ---- */
 .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 1rem 1.25rem; }
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .75rem; margin: 1rem 0 1.5rem; }
 .tile { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: .8rem 1rem; overflow-wrap: anywhere; }
-.tile .num { font-size: 1.5rem; font-weight: 700; }
+.tile .num { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .tile .lbl { font-size: .78rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: .05em; }
 
 /* ---- Language bar ---- */
@@ -96,10 +137,10 @@ h2 { font-size: 1.15rem; margin: 1.75rem 0 .6rem; }
 
 /* ---- Badges ---- */
 .badge { display: inline-block; font-size: .72rem; font-weight: 600; padding: .1em .55em; border-radius: 999px; background: var(--bg-sunken); color: var(--text-soft); border: 1px solid var(--border); vertical-align: middle; }
-.badge.accent { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
-.badge.warn { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); border-color: transparent; }
-.badge.ok { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); border-color: transparent; }
-.badge.danger { background: color-mix(in srgb, var(--danger) 18%, transparent); color: var(--danger); border-color: transparent; }
+.badge.accent { background: var(--accent-soft); color: var(--accent-ink); border-color: transparent; }
+.badge.warn { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn-ink); border-color: transparent; }
+.badge.ok { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok-ink); border-color: transparent; }
+.badge.danger { background: color-mix(in srgb, var(--danger) 18%, transparent); color: var(--danger-ink); border-color: transparent; }
 
 /* ---- Landscape layer filters ---- */
 .tile.tile-zero { opacity: .5; }
@@ -109,7 +150,7 @@ h2 { font-size: 1.15rem; margin: 1.75rem 0 .6rem; }
 .heat-tile { display: flex; flex-direction: column; gap: .2rem; min-width: 0; padding: .5rem .6rem; border: 1px solid var(--border); border-radius: 8px; color: var(--text); text-decoration: none; transition: outline .1s; }
 .heat-tile:hover { outline: 2px solid var(--accent); }
 .heat-name { font-size: .74rem; line-height: 1.25; overflow-wrap: anywhere; word-break: break-word; }
-.heat-count { font-size: .82rem; font-weight: 700; }
+.heat-count { font-size: .82rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 a.tile { color: inherit; text-decoration: none; display: block; transition: border-color .15s, box-shadow .15s; }
 a.tile:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .landscape-filters {
@@ -181,7 +222,10 @@ select, .calc input[type="number"] { padding: .35rem .6rem; border-radius: 7px; 
 
 /* ---- Tables ---- */
 table.grid { border-collapse: collapse; width: 100%; font-size: .88rem; background: var(--bg-panel); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
-table.grid th, table.grid td { text-align: left; padding: .45rem .7rem; border-bottom: 1px solid var(--border); }
+/* tabular-nums: these tables are almost all counts and scores read down the column
+   (complexity, churn, LOC). Proportional digits make those columns ragged. Only digits
+   are affected, so text cells in the same table are untouched. */
+table.grid th, table.grid td { text-align: left; padding: .45rem .7rem; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
 table.grid th { background: var(--bg-sunken); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-soft); }
 table.grid tr:last-child td { border-bottom: none; }
 
@@ -195,6 +239,26 @@ table.grid tr:last-child td { border-bottom: none; }
 
 /* ---- Print (System Brief and any page) ---- */
 @media print {
+  /* Paper is white whatever the screen theme was. Without this, printing a page while
+     the dark theme is active sends --text (#dbe4ee, a near-white) to the printer on an
+     unpainted white background — legible on screen, effectively blank on paper. Forcing
+     the tokens rather than the components means every rule in this sheet, including ones
+     added later, prints correctly without needing its own print override. */
+  :root, :root[data-theme="light"], :root[data-theme="dark"] {
+    --bg: #ffffff;
+    --bg-panel: #ffffff;
+    --bg-sunken: #f2f4f7;
+    --border: #c8d0d9;
+    --text: #14181d;
+    --text-soft: #454f5b;
+    --accent: #1f5c8f;
+    --accent-ink: #1f5c8f;
+    --ok: #2e7d32; --ok-ink: #1f5a22;
+    --warn: #b7791f; --warn-ink: #6f4900;
+    --danger: #c0392b; --danger-ink: #94271b;
+    --diagram-bg: #ffffff;
+    color-scheme: light;
+  }
   .sidebar, .breadcrumbs, .search-open, .explain, .hover-tip, .explain-pop { display: none !important; }
   .layout { display: block; }
   .content { max-width: none; padding: 0; }
@@ -257,7 +321,7 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
 .note { font-size: .83rem; color: var(--text-soft); background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 8px; padding: .6rem .9rem; margin: .75rem 0; }
 .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-soft); }
 .empty-state .big { font-size: 2.2rem; }
-.diag-list { color: var(--warn); font-size: .85rem; }
+.diag-list { color: var(--warn-ink); font-size: .85rem; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 @media (max-width: 1100px) { .two-col { grid-template-columns: 1fr; } }
 
@@ -292,7 +356,7 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
 .palette-results li.palette-empty { color: var(--text-soft); cursor: default; justify-content: center; padding: 1.2rem; }
 .palette-kind {
   flex: none; font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
-  color: var(--accent); background: var(--accent-soft); border-radius: 5px; padding: .1em .45em; min-width: 3.4em; text-align: center;
+  color: var(--accent-ink); background: var(--accent-soft); border-radius: 5px; padding: .1em .45em; min-width: 3.4em; text-align: center;
 }
 .palette-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .palette-detail { color: var(--text-soft); font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-left: auto; max-width: 45%; }
@@ -303,7 +367,9 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
   padding: .45rem .7rem; border-radius: 8px; border: 1px solid var(--border);
   background: var(--bg-panel); color: var(--text); font-size: .9rem; min-width: 280px;
 }
-.filter-input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+/* Was --accent-soft, which is near-invisible against the light panel it sits on and so
+   read as "no focus ring at all" for keyboard users. */
+.filter-input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
 .filter-count { font-size: .8rem; color: var(--text-soft); }
 .diagram-trim { margin: 0 0 .5rem; padding: .4rem .6rem; border-left: 3px solid var(--warn, #b7791f);
   background: color-mix(in srgb, var(--warn, #b7791f) 10%, transparent); border-radius: 6px; }
