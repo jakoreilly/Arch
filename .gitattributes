@@ -1,0 +1,18 @@
+# Normalise to LF in the repository, and let each checkout decide for itself.
+* text=auto
+
+# These are read by cmd.exe and by Windows PowerShell 5.1, both of which want CRLF.
+# A .cmd file with LF endings fails in ways that do not name the cause.
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Shell scripts must keep LF wherever they are checked out, or the shebang line
+# carries a stray CR and the interpreter is reported as not found.
+*.sh   text eol=lf
+
+# Generated sites are one long line of inlined payload; diffing them is noise.
+*.html linguist-generated=true
+
+# Vendored viewer libraries (mermaid, 3d-force-graph) are third-party bundles and
+# should not skew the repository's language statistics.
+**/assets/lib/** linguist-vendored=true
