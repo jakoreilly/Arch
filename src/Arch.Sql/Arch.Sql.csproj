@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <!-- See the matching comment in Arch.Code.csproj. -->
-    <InternalsVisibleTo Include="Arch.Cli" />
+    <InternalsVisibleTo Include="arch" />
   </ItemGroup>
 
   <ItemGroup>

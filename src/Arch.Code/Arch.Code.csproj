@@ -16,8 +16,10 @@
 
   <ItemGroup>
     <!-- Arch.Cli's back-compat "arch code <args>" verb dispatches to Verbs.Run, which is
-         internal by design (Cli/ is not this product's public surface). -->
-    <InternalsVisibleTo Include="Arch.Cli" />
+         internal by design (Cli/ is not this product's public surface). The name here is
+         Arch.Cli's AssemblyName ("arch"), not its project name — InternalsVisibleTo matches
+         on assembly identity. -->
+    <InternalsVisibleTo Include="arch" />
   </ItemGroup>
 
   <ItemGroup>

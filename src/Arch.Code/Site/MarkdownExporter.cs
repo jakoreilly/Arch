@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Arch.Code.Graph;
 
@@ -136,7 +137,7 @@ public static class MarkdownExporter
     {
         sb.AppendLine("## Architecture metrics");
         sb.AppendLine();
-        sb.AppendLine($"Propagation cost: **{metrics.PropagationCost:P0}** · dependency cycles: **{metrics.Cycles.Count}** (module level, heuristic).");
+        sb.AppendLine($"Propagation cost: **{metrics.PropagationCost.ToString("P0", CultureInfo.InvariantCulture)}** · dependency cycles: **{metrics.Cycles.Count}** (module level, heuristic).");
         sb.AppendLine();
         sb.AppendLine("Highest distance from the main sequence (D = |A + I − 1|):");
         sb.AppendLine();

@@ -3,9 +3,11 @@
     <Project Path="src/Arch.Core/Arch.Core.csproj" />
     <Project Path="src/Arch.Code/Arch.Code.csproj" />
     <Project Path="src/Arch.Sql/Arch.Sql.csproj" />
+    <Project Path="src/Arch.Cli/Arch.Cli.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Arch.Code.Tests/Arch.Code.Tests.csproj" />
     <Project Path="tests/Arch.Sql.Tests/Arch.Sql.Tests.csproj" />
+    <Project Path="tests/Arch.Cli.Tests/Arch.Cli.Tests.csproj" />
   </Folder>
 </Solution>
