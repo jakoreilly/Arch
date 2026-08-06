@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace ArchSql.Site;
+namespace Arch.Sql.Site;
 
 /// <summary>Term -> plain-English explanation, rendered into the page's circled-i popovers by
 /// site.js (reads #arch-glossary).</summary>

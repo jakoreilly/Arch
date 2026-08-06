@@ -1,7 +1,7 @@
 using System.Text;
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 /// <summary>Runtime activity and issue concentration from a live connection: where execution
 /// actually concentrates, which indexes are missing or unused, and where problems cluster by

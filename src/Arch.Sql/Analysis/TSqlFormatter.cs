@@ -1,7 +1,7 @@
 using System.Text;
 using Microsoft.SqlServer.TransactSql.ScriptDom;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Loss-safe T-SQL formatter: parse -> regenerate each statement via ScriptDom's generator,
 /// re-emitting inter-statement comments (which live in the token stream, not the AST, and would

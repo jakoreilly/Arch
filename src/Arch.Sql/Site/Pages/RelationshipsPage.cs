@@ -1,7 +1,7 @@
 using System.Text;
-using ArchSql.Analysis;
+using Arch.Sql.Analysis;
 
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 /// <summary>Likely table relationships inferred from column-naming patterns, for databases where
 /// referential integrity is not declared as foreign keys — a complement to the FK-based ER diagram,

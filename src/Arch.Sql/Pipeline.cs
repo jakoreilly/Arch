@@ -1,11 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
-using ArchSql.Analysis;
-using ArchSql.Cli;
-using ArchSql.Live;
-using ArchSql.Model;
+using Arch.Sql.Analysis;
+using Arch.Sql.Cli;
+using Arch.Sql.Live;
+using Arch.Sql.Model;
 
-namespace ArchSql;
+namespace Arch.Sql;
 
 public static class Pipeline
 {

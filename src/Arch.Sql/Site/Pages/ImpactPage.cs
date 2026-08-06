@@ -1,8 +1,8 @@
 using System.Text;
 using System.Text.Json;
-using ArchSql.Analysis;
+using Arch.Sql.Analysis;
 
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 /// <summary>"What breaks if I change X?" — pick an object, see its transitive dependents. The
 /// reverse dependency graph is emitted once as a compact adjacency map and the breadth-first

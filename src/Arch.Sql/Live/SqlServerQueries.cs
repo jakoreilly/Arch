@@ -1,4 +1,4 @@
-namespace ArchSql.Live;
+namespace Arch.Sql.Live;
 
 /// <summary>The fixed, read-only catalog and DMV queries. All are constant SELECTs with no
 /// interpolation — no caller input ever reaches these strings.</summary>

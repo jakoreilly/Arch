@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Groups objects into likely bounded contexts by name prefix (the first underscore-
 /// delimited token). Flat single-schema databases encode

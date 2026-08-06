@@ -1,4 +1,4 @@
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>The single place cross-dialect identifier normalization happens. Every caller that
 /// needs to key or look up a DbObject.Id MUST go through NormalizeId — never concatenate

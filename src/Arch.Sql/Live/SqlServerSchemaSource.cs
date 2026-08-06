@@ -1,8 +1,8 @@
-using ArchSql.Analysis;
-using ArchSql.Model;
+using Arch.Sql.Analysis;
+using Arch.Sql.Model;
 using Microsoft.Data.SqlClient;
 
-namespace ArchSql.Live;
+namespace Arch.Sql.Live;
 
 /// <summary>Read-only SQL Server schema source. Read() reconstructs CREATE DDL from catalog views
 /// so the live schema flows through the existing analyzer; ReadRuntime() layers DMV facts on top,

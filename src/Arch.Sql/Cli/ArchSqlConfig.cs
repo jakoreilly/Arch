@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace ArchSql.Cli;
+namespace Arch.Sql.Cli;
 
 /// <summary>Optional project-level configuration, e.g. archsql.config.json.</summary>
 public sealed record ArchSqlConfig

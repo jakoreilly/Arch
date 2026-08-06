@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Resolves object-to-object references across files: for every ForeignKey/ObjectDep
 /// whose target wasn't known at parse time (single-file scope), looks up the real object by Id

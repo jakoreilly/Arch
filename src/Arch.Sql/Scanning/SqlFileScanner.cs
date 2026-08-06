@@ -1,4 +1,4 @@
-namespace ArchSql.Scanning;
+namespace Arch.Sql.Scanning;
 
 /// <summary>One scanned file: absolute + root-relative path, extension, size. Sorted output is
 /// load-bearing (Constraint 3, determinism) — callers must not re-sort with a different comparer.</summary>

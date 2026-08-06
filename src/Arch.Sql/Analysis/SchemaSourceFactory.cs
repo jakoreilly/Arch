@@ -1,7 +1,7 @@
-using ArchSql.Cli;
-using ArchSql.Live;
+using Arch.Sql.Cli;
+using Arch.Sql.Live;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Chooses the schema source from the options: a live SQL Server connection when a
 /// connection string is present (the `connect` verb), otherwise the folder-of-.sql-files source.

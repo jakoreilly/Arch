@@ -1,7 +1,7 @@
 using System.Text.Json;
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Site;
+namespace Arch.Sql.Site;
 
 /// <summary>Builds the [kind,name,detail,href] tuple array the Ctrl+K palette (site.js) reads from
 /// window.ARCH_SEARCH_INDEX. Written ONCE to assets/search-index.js and referenced by every page

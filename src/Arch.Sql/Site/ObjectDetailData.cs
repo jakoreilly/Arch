@@ -1,8 +1,8 @@
 using System.Text.Json;
-using ArchSql.Analysis;
-using ArchSql.Model;
+using Arch.Sql.Analysis;
+using Arch.Sql.Model;
 
-namespace ArchSql.Site;
+namespace Arch.Sql.Site;
 
 /// <summary>Builds the per-object detail payload (columns, primary key, lint findings, purpose,
 /// source availability) that object.html reads via window.ARCH_OBJDETAIL. Kept separate from

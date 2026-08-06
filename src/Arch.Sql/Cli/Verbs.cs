@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using ArchSql.Analysis;
-using ArchSql.Rendering;
+using Arch.Sql.Analysis;
+using Arch.Sql.Rendering;
 
-namespace ArchSql.Cli;
+namespace Arch.Sql.Cli;
 
 internal static class Verbs
 {

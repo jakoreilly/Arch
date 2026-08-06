@@ -1,4 +1,4 @@
-namespace ArchSql.Live;
+namespace Arch.Sql.Live;
 
 /// <summary>Plain row shapes read from the catalog/DMV queries. They form the test seam: the pure
 /// reconstruction/aggregation helpers take these lists, so they can be exercised without a database.</summary>

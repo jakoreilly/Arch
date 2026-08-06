@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace ArchSql.Live;
+namespace Arch.Sql.Live;
 
 /// <summary>Reconstructs CREATE DDL text from catalog rows so the live schema flows through the
 /// existing T-SQL analyzer unchanged. Tables are rebuilt from columns/PK/FK rows; module objects

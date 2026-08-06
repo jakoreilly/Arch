@@ -1,7 +1,7 @@
-using ArchSql.Analysis;
-using ArchSql.Model;
+using Arch.Sql.Analysis;
+using Arch.Sql.Model;
 
-namespace ArchSql.Live;
+namespace Arch.Sql.Live;
 
 /// <summary>Turns raw DMV rows into the model's RuntimeStats: normalizes ids the same way the
 /// analyzer does, flags unused indexes, and builds the deterministic sorted lists plus the UI

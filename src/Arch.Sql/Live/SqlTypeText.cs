@@ -1,4 +1,4 @@
-namespace ArchSql.Live;
+namespace Arch.Sql.Live;
 
 /// <summary>Formats a SQL Server column type into the text a CREATE TABLE would use
 /// (e.g. "nvarchar(100)", "decimal(18,2)", "nvarchar(max)", "int"). Pure and DB-free.</summary>

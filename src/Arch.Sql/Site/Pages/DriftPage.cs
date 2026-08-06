@@ -1,7 +1,7 @@
-using ArchSql.Analysis;
-using ArchSql.Rendering;
+using Arch.Sql.Analysis;
+using Arch.Sql.Rendering;
 
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 /// <summary>Schema drift since a baseline scan, when one was supplied. Reuses the same schema-diff
 /// report the standalone diff verb produces. Empty (with guidance) when no baseline was given.</summary>

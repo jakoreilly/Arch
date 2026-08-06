@@ -1,4 +1,4 @@
-namespace ArchSql.Cli;
+namespace Arch.Sql.Cli;
 
 public sealed record CliOptions
 {

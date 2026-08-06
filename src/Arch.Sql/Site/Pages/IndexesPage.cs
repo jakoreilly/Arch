@@ -1,7 +1,7 @@
 using System.Text;
-using ArchSql.Analysis;
+using Arch.Sql.Analysis;
 
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 /// <summary>Static index-health report: heaps, duplicate/overlapping indexes, unused indexes (with
 /// runtime evidence and a ready-to-review drop statement), and the largest tables by row count.

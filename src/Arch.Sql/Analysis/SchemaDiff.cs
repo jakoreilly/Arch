@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 public enum ChangeRisk { Safe, Degrading, Breaking }
 

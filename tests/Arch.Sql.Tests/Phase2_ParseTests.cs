@@ -1,8 +1,8 @@
 using System.Text.Json;
-using ArchSql.Analysis;
+using Arch.Sql.Analysis;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase2_ParseTests
 {

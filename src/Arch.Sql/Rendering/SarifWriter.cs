@@ -1,7 +1,7 @@
 using System.Text.Json;
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Rendering;
+namespace Arch.Sql.Rendering;
 
 /// <summary>SARIF 2.1.0 output mapping every LintFinding to a SARIF result. Uses its own
 /// JsonSerializerOptions (not the camelCase model options) because SARIF keys like "$schema" are

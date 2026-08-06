@@ -1,8 +1,8 @@
 using System.Text.Json;
-using ArchSql.Analysis;
-using ArchSql.Model;
+using Arch.Sql.Analysis;
+using Arch.Sql.Model;
 
-namespace ArchSql.Site;
+namespace Arch.Sql.Site;
 
 /// <summary>Builds the object/dependency graph payload the client-side engine in site.js consumes
 /// as window.ARCH_QUERY (the Explore console and the neighborhood diagrams). Field names match the

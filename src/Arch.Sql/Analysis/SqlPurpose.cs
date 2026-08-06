@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Heuristic one-line purpose text for objects and files, table-driven via a
 /// name-conventions table evaluated as a priority cascade.</summary>

@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Infers likely table relationships from column-naming conventions, for databases where
 /// referential integrity is not declared as foreign keys. Makes no assumption about which naming

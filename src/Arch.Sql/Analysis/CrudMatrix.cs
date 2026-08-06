@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Reduces typed ObjectDep records into the CrudEntry projection. Pure and deterministic:
 /// the same deps always fold to the same sorted entries. No ScriptDom here, so it is fully

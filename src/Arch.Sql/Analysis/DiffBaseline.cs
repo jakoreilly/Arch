@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Suppression file for the schema differ: SHA256 of (kind + normalized target), never a
 /// line number — lines shift on every edit and would make a baseline useless.</summary>

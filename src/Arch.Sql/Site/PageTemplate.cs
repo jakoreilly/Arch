@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace ArchSql.Site;
+namespace Arch.Sql.Site;
 
 public static class Html
 {

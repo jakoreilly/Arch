@@ -1,7 +1,7 @@
 using Microsoft.SqlServer.TransactSql.ScriptDom;
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 public sealed class TSqlScriptDomAnalyzer : ISqlDialectAnalyzer
 {

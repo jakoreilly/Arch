@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>"What breaks if I change X?" — transitive dependents (reverse edges) plus FK-cascade and
 /// exec/write chains. BFS per query with a depth cap and cycle detection (broken/aspirational DDL in

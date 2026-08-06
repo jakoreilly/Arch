@@ -1,8 +1,8 @@
-using ArchSql.Model;
-using ArchSql.Rendering;
+using Arch.Sql.Model;
+using Arch.Sql.Rendering;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase7_FoundationTests
 {

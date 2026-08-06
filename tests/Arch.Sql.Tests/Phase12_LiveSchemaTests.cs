@@ -1,10 +1,10 @@
-using ArchSql;
-using ArchSql.Analysis;
-using ArchSql.Cli;
-using ArchSql.Live;
+using Arch.Sql;
+using Arch.Sql.Analysis;
+using Arch.Sql.Cli;
+using Arch.Sql.Live;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase12_LiveSchemaTests
 {

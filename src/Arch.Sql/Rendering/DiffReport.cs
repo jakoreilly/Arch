@@ -1,8 +1,8 @@
 using System.Text;
-using ArchSql.Analysis;
-using ArchSql.Site;
+using Arch.Sql.Analysis;
+using Arch.Sql.Site;
 
-namespace ArchSql.Rendering;
+namespace Arch.Sql.Rendering;
 
 /// <summary>Renders a SchemaDiff result as a Markdown report (for PR comments) and a themed HTML
 /// page (reusing PageTemplate/site.css so it's legible in both themes without new CSS).</summary>

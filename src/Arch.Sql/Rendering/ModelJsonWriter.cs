@@ -1,7 +1,7 @@
 using System.Text.Json;
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Rendering;
+namespace Arch.Sql.Rendering;
 
 public static class ModelJsonWriter
 {

@@ -1,4 +1,4 @@
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Optional companion to ISchemaSource: a source that can supply catalog detail beyond
 /// what CREATE DDL reconstruction carries — column width/precision/scale/collation, static index

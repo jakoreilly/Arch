@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 /// <summary>Client-side query console over the object/dependency graph (window.ARCH_QUERY). The
 /// engine already exists in site.js; this page supplies the markup, SQL-flavoured example queries,

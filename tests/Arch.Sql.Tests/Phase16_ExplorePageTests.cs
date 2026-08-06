@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase16_ExplorePageTests
 {

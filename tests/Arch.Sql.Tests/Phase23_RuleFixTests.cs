@@ -1,10 +1,10 @@
-using ArchSql;
-using ArchSql.Analysis;
-using ArchSql.Cli;
-using ArchSql.Model;
+using Arch.Sql;
+using Arch.Sql.Analysis;
+using Arch.Sql.Cli;
+using Arch.Sql.Model;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase23_RuleFixTests
 {

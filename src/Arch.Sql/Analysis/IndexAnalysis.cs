@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Index-health checks over the static index inventory (IndexDef) and, where available,
 /// runtime index usage (IndexStat). Pure and deterministic; every check degrades to an empty list

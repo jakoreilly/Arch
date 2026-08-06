@@ -1,4 +1,4 @@
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Optional companion to ISchemaSource: a source that can also supply live runtime facts
 /// (execution stats, index usage, missing indexes). Only the live DB source implements it; the

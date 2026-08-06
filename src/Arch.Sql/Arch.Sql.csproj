@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>archsql</AssemblyName>
-    <RootNamespace>ArchSql</RootNamespace>
+    <RootNamespace>Arch.Sql</RootNamespace>
     <!-- Must be false: Microsoft.Data.SqlClient requires ICU/globalization support and throws at
          connection time under invariant mode. All culture-sensitive operations in this codebase
          use explicit InvariantCulture/Ordinal comparisons, so disabling invariant mode does not

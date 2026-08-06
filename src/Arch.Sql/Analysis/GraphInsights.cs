@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Architecture-level graph analysis over the object dependency graph: strongly-connected
 /// components (dependency cycles), per-object instability, and "god" objects (extreme fan-in/out).

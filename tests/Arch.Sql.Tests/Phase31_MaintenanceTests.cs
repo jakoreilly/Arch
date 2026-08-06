@@ -1,9 +1,9 @@
-using ArchSql.Live;
-using ArchSql.Model;
-using ArchSql.Site;
+using Arch.Sql.Live;
+using Arch.Sql.Model;
+using Arch.Sql.Site;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase31_MaintenanceTests
 {

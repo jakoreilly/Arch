@@ -1,7 +1,7 @@
 using System.Text;
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 /// <summary>One page per scanned .sql file: its objects, columns, findings, and Purpose text.</summary>
 public static class ObjectFilePage

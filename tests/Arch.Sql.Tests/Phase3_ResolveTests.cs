@@ -1,8 +1,8 @@
-using ArchSql.Analysis;
-using ArchSql.Model;
+using Arch.Sql.Analysis;
+using Arch.Sql.Model;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase3_ResolveTests
 {

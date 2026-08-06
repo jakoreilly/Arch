@@ -1,4 +1,4 @@
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 public static class GuidePage
 {

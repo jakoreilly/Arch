@@ -1,10 +1,10 @@
 using System.Text.Json;
-using ArchSql.Analysis;
-using ArchSql.Cli;
-using ArchSql.Rendering;
+using Arch.Sql.Analysis;
+using Arch.Sql.Cli;
+using Arch.Sql.Rendering;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase4_LintTests
 {

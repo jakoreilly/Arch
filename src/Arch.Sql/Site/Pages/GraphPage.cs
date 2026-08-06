@@ -1,4 +1,4 @@
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 /// <summary>Interactive 3D dependency graph: the whole object/dependency model rendered with the
 /// vendored ForceGraph3D WebGL bundle, driven client-side by graph3d.js against the shared

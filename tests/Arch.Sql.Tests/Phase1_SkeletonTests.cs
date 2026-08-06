@@ -1,8 +1,8 @@
-using ArchSql.Analysis;
-using ArchSql.Rendering;
+using Arch.Sql.Analysis;
+using Arch.Sql.Rendering;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase1_SkeletonTests
 {

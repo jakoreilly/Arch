@@ -1,7 +1,7 @@
 using System.Text;
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Site;
+namespace Arch.Sql.Site;
 
 /// <summary>Builds Mermaid diagram source for the ER and object-dependency views. Diagrams are
 /// capped at maxNodes (by fan-in+fan-out, most-connected first) for readability.</summary>

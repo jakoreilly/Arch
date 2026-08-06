@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <RootNamespace>ArchSql.Tests</RootNamespace>
+    <RootNamespace>Arch.Sql.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

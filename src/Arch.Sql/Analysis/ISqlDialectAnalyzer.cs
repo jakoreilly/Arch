@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>One per dialect. Tier-2 (TSqlScriptDomAnalyzer) parses a full AST; a future Tier-1
 /// tokenizer-based analyzer (MySQL/Postgres, not yet implemented) will implement this same

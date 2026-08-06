@@ -1,4 +1,4 @@
-namespace ArchSql.Model;
+namespace Arch.Sql.Model;
 
 /// <summary>model.json schema version constants. The single place the current contract version
 /// bumps; ModelUpgrader.Upgrade backfills anything older.</summary>

@@ -1,6 +1,6 @@
-using ArchSql.Scanning;
+using Arch.Sql.Scanning;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>v1's only ISchemaSource implementation: reads .sql files from a folder on disk.</summary>
 public sealed class SqlFileSchemaSource(string root, IReadOnlyList<string> exclude, string forceDialect, List<string> diagnostics) : ISchemaSource

@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Detects a handful of body-level code characteristics from an object's source text: a
 /// single tokenizing pass, no second AST traversal. Token-based (not substring search) so a keyword

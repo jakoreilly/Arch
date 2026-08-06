@@ -1,7 +1,7 @@
-using ArchSql.Analysis;
-using ArchSql.Model;
+using Arch.Sql.Analysis;
+using Arch.Sql.Model;
 
-namespace ArchSql.Site;
+namespace Arch.Sql.Site;
 
 /// <summary>Precomputed, shared-across-pages view of a SqlModel: lookups, fan-in/out, scorecard.
 /// Built once per site generation so pages never recompute.</summary>

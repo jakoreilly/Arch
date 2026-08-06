@@ -1,7 +1,7 @@
 using System.Text;
-using ArchSql.Analysis;
+using Arch.Sql.Analysis;
 
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 public static class ObjectsPage
 {

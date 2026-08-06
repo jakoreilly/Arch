@@ -1,8 +1,8 @@
-using ArchSql.Model;
-using ArchSql.Site;
+using Arch.Sql.Model;
+using Arch.Sql.Site;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase19_OverviewTests
 {

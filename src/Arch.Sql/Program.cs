@@ -6,7 +6,7 @@
 //
 // Usage: archsql <path-to-folder> [--out <dir>] [--no-open] [--max-nodes <n>] [--exclude <dirname>]...
 //        archsql connect (--conn-file <path> | --env) [--out <dir>] [--timeout <sec>] ...
-using ArchSql.Cli;
+using Arch.Sql.Cli;
 
 if (args.Length > 0 && args[0] == "--from-model") { return Verbs.RunFromModel(args); }
 if (args.Length > 0 && args[0] == "--format") { return Verbs.RunFormat(args); }

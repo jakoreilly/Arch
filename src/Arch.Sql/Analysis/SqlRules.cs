@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>A lint rule: metadata plus a pure function producing findings from the resolved
 /// model. Rules are registered in a list, not a switch, to keep cognitive complexity low and make

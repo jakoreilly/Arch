@@ -1,4 +1,4 @@
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 /// <summary>Single client-rendered page for every object's detail view (object.html?id=...).
 /// Renders one static shell; site.js fills it from the shared graph-data.js/object-detail.js

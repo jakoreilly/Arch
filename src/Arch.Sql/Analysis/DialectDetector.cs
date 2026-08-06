@@ -1,4 +1,4 @@
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Heuristic dialect detection by marker-token scoring — a linear scan, no
 /// backtracking-capable regex. Only "tsql" is deep-analyzed; files scored as

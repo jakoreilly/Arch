@@ -1,11 +1,11 @@
 using System.Text;
-using ArchSql.Model;
-using ArchSql.Rendering;
-using ArchSql.Site.Pages;
+using Arch.Sql.Model;
+using Arch.Sql.Rendering;
+using Arch.Sql.Site.Pages;
 
 using System.Reflection;
 
-namespace ArchSql.Site;
+namespace Arch.Sql.Site;
 
 /// <summary>Orchestrates static-site output: one WritePage call per page (UTF-8 no BOM,
 /// PageTemplate.Render, relRoot convention).</summary>

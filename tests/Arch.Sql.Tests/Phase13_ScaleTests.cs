@@ -1,8 +1,8 @@
-using ArchSql.Model;
-using ArchSql.Site;
+using Arch.Sql.Model;
+using Arch.Sql.Site;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 /// <summary>Guards the scalability fixes: the search index is a shared asset (not inlined into
 /// every page), and the impact page ships the edge graph rather than a per-object precomputed

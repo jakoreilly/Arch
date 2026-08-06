@@ -1,4 +1,4 @@
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Where schema comes from. Implementations include a folder-of-.sql source and a live
 /// SQL Server catalog source; both implement this same interface and slot into Pipeline with zero

@@ -1,6 +1,6 @@
 using Microsoft.Data.SqlClient;
 
-namespace ArchSql.Cli;
+namespace Arch.Sql.Cli;
 
 /// <summary>Parses the `connect` verb into a CliOptions carrying a connection string. The string
 /// is read from a file (--conn-file) or the ARCHSQL_CONNECTION env var (--env), never from a bare

@@ -1,9 +1,9 @@
-using ArchSql.Analysis;
-using ArchSql.Live;
-using ArchSql.Model;
+using Arch.Sql.Analysis;
+using Arch.Sql.Live;
+using Arch.Sql.Model;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase25_CatalogDetailTests
 {

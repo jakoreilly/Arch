@@ -1,7 +1,7 @@
-using ArchSql.Analysis;
-using ArchSql.Model;
+using Arch.Sql.Analysis;
+using Arch.Sql.Model;
 
-namespace ArchSql.Rendering;
+namespace Arch.Sql.Rendering;
 
 /// <summary>Upgrades a deserialized model to the current schema version, filling collections added
 /// in later versions with empty defaults. A v1 file has SchemaVersion == 0. Reject anything newer

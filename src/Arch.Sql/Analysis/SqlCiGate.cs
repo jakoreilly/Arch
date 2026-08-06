@@ -1,4 +1,4 @@
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>CI gate: maps a --fail-on gate name to the Scorecard row it reads. KnownGates is
 /// independent of the scorecard so CliOptions.Parse can validate --fail-on before any analysis

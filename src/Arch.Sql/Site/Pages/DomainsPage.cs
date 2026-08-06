@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 /// <summary>Bounded contexts inferred from object name prefixes, with cross-domain coupling. Makes
 /// a large flat single-schema database navigable by domain and shows where domains bleed into each

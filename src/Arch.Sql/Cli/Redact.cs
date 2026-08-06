@@ -1,4 +1,4 @@
-namespace ArchSql.Cli;
+namespace Arch.Sql.Cli;
 
 /// <summary>Scrubs connection-string secrets out of any text before it is printed or logged.
 /// Connection strings carry passwords, so a driver exception that echoes one must never reach

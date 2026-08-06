@@ -1,7 +1,7 @@
-using ArchSql.Analysis;
+using Arch.Sql.Analysis;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase27_CodeFlagsTests
 {
@@ -91,7 +91,7 @@ public class Phase27_CodeFlagsTests
             CREATE FUNCTION dbo.fn_B() RETURNS INT AS BEGIN RETURN 1; END
             """;
         var facts = new TSqlScriptDomAnalyzer().Analyze("a.sql", sql);
-        var model = new ArchSql.Model.SqlModel { RootName = "x", SourcePath = "x", Objects = facts.Objects };
+        var model = new Arch.Sql.Model.SqlModel { RootName = "x", SourcePath = "x", Objects = facts.Objects };
         var findings = SqlRules.Run(model);
         Assert.Contains(findings, f => f.RuleId == "SQL0020" && f.ObjectId == "dbo.usp_a");
         Assert.DoesNotContain(findings, f => f.RuleId == "SQL0020" && f.ObjectId == "dbo.fn_b");

@@ -1,7 +1,7 @@
-using ArchSql.Analysis;
-using ArchSql.Model;
+using Arch.Sql.Analysis;
+using Arch.Sql.Model;
 
-namespace ArchSql.Live;
+namespace Arch.Sql.Live;
 
 /// <summary>Merges catalog detail (column width/precision/scale/collation, static index
 /// definitions, row counts and storage size) onto an already-built model's objects. Runs after

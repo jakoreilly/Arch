@@ -1,4 +1,4 @@
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Case-insensitive glob matcher supporting '*' (any run of characters) and '?' (exactly
 /// one character). Iterative backtracking, no regex — avoids catastrophic-backtracking risk on

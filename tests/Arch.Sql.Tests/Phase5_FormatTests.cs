@@ -1,7 +1,7 @@
-using ArchSql.Analysis;
+using Arch.Sql.Analysis;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase5_FormatTests
 {

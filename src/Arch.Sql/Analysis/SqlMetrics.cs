@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Per-schema coupling and health signals. Pure static methods so the logic is unit
 /// testable without a database.</summary>

@@ -1,7 +1,7 @@
-using ArchSql.Analysis;
-using ArchSql.Model;
+using Arch.Sql.Analysis;
+using Arch.Sql.Model;
 
-namespace ArchSql.Live;
+namespace Arch.Sql.Live;
 
 /// <summary>Turns raw backup-history/statistics/fragmentation rows into MaintenanceInfo. Pure and
 /// DB-free; the "now" instant is passed in rather than read from the clock so the aggregation is

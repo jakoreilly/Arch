@@ -1,10 +1,10 @@
-using ArchSql.Analysis;
-using ArchSql.Cli;
-using ArchSql.Model;
-using ArchSql.Site;
+using Arch.Sql.Analysis;
+using Arch.Sql.Cli;
+using Arch.Sql.Model;
+using Arch.Sql.Site;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase30_DriftPageTests
 {

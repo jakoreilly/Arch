@@ -1,7 +1,7 @@
-using ArchSql.Cli;
+using Arch.Sql.Cli;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase24_ConnectNamingTests
 {

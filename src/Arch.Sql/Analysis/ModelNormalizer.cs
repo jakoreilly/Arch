@@ -1,6 +1,6 @@
-using ArchSql.Model;
+using Arch.Sql.Model;
 
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Guarantees a model's identity invariants before any consumer keys objects or runtime
 /// facts by id: object ids are unique, and runtime stat lists hold no duplicate keys. A brownfield

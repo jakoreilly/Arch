@@ -1,4 +1,4 @@
-namespace ArchSql.Analysis;
+namespace Arch.Sql.Analysis;
 
 /// <summary>Compares column base-type names for the schema differ. The model currently stores only
 /// the base type identifier (see TSqlScriptDomAnalyzer's CreateTableStatement handling), not

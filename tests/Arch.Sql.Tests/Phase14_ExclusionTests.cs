@@ -1,9 +1,9 @@
-using ArchSql;
-using ArchSql.Analysis;
-using ArchSql.Cli;
+using Arch.Sql;
+using Arch.Sql.Analysis;
+using Arch.Sql.Cli;
 using Xunit;
 
-namespace ArchSql.Tests;
+namespace Arch.Sql.Tests;
 
 public class Phase14_ExclusionTests
 {

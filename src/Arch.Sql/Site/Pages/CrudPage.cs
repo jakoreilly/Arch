@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace ArchSql.Site.Pages;
+namespace Arch.Sql.Site.Pages;
 
 /// <summary>Object x actor CRUD projection: which procedures/triggers/views Create, Read, Update or
 /// Delete each table. Answers "what writes to this table?" — the most common question when

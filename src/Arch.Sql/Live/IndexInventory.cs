@@ -1,7 +1,7 @@
-using ArchSql.Analysis;
-using ArchSql.Model;
+using Arch.Sql.Analysis;
+using Arch.Sql.Model;
 
-namespace ArchSql.Live;
+namespace Arch.Sql.Live;
 
 /// <summary>Builds IndexDef records from flat catalog rows: groups (schema, table, index) into one
 /// definition with ordered key columns and included columns. Pure and DB-free.</summary>
