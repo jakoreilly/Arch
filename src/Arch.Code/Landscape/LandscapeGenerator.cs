@@ -27,11 +27,11 @@ public static class LandscapeGenerator
 
         var brandSub = string.IsNullOrWhiteSpace(displayName) ? "Landscape" : displayName;
         Write(outDir, "index.html", "Overview", "index.html",
-            PageTemplate.Crumbs((null, "Landscape")), LandscapeIndexPage.Body(model, maxNodes, generatedOn), brandSub);
+            Html.Crumbs((null, "Landscape")), LandscapeIndexPage.Body(model, maxNodes, generatedOn), brandSub);
         Write(outDir, "databases.html", "Shared Databases", "databases.html",
-            PageTemplate.Crumbs(("index.html", "Landscape"), (null, "Shared Databases")), LandscapeDatabasesPage.Body(model), brandSub);
+            Html.Crumbs(("index.html", "Landscape"), (null, "Shared Databases")), LandscapeDatabasesPage.Body(model), brandSub);
         Write(outDir, "interconnections.html", "Interconnections", "interconnections.html",
-            PageTemplate.Crumbs(("index.html", "Landscape"), (null, "Interconnections")), LandscapeInterconnectionsPage.Body(model), brandSub);
+            Html.Crumbs(("index.html", "Landscape"), (null, "Interconnections")), LandscapeInterconnectionsPage.Body(model), brandSub);
 
         return Path.Combine(outDir, "index.html");
     }

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Arch.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Shared viewer assets. Providers overlay their own on top (see SiteAssets).
+         Empty until the asset relocation commit; the glob is inert until then. -->
+    <None Include="Web\assets\**" CopyToOutputDirectory="PreserveNewest" Link="assets\%(RecursiveDir)%(Filename)%(Extension)" TargetPath="assets\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

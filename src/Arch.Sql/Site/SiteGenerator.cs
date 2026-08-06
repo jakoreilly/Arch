@@ -32,31 +32,31 @@ public static class SiteGenerator
         var graph3dScripts = graphPayloadScripts
             + "<script src=\"assets/lib/3d-force-graph.min.js\"></script><script src=\"assets/graph3d.js\"></script>";
 
-        WritePage(outDir, "index.html", "Overview", model, "index.html", "", PageTemplate.Crumbs((null, "Overview")), IndexPage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "guide.html", "Guide", model, "guide.html", "", PageTemplate.Crumbs((null, "Guide")), GuidePage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "explore.html", "Explore", model, "explore.html", "", PageTemplate.Crumbs((null, "Explore")), ExplorePage.Body(), graphPayloadScripts);
-        WritePage(outDir, "objects.html", "Objects", model, "objects.html", "", PageTemplate.Crumbs((null, "Objects")), ObjectsPage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "domains.html", "Domains", model, "domains.html", "", PageTemplate.Crumbs((null, "Domains")), DomainsPage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "er.html", "ER Diagram", model, "er.html", "", PageTemplate.Crumbs((null, "ER Diagram")), ErPage.Body(ctx, maxNodes), searchIndexHtml);
-        WritePage(outDir, "relationships.html", "Relationships", model, "relationships.html", "", PageTemplate.Crumbs((null, "Relationships")), RelationshipsPage.Body(ctx, maxNodes), searchIndexHtml);
-        WritePage(outDir, "dependencies.html", "Dependencies", model, "dependencies.html", "", PageTemplate.Crumbs((null, "Dependencies")), DependenciesPage.Body(ctx, maxNodes), searchIndexHtml);
-        WritePage(outDir, "graph.html", "3D Graph", model, "graph.html", "", PageTemplate.Crumbs((null, "3D Graph")), GraphPage.Body(ctx), graph3dScripts);
-        WritePage(outDir, "crud.html", "CRUD Matrix", model, "crud.html", "", PageTemplate.Crumbs((null, "CRUD Matrix")), Pages.CrudPage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "impact.html", "Impact", model, "impact.html", "", PageTemplate.Crumbs((null, "Impact")), Pages.ImpactPage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "lint.html", "Lint", model, "lint.html", "", PageTemplate.Crumbs((null, "Lint")), LintPage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "scorecard.html", "Scorecard", model, "scorecard.html", "", PageTemplate.Crumbs((null, "Scorecard")), ScorecardPage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "metrics.html", "Metrics", model, "metrics.html", "", PageTemplate.Crumbs((null, "Metrics")), MetricsPage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "activity.html", "Activity", model, "activity.html", "", PageTemplate.Crumbs((null, "Activity")), ActivityPage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "indexes.html", "Indexes", model, "indexes.html", "", PageTemplate.Crumbs((null, "Indexes")), IndexesPage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "drift.html", "Schema Diff", model, "drift.html", "", PageTemplate.Crumbs((null, "Schema Diff")), DriftPage.Body(drift), searchIndexHtml);
-        WritePage(outDir, "config.html", "Config & Secrets", model, "config.html", "", PageTemplate.Crumbs((null, "Config & Secrets")), ConfigPage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "object.html", "Object", model, "", "", PageTemplate.Crumbs(("objects.html", "Objects"), (null, "Object")), Pages.ObjectPage.Body(), graphPayloadScripts);
+        WritePage(outDir, "index.html", "Overview", model, "index.html", "", Html.Crumbs((null, "Overview")), IndexPage.Body(ctx), searchIndexHtml);
+        WritePage(outDir, "guide.html", "Guide", model, "guide.html", "", Html.Crumbs((null, "Guide")), GuidePage.Body(ctx), searchIndexHtml);
+        WritePage(outDir, "explore.html", "Explore", model, "explore.html", "", Html.Crumbs((null, "Explore")), ExplorePage.Body(), graphPayloadScripts);
+        WritePage(outDir, "objects.html", "Objects", model, "objects.html", "", Html.Crumbs((null, "Objects")), ObjectsPage.Body(ctx), searchIndexHtml);
+        WritePage(outDir, "domains.html", "Domains", model, "domains.html", "", Html.Crumbs((null, "Domains")), DomainsPage.Body(ctx), searchIndexHtml);
+        WritePage(outDir, "er.html", "ER Diagram", model, "er.html", "", Html.Crumbs((null, "ER Diagram")), ErPage.Body(ctx, maxNodes), searchIndexHtml);
+        WritePage(outDir, "relationships.html", "Relationships", model, "relationships.html", "", Html.Crumbs((null, "Relationships")), RelationshipsPage.Body(ctx, maxNodes), searchIndexHtml);
+        WritePage(outDir, "dependencies.html", "Dependencies", model, "dependencies.html", "", Html.Crumbs((null, "Dependencies")), DependenciesPage.Body(ctx, maxNodes), searchIndexHtml);
+        WritePage(outDir, "graph.html", "3D Graph", model, "graph.html", "", Html.Crumbs((null, "3D Graph")), GraphPage.Body(ctx), graph3dScripts);
+        WritePage(outDir, "crud.html", "CRUD Matrix", model, "crud.html", "", Html.Crumbs((null, "CRUD Matrix")), Pages.CrudPage.Body(ctx), searchIndexHtml);
+        WritePage(outDir, "impact.html", "Impact", model, "impact.html", "", Html.Crumbs((null, "Impact")), Pages.ImpactPage.Body(ctx), searchIndexHtml);
+        WritePage(outDir, "lint.html", "Lint", model, "lint.html", "", Html.Crumbs((null, "Lint")), LintPage.Body(ctx), searchIndexHtml);
+        WritePage(outDir, "scorecard.html", "Scorecard", model, "scorecard.html", "", Html.Crumbs((null, "Scorecard")), ScorecardPage.Body(ctx), searchIndexHtml);
+        WritePage(outDir, "metrics.html", "Metrics", model, "metrics.html", "", Html.Crumbs((null, "Metrics")), MetricsPage.Body(ctx), searchIndexHtml);
+        WritePage(outDir, "activity.html", "Activity", model, "activity.html", "", Html.Crumbs((null, "Activity")), ActivityPage.Body(ctx), searchIndexHtml);
+        WritePage(outDir, "indexes.html", "Indexes", model, "indexes.html", "", Html.Crumbs((null, "Indexes")), IndexesPage.Body(ctx), searchIndexHtml);
+        WritePage(outDir, "drift.html", "Schema Diff", model, "drift.html", "", Html.Crumbs((null, "Schema Diff")), DriftPage.Body(drift), searchIndexHtml);
+        WritePage(outDir, "config.html", "Config & Secrets", model, "config.html", "", Html.Crumbs((null, "Config & Secrets")), ConfigPage.Body(ctx), searchIndexHtml);
+        WritePage(outDir, "object.html", "Object", model, "", "", Html.Crumbs(("objects.html", "Objects"), (null, "Object")), Pages.ObjectPage.Body(), graphPayloadScripts);
 
         Directory.CreateDirectory(Path.Combine(outDir, "files"));
         var fileSearchIndexHtml = SearchIndex.ScriptSrc("../");
         foreach (var file in model.Files)
         {
-            var crumbs = PageTemplate.Crumbs(("../objects.html", "Objects"), (null, file.RelPath));
+            var crumbs = Html.Crumbs(("../objects.html", "Objects"), (null, file.RelPath));
             var html = PageTemplate.Render(file.RelPath, model.RootName, "", "../", crumbs, ObjectFilePage.Body(ctx, file), fileSearchIndexHtml);
             File.WriteAllText(Path.Combine(outDir, "files", file.Slug + ".html"), html, Utf8NoBom);
         }

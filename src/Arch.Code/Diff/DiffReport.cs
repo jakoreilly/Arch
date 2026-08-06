@@ -16,7 +16,7 @@ public static class DiffReport
         SiteAssets.CopyTo(outDir);
 
         var body = Body(diff, generatedOn);
-        var crumbs = PageTemplate.Crumbs((null, "Diff"));
+        var crumbs = Html.Crumbs((null, "Diff"));
         var html = PageTemplate.Render($"{diff.OldRootName} → {diff.NewRootName} — Diff", diff.NewRootName,
             "index.html", "", crumbs, body, navItems: [("index.html", "Diff", "⇄")]);
 

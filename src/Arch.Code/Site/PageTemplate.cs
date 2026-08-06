@@ -5,11 +5,6 @@ using Arch.Code.Rendering;
 
 namespace Arch.Code.Site;
 
-public static class Html
-{
-    public static string Encode(string s) => System.Net.WebUtility.HtmlEncode(s);
-}
-
 /// <summary>Shared page shell: sidebar navigation, breadcrumbs, theme toggle,
 /// local asset references only (works from file:// with no network).</summary>
 public static class PageTemplate
@@ -204,18 +199,4 @@ public static class PageTemplate
     public static string ExploreIn3DNote() =>
         "<p class=\"note\">These diagrams are capped for readability. To explore <em>every</em> file at once — "
         + "with search, focus/unfold and a spread slider — open the <a href=\"graph.html\">3D Dependency Graph</a>.</p>";
-
-    public static string Crumbs(params (string? Href, string Text)[] parts)
-    {
-        var sb = new StringBuilder();
-        for (var i = 0; i < parts.Length; i++)
-        {
-            if (i > 0) { sb.Append(" <span class=\"crumb-sep\">/</span> "); }
-            var (href, text) = parts[i];
-            sb.Append(href is null
-                ? $"<span class=\"crumb-here\">{Html.Encode(text)}</span>"
-                : $"<a href=\"{href}\">{Html.Encode(text)}</a>");
-        }
-        return sb.ToString();
-    }
 }

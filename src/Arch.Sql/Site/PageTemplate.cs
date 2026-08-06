@@ -2,11 +2,6 @@ using System.Text;
 
 namespace Arch.Sql.Site;
 
-public static class Html
-{
-    public static string Encode(string s) => System.Net.WebUtility.HtmlEncode(s);
-}
-
 /// <summary>Shared page shell: sidebar navigation, breadcrumbs, theme toggle, local asset
 /// references only (works from file:// with no network). Matches the vendored site.js/site.css
 /// contract — same theme localStorage keys, same DOM ids, so those assets work
@@ -124,18 +119,4 @@ public static class PageTemplate
 </div>
 </details>
 """;
-
-    public static string Crumbs(params (string? Href, string Text)[] parts)
-    {
-        var sb = new StringBuilder();
-        for (var i = 0; i < parts.Length; i++)
-        {
-            if (i > 0) { sb.Append(" <span class=\"crumb-sep\">/</span> "); }
-            var (href, text) = parts[i];
-            sb.Append(href is null
-                ? $"<span class=\"crumb-here\">{Html.Encode(text)}</span>"
-                : $"<a href=\"{href}\">{Html.Encode(text)}</a>");
-        }
-        return sb.ToString();
-    }
 }

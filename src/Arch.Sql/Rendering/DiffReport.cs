@@ -33,7 +33,7 @@ public static class DiffReport
     }
 
     public static string RenderHtml(IReadOnlyList<SchemaChange> changes, IReadOnlySet<string> suppressed) =>
-        PageTemplate.Render("Schema Diff", "ArchSql", "", "", PageTemplate.Crumbs((null, "Schema Diff")), Body(changes, suppressed));
+        PageTemplate.Render("Schema Diff", "ArchSql", "", "", Html.Crumbs((null, "Schema Diff")), Body(changes, suppressed));
 
     /// <summary>The report's inner body markup, without the page shell — reused by the standalone
     /// diff verb (wrapped by RenderHtml) and by the site's Drift page (wrapped by SiteGenerator).</summary>

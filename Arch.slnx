@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Arch.Core/Arch.Core.csproj" />
     <Project Path="src/Arch.Code/Arch.Code.csproj" />
     <Project Path="src/Arch.Sql/Arch.Sql.csproj" />
   </Folder>

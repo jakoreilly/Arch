@@ -25,84 +25,84 @@ public static class SiteGenerator
         var ctx = SiteContext.Build(model);
 
         WritePage(outDir, "index.html", "Overview", model, "index.html", "",
-            PageTemplate.Crumbs((null, "Overview")),
+            Html.Crumbs((null, "Overview")),
             IndexPage.Body(ctx, maxNodes, generatedOn));
 
         WritePage(outDir, "brief.html", "System Brief", model, "brief.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "System Brief")),
+            Html.Crumbs(("index.html", "Overview"), (null, "System Brief")),
             BriefPage.Body(model, generatedOn));
 
         WritePage(outDir, "guide.html", "Guide", model, "guide.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Guide")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Guide")),
             GuidePage.Body(model));
 
         WritePage(outDir, "structure.html", "Structure", model, "structure.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Structure")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Structure")),
             StructurePage.Body(model));
 
         WritePage(outDir, "dependencies.html", "Dependencies", model, "dependencies.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Dependencies")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Dependencies")),
             DependenciesPage.Body(model, maxNodes));
 
         WritePage(outDir, "modules.html", "Modules", model, "modules.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Modules")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Modules")),
             ModulesPage.Body(model, maxNodes));
 
         WritePage(outDir, "layers.html", "Dependency Direction", model, "layers.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Dependency Direction")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Dependency Direction")),
             LayeringPage.Body(model));
 
         WritePage(outDir, "metrics.html", "Architecture Metrics", model, "metrics.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Metrics")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Metrics")),
             MetricsPage.Body(ctx));
 
         WritePage(outDir, "scorecard.html", "Architecture Scorecard", model, "scorecard.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Scorecard")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Scorecard")),
             ScorecardPage.Body(model));
 
         WritePage(outDir, "refactor.html", "Refactoring Backlog", model, "refactor.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Refactoring")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Refactoring")),
             RefactorPage.Body(model));
 
         WritePage(outDir, "types.html", "Types & Members", model, "types.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Types & Members")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Types & Members")),
             TypesPage.Body(model, maxNodes));
 
         WritePage(outDir, "api.html", "API Surface", model, "api.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "API Surface")),
+            Html.Crumbs(("index.html", "Overview"), (null, "API Surface")),
             ApiSurfacePage.Body(model));
 
         WritePage(outDir, "calls.html", "Call Graph", model, "calls.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Call Graph")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Call Graph")),
             CallsPage.Body(model, maxNodes));
 
         WritePage(outDir, "packages.html", "External Dependencies", model, "packages.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Packages")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Packages")),
             PackagesPage.Body(model));
 
         WritePage(outDir, "config.html", "Config & Secrets", model, "config.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Config & Secrets")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Config & Secrets")),
             ConfigSecretsPage.Body(model));
 
         WritePage(outDir, "hotspots.html", "Hotspots & Metrics", model, "hotspots.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Hotspots")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Hotspots")),
             HotspotsPage.Body(ctx, showComplexity));
 
         WritePage(outDir, "evolution.html", "Evolution", model, "evolution.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Evolution")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Evolution")),
             EvolutionPage.Body(model));
 
         WritePage(outDir, "graph.html", "Graph (3D)", model, "graph.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Graph (3D)")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Graph (3D)")),
             GraphPage.Body(model, ctx.GraphJson));
 
         WritePage(outDir, "explore.html", "Explore", model, "explore.html", "",
-            PageTemplate.Crumbs(("index.html", "Overview"), (null, "Explore")),
+            Html.Crumbs(("index.html", "Overview"), (null, "Explore")),
             ExplorePage.Body(model, ctx.GraphJson));
 
         foreach (var file in model.Files)
         {
-            var crumbs = PageTemplate.Crumbs(("../index.html", "Overview"), ("../structure.html", "Structure"), (null, file.RelPath));
+            var crumbs = Html.Crumbs(("../index.html", "Overview"), ("../structure.html", "Structure"), (null, file.RelPath));
             var html = PageTemplate.Render(file.RelPath, model.RootName, "", "../", crumbs, FilePage.Body(ctx, file, maxNodes, showComplexity, showSnippets), navItems: null, sourceLink: model.SourceLink);
             File.WriteAllText(Path.Combine(outDir, "files", file.Slug + ".html"), html, Utf8NoBom);
         }

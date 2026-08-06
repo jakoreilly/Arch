@@ -15,6 +15,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Arch.Core\Arch.Core.csproj" />
+    <!-- Html (and later PageShell/Glossary/SiteAssets) were same-namespace types before the
+         core was extracted and are referenced unqualified in 45 files. A global using keeps
+         those call sites untouched, so the extraction diff stays readable. -->
+    <Using Include="Arch.Core.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Viewer assets ship next to the exe and are copied into every generated site. -->
     <None Include="Site\assets\**" CopyToOutputDirectory="PreserveNewest" Link="assets\%(RecursiveDir)%(Filename)%(Extension)" TargetPath="assets\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
