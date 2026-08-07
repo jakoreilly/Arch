@@ -334,6 +334,42 @@ which GitHub code scanning and similar dashboards ingest directly.
 `--baseline <model.json>` (SQL) and `arch sql diff` turn a previous run's `model.json`
 into a drift report — commit the baseline, diff each build against it.
 
+### Publishing only when something changed
+
+`model.json` carries a **`contentHash`** — a SHA-256 of the analysis — and one per file
+under `files[].contentHash`. Store the top-level hash beside your published docs and skip
+the upload when it hasn't moved:
+
+```bash
+arch code ./src --out ./artifacts/arch --no-open
+NEW=$(grep -o '"contentHash": "[a-f0-9]*"' ./artifacts/arch/model.json | tail -1)
+OLD=$(cat ./published/.arch-hash 2>/dev/null || true)
+
+if [ "$NEW" = "$OLD" ]; then
+    echo "Docs unchanged — nothing to publish."
+else
+    ./publish.sh ./artifacts/arch
+    printf '%s' "$NEW" > ./published/.arch-hash
+fi
+```
+
+The hash is **stable** across machines, checkout locations and commits that change nothing
+relevant. It excludes the absolute source path, git churn and authorship, and diagnostics —
+all of which move constantly and would make it useless. It **includes** the root folder
+name, because that is rendered as the site title, so renaming the checkout does change the
+published docs.
+
+The per-file hashes let a publisher re-upload only the `files/*.html` pages that actually
+changed. Connection strings enter the hash by their normalised hash, never as raw text, so
+a fingerprint is safe to store anywhere.
+
+**What this is not: an incremental-generation cache.** Almost every page here is a
+whole-model aggregate — fan-in, the coupling matrix, hotspot ranking, the scorecard — so
+one changed file can legitimately move the ranking of every other file, and "re-render
+only the changed page" is not a safe transformation. Generation always does the full job;
+these hashes are for the step *after* it. A full run of this repo (≈300 files, both
+analysers) takes about 7 seconds, so there is nothing to optimise there anyway.
+
 ## Guarantees
 
 - **Read-only.** Both analysers only ever read the folder they're pointed at. `arch

@@ -63,7 +63,10 @@ public static class Pipeline
         {
             diagnostics.AddRange(r.Diagnostics);
             var node = r.NodeNoSlug with { Slug = MakeSlug(r.NodeNoSlug.RelPath, usedSlugs) };
-            files.Add(node);
+            // The fingerprint covers analysed content only, so it is set here, once the node is
+            // final, and deliberately does not include the slug (which can shift when an unrelated
+            // file with a colliding slug is added or removed).
+            files.Add(node with { ContentHash = ContentHash.OfFile(node) });
             if (r.Loc > 0) { languageLoc[r.Language] = languageLoc.GetValueOrDefault(r.Language) + r.Loc; }
         }
 
@@ -80,7 +83,7 @@ public static class Pipeline
         var rootName = Path.GetFileName(options.SourcePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         if (string.IsNullOrWhiteSpace(rootName)) { rootName = "project"; }
 
-        return new ProjectModel
+        var model = new ProjectModel
         {
             RootName = rootName,
             SourcePath = options.SourcePath,
@@ -103,6 +106,10 @@ public static class Pipeline
             Capabilities = CapabilityRollup.Build(files, authored.Capabilities),
             UnattributedFileCount = CapabilityRollup.Unattributed(files, authored.Capabilities).Count,
         };
+
+        // Last, over the finished model: the hash summarises everything above it, so it cannot be
+        // one of the fields it summarises.
+        return model with { ContentHash = ContentHash.OfModel(model) };
     }
 
     /// <summary>Pure per-file analysis: read + parse one file and produce everything a

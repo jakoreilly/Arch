@@ -22,7 +22,7 @@ src/Arch.Core/    Html, Crumbs, PageShell, Glossary, SiteAssets, ModelJson,
 src/Arch.Code/    namespace Arch.Code.*, assets-code overlay
 src/Arch.Sql/     namespace Arch.Sql.*,  assets-sql overlay
 src/Arch.Cli/     the unified exe: Entry (the verb table), Runner, HubPage, CrossLink
-tests/            Arch.Code.Tests (273), Arch.Sql.Tests (183), Arch.Cli.Tests (22)
+tests/            Arch.Code.Tests (289), Arch.Sql.Tests (183), Arch.Cli.Tests (22)
 tools/golden.sh   the byte-identical-output regression net
 ```
 
@@ -37,7 +37,7 @@ tools/golden.sh   the byte-identical-output regression net
 
 ```bash
 dotnet build Arch.slnx --nologo     # 0 warnings, 0 errors
-dotnet test  Arch.slnx --nologo     # 478 passed (~90s — not a hang)
+dotnet test  Arch.slnx --nologo     # 494 passed (~90s — not a hang)
 bash tools/golden.sh                # GOLDEN OK
 bash tools/golden.sh accept         # re-baseline (golden/ is gitignored; regenerate after a clone)
 ```

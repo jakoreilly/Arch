@@ -47,6 +47,13 @@ public sealed record ProjectModel
     /// <summary>First-party files matched by no capability path. 0 when no capabilities are
     /// declared (nothing is claimed, so nothing is missing). Additive.</summary>
     public int UnattributedFileCount { get; init; }
+
+    /// <summary>SHA-256 of this analysis's content, stable across machines, checkout paths and
+    /// commits that change nothing relevant — so a docs pipeline can compare it against the last
+    /// published run and skip the publish when nothing moved. Excludes the absolute source path,
+    /// git churn and diagnostics; see <see cref="Analysis.ContentHash"/> for the exact contract.
+    /// "" on a model built before this field existed. Additive.</summary>
+    public string ContentHash { get; init; } = "";
 }
 
 /// <summary>One business capability: what a human asserted, plus what the scan actually found
@@ -107,6 +114,12 @@ public sealed record FileNode
     public string PrincipalAuthor { get; init; } = "";
     /// <summary>ISO date (yyyy-MM-dd) of the most recent commit touching this file ("" = unknown). Additive.</summary>
     public string LastModified { get; init; } = "";
+
+    /// <summary>SHA-256 of this file's analysed content — what its own page renders from. Lets a
+    /// publisher re-upload only the file pages that actually changed. Excludes churn, authorship
+    /// and last-modified date, so a commit touching a neighbour does not move it. "" on a model
+    /// built before this field existed. Additive.</summary>
+    public string ContentHash { get; init; } = "";
 }
 
 /// <summary>A TODO/FIXME/HACK/BUG/XXX marker found in a source comment. <see cref="Author"/>
