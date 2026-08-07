@@ -117,7 +117,7 @@ internal static class Verbs
         //   [--no-open] [--max-nodes <n>] [--fail-on <gate>...]
         var parsed = ConnectOptions.Parse(args, out var exitCode);
         if (parsed is null) { return exitCode; }
-        Console.Error.WriteLine("Connecting read-only. ArchSql issues only SELECT queries and never writes — "
+        Console.Error.WriteLine("Connecting read-only. Arch issues only SELECT queries and never writes — "
             + "but this is enforced by convention, not the server. Use a least-privilege read-only login.");
         return BuildAndEmit(parsed);
     }

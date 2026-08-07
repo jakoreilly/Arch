@@ -114,7 +114,9 @@ public static class GitHistory
 
     /// <summary>Runs <c>git &lt;args&gt;</c> in <paramref name="workingDir"/> and returns stdout, or
     /// null on any failure (git missing, non-zero exit, timeout). Never throws.</summary>
-    private static string? RunGit(string workingDir, string args)
+    /// <summary>Internal (not private) so <see cref="GitRemote"/> can reuse the same guarded,
+    /// timeout-bounded, never-throws invocation rather than growing a second one.</summary>
+    internal static string? RunGit(string workingDir, string args)
     {
         try
         {

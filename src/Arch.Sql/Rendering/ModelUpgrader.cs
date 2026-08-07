@@ -14,7 +14,7 @@ public static class ModelUpgrader
         {
             throw new InvalidDataException(
                 $"model.json schemaVersion {model.SchemaVersion} is newer than this build supports "
-                + $"({SchemaVersions.Current}). Upgrade ArchSql.");
+                + $"({SchemaVersions.Current}). Upgrade Arch.");
         }
 
         // v0/v1 -> v2 added Crud; v2 -> v3 added Runtime; v3 -> v4 added column detail, index

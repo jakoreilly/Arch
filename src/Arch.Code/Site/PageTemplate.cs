@@ -86,7 +86,13 @@ public static class PageTemplate
 
         var shell = new ShellOptions
         {
-            Brand = "ArchDiagram",
+            // One product, three entry points. The brand names the ANALYSER ("Arch Code"),
+            // not the executable that happened to host it — a combined `arch` run used to put
+            // "Arch" on the hub, "ArchDiagram" on the code site and "ArchSql" on the SQL site,
+            // which read as three unrelated tools. The localStorage keys stay "archdiagram-*"
+            // on purpose: they are shared with the hub and the SQL site, so renaming them
+            // would silently reset every existing reader's theme.
+            Brand = "Arch Code",
             Nav = navGroups,
             SearchButtonTitle = "Search files, types and methods (Ctrl+K)",
             SearchInputPlaceholder = "Search files, types, methods…",

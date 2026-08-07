@@ -44,15 +44,26 @@ shows what writes each table; <a href="impact.html">Impact</a> shows what breaks
         {
             sb.Append("<h2>Dialect mix</h2><div class=\"lang-bar\">");
             var total = model.DialectLoc.Values.Sum();
-            foreach (var (dialect, loc) in model.DialectLoc.OrderByDescending(kv => kv.Value))
+            // Ordered once, and the tie broken on name: two dialects with equal LOC must not
+            // be free to swap places between runs (determinism is the product).
+            var ordered = model.DialectLoc
+                .OrderByDescending(kv => kv.Value)
+                .ThenBy(kv => kv.Key, StringComparer.Ordinal)
+                .ToList();
+            // The bar SEGMENTS are `.lang-bar span` (full-height blocks). They deliberately do
+            // not carry .lang-dot — that class is the round legend swatch, and it sets no
+            // background at all, so using it here rendered a bar of invisible segments.
+            for (var i = 0; i < ordered.Count; i++)
             {
+                var (dialect, loc) = ordered[i];
                 var pct = total == 0 ? 0 : 100.0 * loc / total;
-                sb.Append($"<span class=\"lang-dot\" style=\"width:{pct:F1}%\" title=\"{Html.Encode(dialect)}: {loc:N0} LOC\"></span>");
+                sb.Append($"<span style=\"width:{pct:F1}%;background:var(--cat-{(i % 5) + 1})\" title=\"{Html.Encode(dialect)}: {loc:N0} LOC\"></span>");
             }
             sb.Append("</div><div class=\"lang-legend\">");
-            foreach (var (dialect, loc) in model.DialectLoc.OrderByDescending(kv => kv.Value))
+            for (var i = 0; i < ordered.Count; i++)
             {
-                sb.Append($"<span>{Html.Encode(dialect)} ({loc:N0} LOC)</span> ");
+                var (dialect, loc) = ordered[i];
+                sb.Append($"<span><span class=\"lang-dot\" style=\"background:var(--cat-{(i % 5) + 1})\"></span>{Html.Encode(dialect)} ({loc:N0} LOC)</span>");
             }
             sb.Append("</div>");
         }
@@ -68,7 +79,7 @@ shows what writes each table; <a href="impact.html">Impact</a> shows what breaks
 
         if (model.Objects.Count(o => o.Kind == "table") == 0)
         {
-            sb.Append("""<div class="panel empty-state"><div class="big">✓</div><p>No tables were found in this scan. Point ArchSql at a folder containing CREATE TABLE statements to see the architecture map.</p></div>""");
+            sb.Append("""<div class="panel empty-state"><div class="big">✓</div><p>No tables were found in this scan. Point Arch at a folder containing CREATE TABLE statements to see the architecture map.</p></div>""");
         }
         else
         {

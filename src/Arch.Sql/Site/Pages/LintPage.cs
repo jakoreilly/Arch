@@ -21,7 +21,7 @@ public static class LintPage
 
         if (model.Findings.Count == 0)
         {
-            sb.Append("""<div class="panel empty-state"><div class="big">✓</div><p>No issues found. Every rule passed on the objects ArchSql could parse — scroll to the Scorecard for the overall grade.</p></div>""");
+            sb.Append("""<div class="panel empty-state"><div class="big">✓</div><p>No issues found. Every rule passed on the objects Arch could parse — scroll to the Scorecard for the overall grade.</p></div>""");
             return sb.ToString();
         }
 

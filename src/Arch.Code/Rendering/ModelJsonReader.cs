@@ -14,6 +14,6 @@ public static class ModelJsonReader
     {
         var json = File.ReadAllText(path);
         return JsonSerializer.Deserialize<ProjectModel>(json, ModelJson.Options)
-            ?? throw new InvalidDataException($"'{path}' did not contain a valid ArchDiagram model.");
+            ?? throw new InvalidDataException($"'{path}' did not contain a valid Arch model.");
     }
 }

@@ -53,7 +53,7 @@ public static class FileSystemScanner
                 // and the per-file HTML pages as if they were project source.
                 if (IsGeneratedSite(entry))
                 {
-                    diagnostics?.Add($"Skipped generated ArchDiagram site '{Path.GetRelativePath(root, entry).Replace('\\', '/')}'");
+                    diagnostics?.Add($"Skipped generated Arch site '{Path.GetRelativePath(root, entry).Replace('\\', '/')}'");
                     continue;
                 }
                 Walk(entry, root, skips, results, diagnostics, visited);

@@ -13,12 +13,17 @@ public sealed record CliOptions
     public bool ShowSnippets { get; init; } = true;
     /// <summary>Also write an offline wiki export (Confluence Storage Format). Disable with --no-wiki.</summary>
     public bool Wiki { get; init; } = true;
-    /// <summary>Source-link host: "github" | "gitlab" | "local" | "none".</summary>
+    /// <summary>Source-link host: "github" | "gitlab" | "vscode" | "local" | "none". "none"
+    /// does not mean "no links" — it means "nothing explicit was asked for", which lets the
+    /// pipeline derive one from the git remote. <see cref="NoSourceLink"/> is the real off switch.</summary>
     public string SourceLinkType { get; init; } = "none";
     /// <summary>Repo/web base or local root used to build source links.</summary>
     public string SourceLinkBase { get; init; } = "";
     /// <summary>Branch/tag/commit for web source links (ignored for local).</summary>
     public string SourceLinkRef { get; init; } = "main";
+    /// <summary>Suppress deriving source links from the git remote. For a site published
+    /// somewhere the repository host is not reachable, where a dead link is worse than none.</summary>
+    public bool NoSourceLink { get; init; }
     /// <summary>Optional path to an authored descriptions sidecar; null probes the source root.</summary>
     public string? DescriptionsPath { get; init; }
     /// <summary>CI gates to check after generation: "cycles" | "layering" | "secrets" |
@@ -34,7 +39,8 @@ public sealed record CliOptions
         exitCode = 0;
         if (args.Length == 0 || args[0] is "-h" or "--help")
         {
-            Console.Error.WriteLine("Usage: archdiagram <path-to-project> [--out <dir>] [--no-open] [--max-nodes <n>] [--exclude <dirname>]... [--no-complexity] [--no-snippets] [--no-wiki] [--source-link-type <github|gitlab|local>] [--source-link-base <url>] [--source-link-ref <branch>] [--descriptions <path>] [--fail-on <gate>[,<gate>...]] [--sarif <path>]");
+            Console.Error.WriteLine("Usage: archdiagram <path-to-project> [--out <dir>] [--no-open] [--max-nodes <n>] [--exclude <dirname>]... [--no-complexity] [--no-snippets] [--no-wiki] [--source-link-type <github|gitlab|vscode|local>] [--source-link-base <url>] [--source-link-ref <branch>] [--no-source-link] [--descriptions <path>] [--fail-on <gate>[,<gate>...]] [--sarif <path>]");
+            Console.Error.WriteLine("  Source links are derived from the git 'origin' remote when it is a GitHub/GitLab URL and no --source-link-type is given (credentials in the remote are never written to the output). --no-source-link turns that off.");
             Console.Error.WriteLine($"  --fail-on gates: {string.Join(", ", Analysis.CiGate.KnownGates.Keys.OrderBy(k => k, StringComparer.Ordinal))}. On a tripped gate the site is still written and the process exits 3 (2 = usage error, 1 = crash).");
             exitCode = args.Length == 0 ? 2 : 0;
             return null;
@@ -58,6 +64,7 @@ public sealed record CliOptions
         var slType = "none";
         var slBase = "";
         var slRef = "main";
+        var noSourceLink = false;
         string? descriptionsPath = null;
         string? sarifPath = null;
         var failOn = new List<string>();
@@ -77,6 +84,7 @@ public sealed record CliOptions
             ["--no-complexity"] = () => showComplexity = false,
             ["--no-snippets"] = () => showSnippets = false,
             ["--no-wiki"] = () => wiki = false,
+            ["--no-source-link"] = () => noSourceLink = true,
         };
         var valueFlags = new Dictionary<string, Action<string>>(StringComparer.Ordinal)
         {
@@ -123,6 +131,7 @@ public sealed record CliOptions
             SourceLinkType = slType,
             SourceLinkBase = slBase,
             SourceLinkRef = slRef,
+            NoSourceLink = noSourceLink,
             DescriptionsPath = descriptionsPath,
             FailOn = failOn,
             SarifPath = sarifPath,

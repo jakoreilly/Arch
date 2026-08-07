@@ -26,7 +26,7 @@ public sealed class SqlServerSchemaSource(string connectionString, int timeoutSe
         {
             ApplicationIntent = ApplicationIntent.ReadOnly,
             ConnectTimeout = timeoutSeconds,
-            ApplicationName = "ArchSql",
+            ApplicationName = "Arch",
         };
         return b.ConnectionString;
     }

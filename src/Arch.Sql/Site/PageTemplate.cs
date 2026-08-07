@@ -33,7 +33,8 @@ public static class PageTemplate
     {
         var shell = new ShellOptions
         {
-            Brand = "ArchSql",
+            // See Arch.Code's PageTemplate for why this is "Arch SQL" and not "ArchSql".
+            Brand = "Arch SQL",
             Nav = NavSections,
             SearchButtonTitle = "Search objects (Ctrl+K)",
             SearchInputPlaceholder = "Search objects…",

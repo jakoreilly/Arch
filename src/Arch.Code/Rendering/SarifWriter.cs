@@ -46,7 +46,7 @@ public static class SarifWriter
                     {
                         driver = new
                         {
-                            name = "ArchDiagram",
+                            name = "Arch",
                             informationUri = "https://github.com/",
                             rules = RulesFor(backlog),
                         },

@@ -28,7 +28,7 @@ public static class SarifWriter
                 {
                     ["tool"] = new Dictionary<string, object>
                     {
-                        ["driver"] = new Dictionary<string, object> { ["name"] = "ArchSql", ["rules"] = rules },
+                        ["driver"] = new Dictionary<string, object> { ["name"] = "Arch", ["rules"] = rules },
                     },
                     ["results"] = results,
                 },

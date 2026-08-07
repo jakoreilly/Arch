@@ -22,7 +22,7 @@ public static class EvolutionPage
         {
             sb.Append("<div class=\"panel empty-state\"><div class=\"big\">🕓</div>"
                     + "<p>No git history was found for this scan, so churn and ownership analysis is unavailable. "
-                    + "Run ArchDiagram against a full git working tree (not a dropped-in folder or a "
+                    + "Run Arch against a full git working tree (not a dropped-in folder or a "
                     + "<code>--from-model</code> rebuild) to see which files change most and who owns them.</p></div>");
             return sb.ToString();
         }

@@ -22,8 +22,12 @@
 
   function url(relPath, line) {
     if (!cfg || !cfg.base || !relPath) { return ""; }
-    var path = String(relPath).replace(/\\/g, "/").replace(/^\/+/, "")
-      .split("/").map(encodeURIComponent).join("/");
+    // cfg.prefix is the repo-root-to-scan-root path; it applies to the web hosts, whose URL
+    // is rooted at the repository, and not to local/vscode, whose base IS the scan root.
+    var rel = String(relPath).replace(/\\/g, "/").replace(/^\/+/, "");
+    var prefix = String(cfg.prefix || "").replace(/\\/g, "/").replace(/^\/+/, "");
+    var path = (prefix + rel).split("/").map(encodeURIComponent).join("/");
+    var localPath = rel.split("/").map(encodeURIComponent).join("/");
     var b = String(cfg.base).replace(/\/+$/, "");
     var ref = encodeURIComponent(cfg.ref || "main");
     var anchor = line > 0 ? "#L" + line : "";
@@ -32,7 +36,13 @@
       case "gitlab": return b + "/-/blob/" + ref + "/" + path + anchor;
       case "local":
         var base = /^file:/i.test(b) ? b : "file:///" + b.replace(/ /g, "%20");
-        return base + "/" + path;
+        return base + "/" + localPath;
+      case "vscode":
+        // The only local option that can deep-link a line. Path segments are NOT
+        // percent-encoded the way the web cases are — VS Code wants the real path.
+        return "vscode://file/" + b.replace(/\\/g, "/").replace(/\/+$/, "").replace(/ /g, "%20") +
+               "/" + String(relPath).replace(/\\/g, "/").replace(/^\/+/, "") +
+               (line > 0 ? ":" + line : "");
       default: return "";
     }
   }
@@ -54,7 +64,8 @@
       'Stored only in this browser.</p>' +
       '<label class="lf-range" style="display:flex;gap:.5rem;margin:.4rem 0">Host' +
       '<select id="sl-type"><option value="github">GitHub</option>' +
-      '<option value="gitlab">GitLab</option><option value="local">Local file://</option></select></label>' +
+      '<option value="gitlab">GitLab</option><option value="vscode">VS Code (opens at the line)</option>' +
+      '<option value="local">Local file://</option></select></label>' +
       '<input id="sl-base" class="filter-input" style="width:100%;margin:.4rem 0" ' +
       'placeholder="https://github.com/org/repo  or  C:/src/app">' +
       '<input id="sl-ref" class="filter-input" style="width:100%;margin:.4rem 0" ' +

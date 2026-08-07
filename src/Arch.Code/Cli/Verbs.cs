@@ -60,15 +60,15 @@ internal static class Verbs
         ISet<string>? onlySet = only is null ? null
             : new HashSet<string>(only.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase);
         var sites = SiteDiscovery.Discover(parent, lOut, diags, onlySet);
-        Console.Error.WriteLine($"archdiagram: landscape found {sites.Count} site(s) under {parent}");
+        Console.Error.WriteLine($"arch: landscape found {sites.Count} site(s) under {parent}");
         var landscape = LandscapeModelBuilder.Build(sites) with { Diagnostics = diags };
         var lIndex = LandscapeGenerator.Generate(landscape, lOut, 60, DateTime.Now.ToString("yyyy-MM-dd"), title);
-        Console.Error.WriteLine($"archdiagram: landscape written to {lOut}");
+        Console.Error.WriteLine($"arch: landscape written to {lOut}");
 
         if (lOpen)
         {
             try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(lIndex) { UseShellExecute = true }); }
-            catch (Exception ex) { Console.Error.WriteLine($"archdiagram: could not auto-open the landscape: {ex.Message}"); }
+            catch (Exception ex) { Console.Error.WriteLine($"arch: could not auto-open the landscape: {ex.Message}"); }
         }
         return 0;
     }
@@ -105,13 +105,13 @@ internal static class Verbs
         dOut = Path.GetFullPath(dOut ?? $"diff-{oldModel.RootName}-{newModel.RootName}", Directory.GetCurrentDirectory());
         var diffResult = ModelDiff.Compute(oldModel, newModel);
         var dIndex = DiffReport.Write(diffResult, dOut, DateTime.Now.ToString("yyyy-MM-dd"));
-        Console.Error.WriteLine($"archdiagram: diff written to {dOut} "
+        Console.Error.WriteLine($"arch: diff written to {dOut} "
             + $"({diffResult.AddedFiles.Count} added, {diffResult.RemovedFiles.Count} removed, {diffResult.ChangedFiles.Count} changed)");
 
         if (dOpen)
         {
             try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(dIndex) { UseShellExecute = true }); }
-            catch (Exception ex) { Console.Error.WriteLine($"archdiagram: could not auto-open the diff: {ex.Message}"); }
+            catch (Exception ex) { Console.Error.WriteLine($"arch: could not auto-open the diff: {ex.Message}"); }
         }
         return 0;
     }
@@ -150,11 +150,11 @@ internal static class Verbs
         // Source snippets are omitted: the model carries no source text, so a rebuilt-from-archive
         // site is faithful in every other respect. showComplexity is data-driven and stays on.
         var fmIndex = SiteGenerator.Generate(fmModel, fmOut, fmMax, fmOn, showComplexity: true, showSnippets: false, wiki: fmWiki);
-        Console.Error.WriteLine($"archdiagram: rebuilt site from {modelPath} → {fmOut}");
+        Console.Error.WriteLine($"arch: rebuilt site from {modelPath} → {fmOut}");
         if (fmOpen)
         {
             try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(fmIndex) { UseShellExecute = true }); }
-            catch (Exception ex) { Console.Error.WriteLine($"archdiagram: could not auto-open: {ex.Message}"); }
+            catch (Exception ex) { Console.Error.WriteLine($"arch: could not auto-open: {ex.Message}"); }
         }
         return 0;
     }
@@ -168,21 +168,21 @@ internal static class Verbs
     /// partial-failure UX.</summary>
     internal static (ProjectModel Model, string IndexPath) BuildAndGenerate(CliOptions options)
     {
-        Console.Error.WriteLine($"archdiagram: scanning {options.SourcePath}");
+        Console.Error.WriteLine($"arch: scanning {options.SourcePath}");
         var model = Pipeline.BuildModel(options);
-        Console.Error.WriteLine($"archdiagram: {model.Files.Count} files, {model.Projects.Count} projects, " +
+        Console.Error.WriteLine($"arch: {model.Files.Count} files, {model.Projects.Count} projects, " +
             $"{model.FileDependencies.Count} file links, {model.Calls.Count} call links, {model.Diagnostics.Count} diagnostics");
 
         var generatedOn = DateTime.Now.ToString("yyyy-MM-dd");
         var indexPath = SiteGenerator.Generate(model, options.OutDir, options.MaxNodes, generatedOn,
             options.ShowComplexity, options.ShowSnippets, options.Wiki);
-        Console.Error.WriteLine($"archdiagram: site written to {options.OutDir}");
+        Console.Error.WriteLine($"arch: site written to {options.OutDir}");
 
         if (options.SarifPath is not null)
         {
             var sarifFullPath = Path.GetFullPath(options.SarifPath, Environment.CurrentDirectory);
             SarifWriter.Write(model, sarifFullPath);
-            Console.Error.WriteLine($"archdiagram: SARIF log written to {sarifFullPath}");
+            Console.Error.WriteLine($"arch: SARIF log written to {sarifFullPath}");
         }
 
         return (model, indexPath);
@@ -204,7 +204,7 @@ internal static class Verbs
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"archdiagram: could not auto-open the site: {ex.Message}");
+                Console.Error.WriteLine($"arch: could not auto-open the site: {ex.Message}");
             }
         }
 
@@ -216,10 +216,10 @@ internal static class Verbs
             var failedGates = CiGate.Evaluate(options.FailOn, card);
             if (failedGates.Count > 0)
             {
-                foreach (var f in failedGates) { Console.Error.WriteLine($"archdiagram: gate failed — {f}"); }
+                foreach (var f in failedGates) { Console.Error.WriteLine($"arch: gate failed — {f}"); }
                 return 3;
             }
-            Console.Error.WriteLine($"archdiagram: all {options.FailOn.Count} gate(s) passed.");
+            Console.Error.WriteLine($"arch: all {options.FailOn.Count} gate(s) passed.");
         }
 
         return 0;

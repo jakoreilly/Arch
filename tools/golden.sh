@@ -31,6 +31,13 @@ dotnet build Arch.slnx --nologo -v q >/dev/null
 # model.json - a number that increments with every commit made while working the plan.
 # Left alone it makes the golden fail on the next commit no matter what changed, which
 # trains you to run `accept` reflexively and destroys the net's whole value.
+#
+# The source-link "ref" is the same class of problem, for the same reason: the fixture is
+# inside this repo, so GitRemote.Detect bakes the CURRENT BRANCH NAME into model.json and
+# into every page's window.ARCH_SOURCELINK. Without this the golden would fail on every
+# branch switch. The remote's BASE url is not normalised on purpose - it is stable for this
+# repo, and leaving it visible is what proves the derivation still works (and that no
+# credential ever appears in it).
 normalise() {
   local dir="$1"
   # Three spellings of the same root have to be caught, because `pwd` in Git Bash is the
@@ -56,6 +63,8 @@ normalise() {
         -e 's#[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}[ T][0-9]\{2\}:[0-9]\{2\}\(:[0-9]\{2\}\)\?#<TIMESTAMP>#g' \
         -e 's#[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}#<DATE>#g' \
         -e 's#"totalCommits": [0-9]\{1,\}#"totalCommits": <COMMITS>#g' \
+        -e 's#"ref": "[^"]*"#"ref": "<REF>"#g' \
+        -e 's#"ref":"[^"]*"#"ref":"<REF>"#g' \
         -e 's#<div class="num">[0-9]\{1,\}</div><div class="lbl">Commits in history</div>#<div class="num">\&lt;COMMITS\&gt;</div><div class="lbl">Commits in history</div>#g' \
         "$f"
     done

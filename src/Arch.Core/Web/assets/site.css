@@ -23,6 +23,16 @@
   --danger-ink: #a52c1f;
   --shadow: 0 1px 3px rgba(16, 30, 54, .08), 0 4px 14px rgba(16, 30, 54, .06);
   --diagram-bg: #ffffff;
+  /* Categorical fills for "one colour per member of a small set" surfaces that carry no
+     semantic meaning (SQL dialect mix, and anything else that needs to tell N things
+     apart). Fills only — never text — so these are tuned for separation from each other
+     and from --bg-panel, not for a contrast ratio against them. Cycle with modulo; a set
+     larger than this wants a different visual, not a sixth colour. */
+  --cat-1: #2f6fab;
+  --cat-2: #b7791f;
+  --cat-3: #7a5195;
+  --cat-4: #1f8a8a;
+  --cat-5: #488f31;
   color-scheme: light;
 }
 :root[data-theme="dark"] {
@@ -46,6 +56,14 @@
   --danger-ink: #ef9484;
   --shadow: 0 1px 3px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .3);
   --diagram-bg: #151a21; /* mermaid re-renders with its dark theme; keep the canvas dark too */
+  /* Same five categories, lightened: the light-theme values are tuned to separate from a
+     white panel and go muddy against #1a2029. Order and meaning are identical, so a
+     dialect keeps its identity across a theme switch. */
+  --cat-1: #6aa9dd;
+  --cat-2: #d9a441;
+  --cat-3: #a986c4;
+  --cat-4: #4fbcbc;
+  --cat-5: #7fbf5f;
   color-scheme: dark;
 }
 

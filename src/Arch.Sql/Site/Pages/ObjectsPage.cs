@@ -14,7 +14,7 @@ public static class ObjectsPage
 
         if (model.Objects.Count == 0)
         {
-            sb.Append("""<div class="panel empty-state"><div class="big">◇</div><p>No schema objects were found. Point ArchSql at a folder containing CREATE TABLE/VIEW/PROCEDURE statements.</p></div>""");
+            sb.Append("""<div class="panel empty-state"><div class="big">◇</div><p>No schema objects were found. Point Arch at a folder containing CREATE TABLE/VIEW/PROCEDURE statements.</p></div>""");
             return sb.ToString();
         }
 

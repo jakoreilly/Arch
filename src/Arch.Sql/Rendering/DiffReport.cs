@@ -33,7 +33,7 @@ public static class DiffReport
     }
 
     public static string RenderHtml(IReadOnlyList<SchemaChange> changes, IReadOnlySet<string> suppressed) =>
-        PageTemplate.Render("Schema Diff", "ArchSql", "", "", Html.Crumbs((null, "Schema Diff")), Body(changes, suppressed));
+        PageTemplate.Render("Schema Diff", "Arch", "", "", Html.Crumbs((null, "Schema Diff")), Body(changes, suppressed));
 
     /// <summary>The report's inner body markup, without the page shell — reused by the standalone
     /// diff verb (wrapped by RenderHtml) and by the site's Drift page (wrapped by SiteGenerator).</summary>
@@ -42,7 +42,7 @@ public static class DiffReport
         var sb = new StringBuilder();
         sb.Append("<h1>Schema Diff</h1>");
         sb.Append("""
-<p class="lede">What changed between two ArchSql scans, classified by risk. Breaking = drops,
+<p class="lede">What changed between two Arch scans, classified by risk. Breaking = drops,
 narrowing type changes, NULL to NOT NULL, or new NOT NULL columns. Degrading = dropped indexes/FKs.
 Safe = additive. Baselined changes are shown struck-through and don't fail the gate.</p>
 """);

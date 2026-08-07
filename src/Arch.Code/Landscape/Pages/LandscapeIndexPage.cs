@@ -21,7 +21,7 @@ Generated on {Html.Encode(generatedOn)}.</p>
         if (model.Sites.Count == 0)
         {
             sb.Append("<div class=\"panel empty-state\"><div class=\"big\">⇄</div><p>No generated sites were found "
-                + "beside this folder. Generate at least two sites first (run ArchDiagram on each repo), then re-run the landscape.</p></div>");
+                + "beside this folder. Generate at least two sites first (run Arch on each repo), then re-run the landscape.</p></div>");
             return sb.ToString();
         }
 

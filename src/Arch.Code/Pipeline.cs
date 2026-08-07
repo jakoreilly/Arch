@@ -98,9 +98,7 @@ public static class Pipeline
             FolderDescriptions = new Dictionary<string, string>(authored.Folders, StringComparer.OrdinalIgnoreCase),
             Layers = LayersLoader.Load(options.SourcePath, diagnostics),
             Git = git.Info.Available ? git.Info : null,
-            SourceLink = options.SourceLinkType is "none" or ""
-                ? null
-                : new SourceLink { Type = options.SourceLinkType, Base = options.SourceLinkBase, Ref = options.SourceLinkRef },
+            SourceLink = ResolveSourceLink(options, diagnostics),
             Network = network,
             Owner = authored.Owner,
             Capabilities = CapabilityRollup.Build(files, authored.Capabilities),
@@ -110,6 +108,43 @@ public static class Pipeline
         // Last, over the finished model: the hash summarises everything above it, so it cannot be
         // one of the fields it summarises.
         return model with { ContentHash = ContentHash.OfModel(model) };
+    }
+
+    /// <summary>The source-link configuration baked into the site, in precedence order:
+    /// an explicit <c>--source-link-type</c> wins outright; otherwise the tree's git
+    /// <c>origin</c> is read and used; otherwise null, which leaves the viewer's existing
+    /// in-browser "Set source link…" prompt as the fallback.
+    ///
+    /// <para>Only a recognised web host is auto-adopted. A local path is deliberately NOT
+    /// baked in by default: it is correct only on the machine that generated the site, and
+    /// these sites get emailed. <c>--source-link-type vscode --source-link-base &lt;root&gt;</c>
+    /// opts into it for a local-only report.</para></summary>
+    private static SourceLink? ResolveSourceLink(CliOptions options, List<string> diagnostics)
+    {
+        if (options.SourceLinkType is not ("none" or ""))
+        {
+            return new SourceLink
+            {
+                Type = options.SourceLinkType,
+                Base = options.SourceLinkBase,
+                Ref = options.SourceLinkRef,
+            };
+        }
+
+        if (options.NoSourceLink) { return null; }
+
+        var detected = GitRemote.Detect(options.SourcePath);
+        if (detected is null) { return null; }
+
+        diagnostics.Add($"Source links point at {detected.Base} ({detected.Ref}), derived from the git "
+                      + "remote. Override with --source-link-base, or suppress with --no-source-link.");
+        return new SourceLink
+        {
+            Type = detected.Type,
+            Base = detected.Base,
+            Ref = detected.Ref,
+            Prefix = detected.Prefix,
+        };
     }
 
     /// <summary>Pure per-file analysis: read + parse one file and produce everything a

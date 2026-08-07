@@ -29,7 +29,7 @@ public static class DiffReport
     {
         var sb = new StringBuilder();
         sb.Append($"<h1>{Html.Encode(diff.OldRootName)} → {Html.Encode(diff.NewRootName)}</h1>");
-        sb.Append($"<p class=\"lede\">Comparing two ArchDiagram model.json snapshots, generated {Html.Encode(generatedOn)}. "
+        sb.Append($"<p class=\"lede\">Comparing two Arch model.json snapshots, generated {Html.Encode(generatedOn)}. "
             + "Files are matched by relative path (not slug, which can vary between independent scans). "
             + "This is a structural diff of the analysis — not a code diff.</p>");
 

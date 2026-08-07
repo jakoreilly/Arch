@@ -7,13 +7,13 @@ public static class GuidePage
         var live = ctx.Model.Runtime.Source == "live-mssql";
         var sourceLine = live
             ? "This site was built from a read-only connection to a live SQL Server: schema is read from catalog views and runtime figures from DMVs. It only issues SELECT queries and never writes."
-            : "ArchSql read the .sql files you pointed it at; no database was connected. It can also build this site from a read-only live connection (the `connect` verb).";
+            : "Arch read the .sql files you pointed it at; no database was connected. It can also build this site from a read-only live connection (the `connect` verb).";
         return $$"""
 <h1>Guide</h1>
-<p class="lede">ArchSql turns a folder of SQL scripts (or a live SQL Server) into this site. It
+<p class="lede">Arch turns a folder of SQL scripts (or a live SQL Server) into this site. It
 supports T-SQL (SQL Server), MySQL and PostgreSQL. T-SQL is parsed in full; MySQL and PostgreSQL use
 a lighter-weight parse, so objects from those files are badged 'shallow parse' and a few complex
-references may be missing. When a file's dialect can't be told apart, ArchSql assumes T-SQL.</p>
+references may be missing. When a file's dialect can't be told apart, Arch assumes T-SQL.</p>
 
 <h2>Where to start</h2>
 <p class="lede">New here? Use <a href="explore.html">Explore</a> to search objects and ask the graph

@@ -41,7 +41,12 @@ public static class NarrativeBuilder
             clauses.Add($"the most central files are {JoinList(names)}");
         }
 
-        var todos = model.Files.Sum(f => f.Todos.Count);
+        // First-party only, for the same reason as `loc` above — and, more sharply, because the
+        // Scorecard's "TODO / FIXME markers" signal counts exactly this set. Summing every file
+        // here instead put two different numbers under the same name on the same site (the lede
+        // said 5, the scorecard said 0), which costs the report more credibility than the extra
+        // markers were ever worth.
+        var todos = model.Files.Where(CodebaseStats.IsFirstParty).Sum(f => f.Todos.Count);
         if (todos > 0) { clauses.Add($"there are {todos:N0} open TODO/FIXME marker(s)"); }
 
         return Capitalize(string.Join("; ", clauses)) + ".";
