@@ -325,6 +325,37 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 @media (max-width: 1100px) { .two-col { grid-template-columns: 1fr; } }
 
+/* ---- Hub landing (Arch.Cli combined mode: one card per generated subsite) ----
+   The whole card is the <a>, so the shared :focus-visible ring already covers it and
+   the click target is the tile rather than a word inside it. auto-fit collapses to one
+   column on a narrow viewport with no media query. */
+.hub-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 1rem 0 1.5rem; }
+.hub-card {
+  display: flex; flex-direction: column; gap: .5rem; padding: 1rem 1.25rem;
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow); color: var(--text); text-decoration: none;
+  transition: border-color .12s, box-shadow .12s;
+}
+.hub-card:hover { border-color: var(--accent); text-decoration: none; }
+.hub-card p { margin: 0; color: var(--text-soft); font-size: .88rem; }
+.hub-card-head { display: flex; align-items: center; gap: .6rem; }
+.hub-mark { font-size: 1.5rem; line-height: 1; color: var(--accent); }
+.hub-title { font-weight: 700; font-size: 1.05rem; }
+.hub-go { margin-left: auto; font-size: .82rem; font-weight: 600; color: var(--accent); }
+/* margin-top:auto pins the figures to the bottom edge so cards with differently sized
+   summaries still line their stat rows up with each other. */
+.hub-stats {
+  display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; margin-top: auto; padding-top: .6rem;
+  border-top: 1px solid var(--border); font-size: .82rem; color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+}
+.hub-stats b { color: var(--text); font-weight: 700; }
+/* The cross-layer join rows. Not .member-list — that one is monospace, for code members;
+   these are prose labels and a status chip. */
+.hub-dbs { list-style: none; margin: .25rem 0 0; padding: 0; }
+.hub-dbs li { display: flex; align-items: center; gap: .5rem; padding: .35rem 0; border-top: 1px dashed var(--border); }
+.hub-dbs li:first-child { border-top: none; }
+
 /* ---- Search ---- */
 .search-open {
   display: flex; align-items: center; gap: .5rem; width: 100%; text-align: left;

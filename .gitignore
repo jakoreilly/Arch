@@ -16,6 +16,9 @@ golden/
 !plan.md
 !continue.md
 !CLAUDE.md
+# User-facing documentation for the tool itself, as opposed to the repo's own notes.
+!IDIOTS-GUIDE.md
+!HOW-TO-USE.md
 # Project-scoped agent skills are documentation of this repo's own conventions and
 # belong to it, not to whoever happens to have it checked out.
 !.claude/skills/**/*.md

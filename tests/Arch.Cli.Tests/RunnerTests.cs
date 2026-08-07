@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Arch.Cli.Tests;
 
 /// <summary>Exercises Runner.Run in-process. All tests pass --no-open (Runner would
@@ -114,6 +116,54 @@ public class RunnerTests : IDisposable
         Assert.Contains("href=\"code/index.html\"", hub);
         Assert.Contains("href=\"sql/index.html\"", hub);
         Assert.Contains("→", stderr); // final "location of the site" line
+    }
+
+    /// <summary>The hub's per-subsite cards carry that provider's own headline figures, so the
+    /// landing page says what was found and not just that something was. Counts are pluralised
+    /// against the value ("1 project", not "1 projects").</summary>
+    [Fact]
+    public void Combined_fixture_hub_cards_carry_each_providers_headline_figures()
+    {
+        RunCaptured(Path.Combine(FixturesRoot, "Combined"), "--out", _outDir, "--no-open");
+        var hub = File.ReadAllText(Path.Combine(_outDir, "index.html"));
+
+        Assert.Equal(2, Regex.Matches(hub, "class=\"hub-card\"").Count);
+        Assert.Equal(2, Regex.Matches(hub, "class=\"hub-stats\"").Count);
+        // Code-side nouns and sql-side nouns both appear, each from its own model.
+        Assert.Matches(@"<b>\d+</b> files", hub);
+        Assert.Matches(@"<b>\d+</b> (types|type)", hub);
+        Assert.Matches(@"<b>\d+</b> (tables|table)", hub);
+        Assert.Matches(@"<b>\d+</b> (foreign keys|foreign key)", hub);
+        Assert.DoesNotContain("<b>1</b> projects", hub);
+    }
+
+    /// <summary>The hub reports the same cross-layer join the code site's Packages page shows,
+    /// but with a hub-relative href — SqlCrossLink.Href is deliberately relative to the code
+    /// site ("../sql/..."), which would be a broken link one level up.</summary>
+    [Fact]
+    public void Hub_reports_the_cross_layer_join_with_hub_relative_links()
+    {
+        RunCaptured(Path.Combine(FixturesRoot, "CrossLink", "ShopTest"), "--out", _outDir, "--no-open");
+        var hub = File.ReadAllText(Path.Combine(_outDir, "index.html"));
+
+        Assert.Contains("Code ↔ SQL", hub);
+        Assert.Contains("1 of 2 matched", hub);
+        Assert.Contains("href=\"sql/objects.html?catalog=SHOPTEST\"", hub);
+        Assert.DoesNotContain("href=\"../sql/", hub);
+        Assert.Contains("matched by name", hub);
+        Assert.Contains("not in this scan", hub);
+    }
+
+    /// <summary>No databases in the code model means the join never ran, so the panel is absent
+    /// entirely — an empty one would claim the join ran and found nothing.</summary>
+    [Fact]
+    public void Hub_omits_the_cross_layer_panel_when_the_code_side_references_no_database()
+    {
+        RunCaptured(Path.Combine(FixturesRoot, "Combined"), "--out", _outDir, "--no-open");
+        var hub = File.ReadAllText(Path.Combine(_outDir, "index.html"));
+
+        Assert.DoesNotContain("Code ↔ SQL", hub);
+        Assert.DoesNotContain("hub-dbs", hub);
     }
 
     [Fact]

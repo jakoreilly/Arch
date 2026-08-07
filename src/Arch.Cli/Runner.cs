@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Globalization;
+using Arch.Code.Analysis;
 using Arch.Code.Cli;
 using Arch.Code.Graph;
 using Arch.Core.Detection;
@@ -74,7 +76,7 @@ public static class Runner
                 if (provider.Id == "code") { codeResult = model; codeArgs = providerArgs; }
                 if (provider.Id == "sql") { sqlResult = model; }
                 var (title, icon) = DisplayInfo(provider.Id);
-                links.Add(new HubPage.Link(provider.Id, title, icon, detection.Summary));
+                links.Add(new HubPage.Link(provider.Id, title, icon, detection.Summary, HeadlineStats(model)));
             }
             catch (Exception ex)
             {
@@ -87,9 +89,10 @@ public static class Runner
         // same (necessarily combined-mode) run — re-renders the code site with each detected
         // database's cross-link outcome attached. See CrossLink.Apply's own doc comment for why
         // this is a cheap no-op when the code side found no databases at all.
+        IReadOnlyList<DbNode> joinedDatabases = [];
         if (codeResult is ProjectModel codeModel && sqlResult is SqlModel sqlModel && codeArgs is not null)
         {
-            CrossLink.Apply(codeModel, sqlModel, codeArgs, "../sql");
+            joinedDatabases = CrossLink.Apply(codeModel, sqlModel, codeArgs, "../sql");
         }
 
         sw.Stop();
@@ -108,7 +111,8 @@ public static class Runner
         else
         {
             var siteName = Path.GetFileName(sourceFull.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-            HubPage.Write(outDir, siteName, links);
+            var generatedOn = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            HubPage.Write(outDir, siteName, links, sourceFull, generatedOn, HubDbLinks(joinedDatabases));
             indexPath = Path.Combine(outDir, "index.html");
         }
 
@@ -127,6 +131,64 @@ public static class Runner
 
         return anyFailed ? 1 : 0;
     }
+
+    /// <summary>The handful of figures the hub card shows for a provider, chosen to agree with
+    /// the headline tiles on the subsite that card links to — code counts first-party files and
+    /// lines (tests and vendored bundles excluded, as CodebaseStats defines it), sql counts the
+    /// same object kinds its own Overview leads with. An unrecognised model type contributes no
+    /// figures rather than guessing, so a future provider degrades to a summary-only card.</summary>
+    private static IReadOnlyList<HubPage.Stat> HeadlineStats(object? model) => model switch
+    {
+        ProjectModel p => CodeStats(p),
+        SqlModel s => SqlStats(s),
+        _ => [],
+    };
+
+    private static IReadOnlyList<HubPage.Stat> CodeStats(ProjectModel model) =>
+    [
+        Count(model.Files.Count, "file"),
+        Count(CodebaseStats.FirstPartyLanguageLoc(model).Values.Sum(), "line"),
+        Count(model.Projects.Count, "project"),
+        Count(model.Files.Where(CodebaseStats.IsFirstParty).Sum(f => f.Types.Count), "type"),
+    ];
+
+    private static IReadOnlyList<HubPage.Stat> SqlStats(SqlModel model) =>
+    [
+        Count(model.Objects.Count(o => o.Kind == "table"), "table"),
+        Count(model.Objects.Count(o => o.Kind == "view"), "view"),
+        Count(model.Objects.Count(o => o.Kind is "procedure" or "function" or "trigger"), "routine"),
+        Count(model.ForeignKeys.Count, "foreign key"),
+    ];
+
+    /// <summary>A figure and its noun, pluralised — "1 project", not "1 projects". Invariant
+    /// culture for the same reason MarkdownExporter needs it: Arch.Cli runs with
+    /// InvariantGlobalization=false, so an implicit-culture format here would render
+    /// differently from the standalone exes (see continue.md, Phase 5 findings).</summary>
+    private static HubPage.Stat Count(int n, string noun) =>
+        new(n.ToString("N0", CultureInfo.InvariantCulture), n == 1 ? noun : noun + "s");
+
+    /// <summary>Renders the cross-layer join for the hub. Databases whose SqlLink is null were
+    /// never examined (no catalog in the connection string) and are left off entirely — the panel
+    /// only reports on joins that actually ran. The href is rebuilt hub-relative rather than
+    /// reusing SqlLink.Href, which is deliberately relative to the *code* site.</summary>
+    private static IReadOnlyList<HubPage.DbLink> HubDbLinks(IReadOnlyList<DbNode> databases) =>
+        databases
+            .Where(db => db.SqlLink is not null)
+            .Select(db =>
+            {
+                var link = db.SqlLink!;
+                var (status, badge) = (link.Matched, link.Verified) switch
+                {
+                    (true, true) => ("verified match", "ok"),
+                    (true, false) => ("matched by name", "accent"),
+                    _ => ("not in this scan", "warn"),
+                };
+                var href = link.Matched
+                    ? $"sql/objects.html?catalog={Uri.EscapeDataString(db.Catalog.Trim())}"
+                    : "";
+                return new HubPage.DbLink(db.Label, status, badge, href);
+            })
+            .ToList();
 
     private static (string Title, string Icon) DisplayInfo(string id) => id switch
     {

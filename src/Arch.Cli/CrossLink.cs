@@ -16,10 +16,12 @@ internal static class CrossLink
     /// nothing to join exactly as fast (and as byte-identical) as before this phase. codeArgs
     /// must be the SAME adjusted argv Runner already built for the code provider's own Generate
     /// call, so re-parsing it here reproduces the identical CliOptions (MaxNodes, ShowComplexity,
-    /// ...) the first write used — this second write changes only Databases.</summary>
-    public static void Apply(ProjectModel codeModel, SqlModel sqlModel, string[] codeArgs, string sqlRelativeHrefPrefix)
+    /// ...) the first write used — this second write changes only Databases.
+    /// Returns the joined databases (empty when there were none) so the caller can report the
+    /// same outcome on the hub page without re-running the join.</summary>
+    public static IReadOnlyList<DbNode> Apply(ProjectModel codeModel, SqlModel sqlModel, string[] codeArgs, string sqlRelativeHrefPrefix)
     {
-        if (codeModel.Databases.Count == 0) { return; }
+        if (codeModel.Databases.Count == 0) { return []; }
 
         var joined = codeModel.Databases.Select(db => db with { SqlLink = Join(db, sqlModel, sqlRelativeHrefPrefix) }).ToList();
         var updated = codeModel with { Databases = joined };
@@ -29,6 +31,7 @@ internal static class CrossLink
         var generatedOn = DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
         SiteGenerator.Generate(updated, options.OutDir, options.MaxNodes, generatedOn,
             options.ShowComplexity, options.ShowSnippets, options.Wiki);
+        return joined;
     }
 
     /// <summary>Join on (Server, Catalog), case-insensitively — SQL Server instance and database
