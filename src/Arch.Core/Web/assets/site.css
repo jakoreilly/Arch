@@ -21,7 +21,16 @@
   --ok-ink: #236526;
   --warn-ink: #7f5300;
   --danger-ink: #a52c1f;
+  /* Ink for text sitting on a SOLID --accent fill (the primary button), as opposed to
+     --accent-ink which is for text on the accent's pale tint. Separate token because the
+     two grounds are opposites: light theme's accent is dark (wants white on it), dark
+     theme's accent is light (wants near-black). 5.27:1 and 7.16:1 respectively. */
+  --accent-on: #ffffff;
   --shadow: 0 1px 3px rgba(16, 30, 54, .08), 0 4px 14px rgba(16, 30, 54, .06);
+  --shadow-modal: 0 10px 40px rgba(16, 30, 54, .35);
+  /* The dimming wash behind a modal (search palette, mobile nav drawer). A token, not a
+     literal, so the print block can flatten it and the dark theme can go deeper. */
+  --scrim: rgba(10, 16, 24, .45);
   --diagram-bg: #ffffff;
   /* Categorical fills for "one colour per member of a small set" surfaces that carry no
      semantic meaning (SQL dialect mix, and anything else that needs to tell N things
@@ -54,7 +63,12 @@
   --ok-ink: #6fbf73;
   --warn-ink: #d9a441;
   --danger-ink: #ef9484;
+  /* Near-black, because THIS theme's --accent (#6aa9dd) is a light blue: white on it is
+     2.52:1 and fails AA outright. This value measures 7.16:1. */
+  --accent-on: #0f1720;
   --shadow: 0 1px 3px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .3);
+  --shadow-modal: 0 10px 40px rgba(0, 0, 0, .55);
+  --scrim: rgba(0, 0, 0, .6);
   --diagram-bg: #151a21; /* mermaid re-renders with its dark theme; keep the canvas dark too */
   /* Same five categories, lightened: the light-theme values are tuned to separate from a
      white panel and go muddy against #1a2029. Order and meaning are identical, so a
@@ -89,6 +103,14 @@ code { font-family: "Cascadia Code", Consolas, monospace; font-size: .9em; backg
 :where(a, button, select, summary, input, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+/* Visually hidden but still announced. For live regions and labels that carry information
+   the sighted layout already conveys some other way (the theme toggle's current state, a
+   result count that is obvious on screen but silent to a screen reader). Not `display:none`
+   and not `visibility:hidden` — both remove it from the accessibility tree too. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
 }
 /* Transitions across this sheet are all short affordance feedback (hover, pan, reveal),
    so there is nothing to preserve for users who ask for less motion — cut them all
@@ -187,8 +209,12 @@ a.tile:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent);
 .toolbar { display: flex; align-items: center; gap: .4rem; padding: .5rem .75rem; border-bottom: 1px solid var(--border); background: var(--bg-sunken); }
 .btn { padding: .3rem .75rem; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-panel); color: var(--text); cursor: pointer; font-size: .85rem; }
 .btn:hover { border-color: var(--accent); color: var(--accent); }
-.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-.btn-primary:hover { color: #fff; filter: brightness(1.08); }
+/* --accent-on, not #fff: the dark theme's accent is a LIGHT blue (#6aa9dd), and white on it
+   measures 2.52:1 — a fails-AA primary button on every diagram toolbar. The token carries the
+   readable ink for each theme (light 5.27:1, dark 7.16:1). Brightening on hover is dropped for
+   the same reason: it only moved the dark value further the wrong way. */
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-on); }
+.btn-primary:hover { color: var(--accent-on); filter: brightness(1.05); }
 .tb-hint { color: var(--text-soft); font-size: .78rem; margin-left: auto; }
 .stage { padding: 1rem; overflow: hidden; height: 66vh; position: relative; cursor: grab; background: var(--diagram-bg); }
 .stage.small { height: 320px; }
@@ -262,6 +288,11 @@ table.grid tr:last-child td { border-bottom: none; }
      unpainted white background — legible on screen, effectively blank on paper. Forcing
      the tokens rather than the components means every rule in this sheet, including ones
      added later, prints correctly without needing its own print override. */
+  /* EVERY token is re-declared, not a hand-picked subset. A token left out keeps its
+     dark-theme value on paper: --accent-soft used to be missed, so printing from the dark
+     theme put --accent-ink (#1f5c8f) on a #1d3247 fill — 1.87:1, effectively a blank chip.
+     If you add a token above, add it here too; that is what makes "style through tokens and
+     printing works for free" actually true. */
   :root, :root[data-theme="light"], :root[data-theme="dark"] {
     --bg: #ffffff;
     --bg-panel: #ffffff;
@@ -270,10 +301,22 @@ table.grid tr:last-child td { border-bottom: none; }
     --text: #14181d;
     --text-soft: #454f5b;
     --accent: #1f5c8f;
+    --accent-soft: #dcecf9;
     --accent-ink: #1f5c8f;
+    --accent-on: #ffffff;
     --ok: #2e7d32; --ok-ink: #1f5a22;
     --warn: #b7791f; --warn-ink: #6f4900;
     --danger: #c0392b; --danger-ink: #94271b;
+    /* Paper has no elevation, and the dark theme's shadow is a heavy black bloom. */
+    --shadow: none;
+    --shadow-modal: none;
+    --scrim: transparent;
+    /* Fills tuned for a white panel — the dark theme's lightened set washes out on paper. */
+    --cat-1: #2f6fab;
+    --cat-2: #b7791f;
+    --cat-3: #7a5195;
+    --cat-4: #1f8a8a;
+    --cat-5: #488f31;
     --diagram-bg: #ffffff;
     color-scheme: light;
   }
@@ -383,6 +426,18 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
 .hub-rows, .hub-dbs { list-style: none; margin: .25rem 0 0; padding: 0; }
 .hub-rows li, .hub-dbs li { display: flex; align-items: center; gap: .5rem; padding: .35rem 0; border-top: 1px dashed var(--border); }
 .hub-rows li:first-child, .hub-dbs li:first-child { border-top: none; }
+/* Pushes a trailing link ("scorecard →") to the right edge of its flex row. */
+.hub-rows .row-end, .hub-dbs .row-end { margin-left: auto; }
+/* A panel's own leading heading sits flush with the panel padding — h2's top margin is
+   sized for gaps BETWEEN sections, not for the first child of a card. Replaces eleven
+   inline style="margin-top:0" attributes that HubPage was emitting by hand. */
+.panel > h2:first-child, .panel > h3:first-child { margin-top: 0; }
+/* Trailing prose inside a panel: tighter than the default block spacing. */
+.panel > .note:last-child { margin-bottom: 0; }
+.panel > .lede.tight { margin: .2rem 0 .6rem; }
+.panel > p.jump-row { margin: .4rem 0; }
+/* Badge cluster (capability chips). Same wrap behaviour as .lang-legend, tighter gap. */
+.chip-row { display: flex; flex-wrap: wrap; gap: .4rem; }
 
 /* ---- Search ---- */
 .search-open {
@@ -394,18 +449,23 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
   border: 1px solid var(--border); border-radius: 4px; padding: .05em .4em; background: var(--bg-sunken);
 }
 .palette-overlay {
-  position: fixed; inset: 0; z-index: 100; background: rgba(10, 16, 24, .45);
+  position: fixed; inset: 0; z-index: 100; background: var(--scrim);
   display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh;
 }
 .palette-overlay[hidden] { display: none; }
 .palette {
   width: min(640px, 92vw); background: var(--bg-panel); border: 1px solid var(--border);
-  border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, .35); overflow: hidden;
+  border-radius: 12px; box-shadow: var(--shadow-modal); overflow: hidden;
 }
+/* No `outline: none` here. The input is the only focusable thing in the palette and it is
+   focused on open, so the ring looked redundant — but suppressing it left keyboard users
+   with no confirmation that typing goes here, which the design baseline forbids. The shared
+   :focus-visible ring would sit outside the rounded panel, so this is an inset replacement. */
 .palette input {
-  width: 100%; border: none; outline: none; background: transparent; color: var(--text);
+  width: 100%; border: none; background: transparent; color: var(--text);
   font-size: 1.05rem; padding: .9rem 1.1rem; border-bottom: 1px solid var(--border);
 }
+.palette input:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .palette-results { list-style: none; margin: 0; padding: .3rem; max-height: 50vh; overflow-y: auto; }
 .palette-results li {
   display: flex; align-items: baseline; gap: .6rem; padding: .45rem .7rem;
@@ -430,8 +490,8 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
    read as "no focus ring at all" for keyboard users. */
 .filter-input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
 .filter-count { font-size: .8rem; color: var(--text-soft); }
-.diagram-trim { margin: 0 0 .5rem; padding: .4rem .6rem; border-left: 3px solid var(--warn, #b7791f);
-  background: color-mix(in srgb, var(--warn, #b7791f) 10%, transparent); border-radius: 6px; }
+.diagram-trim { margin: 0 0 .5rem; padding: .4rem .6rem; border-left: 3px solid var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, transparent); border-radius: 6px; }
 
 /* ---- Diagram flow-path highlight + jump-to-node ---- */
 .diagram-find { min-width: 160px; }
@@ -481,7 +541,7 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
 #graph3d-controls input[type="number"] { padding: .35rem .4rem; border-radius: 7px; border: 1px solid var(--border);
   background: var(--bg-panel); color: var(--text); font-size: .9rem; width: 4.5rem; }
 #graph3d-controls input[type="number"]:disabled { opacity: .5; }
-#graph3d-controls input[aria-invalid="true"] { border-color: var(--danger, #c0392b); outline: 1px solid var(--danger, #c0392b); }
+#graph3d-controls input[aria-invalid="true"] { border-color: var(--danger); outline: 1px solid var(--danger); }
 .graph3d-panel { position: absolute; top: .75rem; right: .75rem; width: min(320px, 42%);
   background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px;
   box-shadow: var(--shadow); padding: .8rem 1rem; font-size: .85rem; max-height: 80%; overflow: auto; z-index: 6; }
@@ -513,7 +573,7 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
     transform: translateX(-100%); transition: transform .2s ease; box-shadow: var(--shadow);
   }
   .layout.nav-open .sidebar { transform: translateX(0); }
-  .layout.nav-open .nav-overlay { display: block; position: fixed; inset: 0; z-index: 47; background: rgba(0,0,0,.45); }
+  .layout.nav-open .nav-overlay { display: block; position: fixed; inset: 0; z-index: 47; background: var(--scrim); }
   .content { padding: 3.2rem 1rem 2.5rem; max-width: 100%; }
   h1 { font-size: 1.35rem; }
   /* Wide tables scroll horizontally instead of overflowing the viewport. */

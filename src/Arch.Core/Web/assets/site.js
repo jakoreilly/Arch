@@ -34,10 +34,17 @@
       tipEl.style.left = Math.min(px + 14, window.innerWidth - tipEl.offsetWidth - 8) + "px";
       tipEl.style.top = Math.min(py + 14, window.innerHeight - tipEl.offsetHeight - 8) + "px";
     }
+    // aria-describedby is set only while the tip is up. The tip is a single shared element
+    // reused by every node, so a permanent association would describe every node with
+    // whatever text was shown last; pointing at it on show and releasing on hide keeps the
+    // description truthful. Keyboard users already got the tip visually via the focus
+    // handler below — this is what makes it reach a screen reader too.
+    function hide() { tipEl.hidden = true; node.removeAttribute("aria-describedby"); }
+    function showAndDescribe(e) { show(e); node.setAttribute("aria-describedby", "hover-tip"); }
     node.addEventListener("mousemove", show);
-    node.addEventListener("focus", show);
-    node.addEventListener("mouseleave", function () { tipEl.hidden = true; });
-    node.addEventListener("blur", function () { tipEl.hidden = true; });
+    node.addEventListener("focus", showAndDescribe);
+    node.addEventListener("mouseleave", hide);
+    node.addEventListener("blur", hide);
   }
 
   function renderCard(card) {
@@ -123,9 +130,10 @@
     card.querySelector("[data-act='zoom-reset']").onclick = function () { scale = 1; tx = 0; ty = 0; apply(); };
     var fitBtn = card.querySelector("[data-act='fit']");
     if (fitBtn) { fitBtn.onclick = fit; }
-    card.querySelector("[data-act='png']").onclick = downloadPng;
+    var pngBtn = card.querySelector("[data-act='png']");
+    if (pngBtn) { pngBtn.onclick = function () { guard(pngBtn, downloadPng); }; }
     var svgBtn = card.querySelector("[data-act='svg']");
-    if (svgBtn) { svgBtn.onclick = downloadSvg; }
+    if (svgBtn) { svgBtn.onclick = function () { guard(svgBtn, function (release) { downloadSvg(); release(); }); }; }
     var copyBtn = card.querySelector("[data-act='copy']");
     if (copyBtn) {
       copyBtn.onclick = function () {
@@ -203,7 +211,17 @@
       URL.revokeObjectURL(a.href);
     }
 
-    function downloadPng() {
+    // Export is asynchronous (image decode, then canvas.toBlob), and nothing stopped a second
+    // click landing mid-flight and starting a duplicate download. Disable for the round trip
+    // and always re-enable, including on the error path.
+    function guard(btn, work) {
+      if (!btn || btn.disabled) { return; }
+      btn.disabled = true;
+      var done = function () { btn.disabled = false; };
+      try { work(done); } catch (e) { done(); }
+    }
+
+    function downloadPng(release) {
       var size = svgSize();
       // 2x for crisp raster, clamped so huge diagrams stay under canvas limits.
       var s = Math.min(2, 8192 / Math.max(size.w, size.h));
@@ -224,9 +242,10 @@
           a.download = (card.dataset.pngName || "archdiagram") + ".png";
           a.click();
           URL.revokeObjectURL(a.href);
+          release();
         }, "image/png");
       };
-      img.onerror = function () { URL.revokeObjectURL(url); };
+      img.onerror = function () { URL.revokeObjectURL(url); release(); };
       img.src = url;
     }
   }
@@ -403,6 +422,16 @@
     recompute();
   })();
 
+  /* ---- Live regions for the counts and summaries pages update in place ----
+     These elements are emitted by a dozen different page generators; marking them here
+     keeps the rule in one place and means a new page gets it for free by reusing the
+     class/id. "polite" so a running filter never interrupts what the user is typing. */
+  [".filter-count", "#dep-summary", "#lf-summary", "#query-count", "#obj-hops-val"].forEach(function (sel) {
+    document.querySelectorAll(sel).forEach(function (el) {
+      if (!el.hasAttribute("role")) { el.setAttribute("role", "status"); }
+    });
+  });
+
   // Render all initially-visible cards. Cards marked data-deferred are rendered
   // by a page-specific controller (e.g. the landscape layer filters) instead.
   document.querySelectorAll(".diagram-card:not([hidden]):not([data-deferred])").forEach(renderCard);
@@ -423,10 +452,23 @@
   // Theme toggle: swap theme, re-init mermaid, and re-render every already-rendered card.
   var toggle = document.getElementById("theme-toggle");
   if (toggle) {
+    // The label used to read "◐ Theme" forever, so neither a sighted user nor a screen
+    // reader could tell which theme was active — unlike the tests toggle right beside it,
+    // which has always named its state. #theme-status is the polite live region that
+    // announces the change (a label rewrite on its own is not announced).
+    var themeStatus = document.getElementById("theme-status");
+    function syncTheme(announceIt) {
+      var now = currentTheme();
+      toggle.textContent = "◐ Theme: " + now;
+      toggle.title = "Switch to the " + (now === "dark" ? "light" : "dark") + " theme";
+      if (themeStatus && announceIt) { themeStatus.textContent = now === "dark" ? "Dark theme" : "Light theme"; }
+    }
+    syncTheme(false);
     toggle.onclick = function () {
       var cur = currentTheme() === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", cur);
       try { localStorage.setItem("archdiagram-theme", cur); } catch (e) { }
+      syncTheme(true);
       initMermaid();
       document.querySelectorAll(".diagram-card[data-rendered]").forEach(function (card) {
         delete card.dataset.rendered;
@@ -503,14 +545,23 @@
     var index = window.ARCH_SEARCH_INDEX || [];
     var relRoot = overlay.getAttribute("data-rel-root") || "";
     var selected = 0, hits = [];
+    // Whatever had focus when the palette opened, so Esc can hand it back. Without this,
+    // closing left focus on a now-hidden input and the browser dropped it to <body> —
+    // a keyboard user lost their place in the page every time they dismissed a search.
+    var lastFocus = null;
 
     function open() {
+      lastFocus = document.activeElement;
       overlay.hidden = false;
       input.value = "";
       search("");
       input.focus();
     }
-    function close() { overlay.hidden = true; }
+    function close() {
+      overlay.hidden = true;
+      if (lastFocus && lastFocus.focus) { lastFocus.focus(); }
+      lastFocus = null;
+    }
 
     function score(name, detail, q) {
       var n = name.toLowerCase(), d = (detail || "").toLowerCase();
@@ -554,10 +605,15 @@
         li.className = "palette-empty";
         li.textContent = "No matches";
         list.appendChild(li);
+        input.removeAttribute("aria-activedescendant");
+        announce("No matches");
         return;
       }
       hits.forEach(function (h, i) {
         var li = document.createElement("li");
+        li.id = "palette-opt-" + i;
+        li.setAttribute("role", "option");
+        li.setAttribute("aria-selected", i === selected ? "true" : "false");
         if (i === selected) { li.className = "selected"; }
         var kind = document.createElement("span");
         kind.className = "palette-kind";
@@ -577,6 +633,23 @@
       });
       var sel = list.querySelector(".selected");
       if (sel) { sel.scrollIntoView({ block: "nearest" }); }
+      // Points the combobox at the highlighted option so a screen reader reads the row the
+      // arrow keys landed on. Focus itself never leaves the input — that is the pattern.
+      input.setAttribute("aria-activedescendant", "palette-opt-" + selected);
+      announce(hits.length + " result" + (hits.length === 1 ? "" : "s"));
+    }
+
+    // Result counts are obvious on screen and invisible to a screen reader. Debounced via the
+    // natural throttle of typing; the region is polite so it never interrupts the keystroke.
+    var liveEl = null;
+    function announce(text) {
+      if (!liveEl) {
+        liveEl = document.createElement("div");
+        liveEl.className = "sr-only";
+        liveEl.setAttribute("role", "status");
+        overlay.appendChild(liveEl);
+      }
+      liveEl.textContent = text;
     }
 
     function go(h) { window.location.href = relRoot + h[3]; }
@@ -587,6 +660,10 @@
       else if (e.key === "ArrowUp") { e.preventDefault(); selected = Math.max(0, selected - 1); renderList(); }
       else if (e.key === "Enter" && hits[selected]) { go(hits[selected]); }
       else if (e.key === "Escape") { close(); }
+      // Focus trap. The palette holds exactly one focusable element, so "trapping" is just
+      // refusing to let Tab leave it — otherwise Tab walked into the page behind an open
+      // modal, which is the classic aria-modal violation.
+      else if (e.key === "Tab") { e.preventDefault(); }
     });
     overlay.addEventListener("mousedown", function (e) { if (e.target === overlay) { close(); } });
     if (openBtn) { openBtn.onclick = open; }
@@ -1052,7 +1129,15 @@
   function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
   var current = null;
-  function close() { pop.hidden = true; current = null; }
+  function close() {
+    // Hand focus back to the ⓘ that opened this. The popover lives at the end of <body>
+    // while its trigger sits mid-content, so anything focused inside it was orphaned in
+    // tab order — closing without restoring dropped the user to the top of the document.
+    var opener = current;
+    pop.hidden = true;
+    current = null;
+    if (opener && opener.focus && pop.contains(document.activeElement)) { opener.focus(); }
+  }
 
   function open(btn) {
     var term = btn.getAttribute("data-term");
@@ -1067,12 +1152,20 @@
     pop.hidden = false;
     var more = pop.querySelector(".exp-more");
     if (more) {
+      more.setAttribute("aria-expanded", "false");
       more.addEventListener("click", function () {
         var d = pop.querySelector(".exp-detail");
         var show = d.hidden;
         d.hidden = !show;
+        more.setAttribute("aria-expanded", show ? "true" : "false");
         more.textContent = show ? "Show less ▴" : "Go deeper ▾";
       });
+      // Reachable by Tab from the trigger rather than stranded at the end of the document:
+      // Tab out of the popover closes it, so focus rejoins the page where it left off.
+      more.addEventListener("keydown", function (e) {
+        if (e.key === "Tab" && !e.shiftKey) { close(); }
+      });
+      more.focus();
     }
     // Position below the button, clamped to the viewport.
     var r = btn.getBoundingClientRect();
@@ -1098,7 +1191,15 @@
   var overlay = document.getElementById("nav-overlay");
   if (!toggle || !layout) { return; }
   function open() { layout.classList.add("nav-open"); toggle.setAttribute("aria-expanded", "true"); if (overlay) { overlay.hidden = false; } }
-  function close() { layout.classList.remove("nav-open"); toggle.setAttribute("aria-expanded", "false"); }
+  function close() {
+    var wasOpen = layout.classList.contains("nav-open");
+    layout.classList.remove("nav-open");
+    toggle.setAttribute("aria-expanded", "false");
+    // Hand focus back to the button that opened the drawer, rather than letting it fall to
+    // <body> when the element holding it slides off-canvas. Guarded on wasOpen so the
+    // document-level Escape handler doesn't steal focus on every Esc press page-wide.
+    if (wasOpen) { toggle.focus(); }
+  }
   toggle.addEventListener("click", function () { layout.classList.contains("nav-open") ? close() : open(); });
   if (overlay) { overlay.addEventListener("click", close); }
   document.querySelectorAll(".sidebar nav a").forEach(function (a) { a.addEventListener("click", close); });
@@ -1416,6 +1517,10 @@
     headers.forEach(function (th, idx) {
       th.classList.add("sortable-th");
       th.setAttribute("tabindex", "0");
+      // role + aria-sort: the sort state was carried only by a CSS ::after arrow and a colour
+      // change, so a screen reader had no way to know a column was sorted, or which way.
+      th.setAttribute("role", "button");
+      th.setAttribute("aria-sort", "none");
       var dir = 1;
       function sort() {
         var all = rows();
@@ -1425,8 +1530,9 @@
           var cmp = (!isNaN(na) && !isNaN(nb)) ? na - nb : va.localeCompare(vb);
           return cmp * dir;
         });
-        headers.forEach(function (h) { h.classList.remove("sort-asc", "sort-desc"); });
+        headers.forEach(function (h) { h.classList.remove("sort-asc", "sort-desc"); h.setAttribute("aria-sort", "none"); });
         th.classList.add(dir === 1 ? "sort-asc" : "sort-desc");
+        th.setAttribute("aria-sort", dir === 1 ? "ascending" : "descending");
         all.forEach(function (tr) { tbody.appendChild(tr); });
         dir = -dir;
         applyPagination();

@@ -105,7 +105,13 @@ public static class HubPage
         };
 
         var sb = new StringBuilder();
-        sb.Append($"<h1>Arch — {Html.Encode(siteName)}</h1>");
+        // "Arch — Arch" is what the naive form produced whenever the scanned folder happened to
+        // be called Arch, and it read as a rendering bug rather than a title. Collapse to the
+        // bare brand when the folder name adds nothing.
+        var heading = string.Equals(siteName, "Arch", StringComparison.OrdinalIgnoreCase)
+            ? "Arch"
+            : $"Arch — {Html.Encode(siteName)}";
+        sb.Append($"<h1>{heading}</h1>");
         sb.Append("<p class=\"lede\">This folder holds more than one kind of content, so Arch generated a "
                 + "complete site for each and left them side by side. Pick one to explore; the sidebar in "
                 + "either site has its own full navigation.</p>");
@@ -186,15 +192,15 @@ public static class HubPage
         sb.Append("<div class=\"panel\">");
         if (owner.Length > 0)
         {
-            sb.Append($"<h2 style=\"margin-top:0\">Owned by {Html.Encode(owner)}</h2>");
+            sb.Append($"<h2>Owned by {Html.Encode(owner)}</h2>");
         }
         else
         {
-            sb.Append("<h2 style=\"margin-top:0\">What this does</h2>");
+            sb.Append("<h2>What this does</h2>");
         }
         if (capabilities.Count > 0)
         {
-            sb.Append("<div class=\"lang-legend\" style=\"gap:.4rem\">");
+            sb.Append("<div class=\"chip-row\">");
             foreach (var c in capabilities)
             {
                 sb.Append($"<span class=\"badge accent\">{Html.Encode(c)}</span>");
@@ -214,7 +220,7 @@ public static class HubPage
         if (graded.Count == 0) { return ""; }
 
         var sb = new StringBuilder();
-        sb.Append("<div class=\"panel\"><h2 style=\"margin-top:0\">Health at a glance</h2>");
+        sb.Append("<div class=\"panel\"><h2>Health at a glance</h2>");
         // .hub-rows, not .tiles: the grade badge is already on each card above, so this panel earns
         // its space by adding the SIGNAL COUNTS and the scorecard link, not by repeating the badge
         // in a big tile. Not .hub-dbs either, though they look identical — RunnerTests asserts on
@@ -225,10 +231,10 @@ public static class HubPage
             sb.Append($"<li><span class=\"badge {l.GradeClass}\">{Html.Encode(l.Grade)}</span> "
                     + $"<strong>{Html.Encode(l.Title)}</strong> "
                     + $"<span class=\"hub-action-src\">{Html.Encode(l.GradeDetail)}</span> "
-                    + $"<a href=\"{l.Id}/scorecard.html\" style=\"margin-left:auto\">scorecard →</a></li>");
+                    + $"<a href=\"{l.Id}/scorecard.html\" class=\"row-end\">scorecard →</a></li>");
         }
         sb.Append("</ul>");
-        sb.Append("<p class=\"note\" style=\"margin:.7rem 0 0\">Each grade is the worst single signal on that "
+        sb.Append("<p class=\"note\">Each grade is the worst single signal on that "
                 + "subsite's scorecard, so read the failing rows rather than the headline. Grades are heuristic "
                 + "and syntax-only — a conversation starter for a review, not a certification.</p>");
         sb.Append("</div>");
@@ -243,7 +249,7 @@ public static class HubPage
         if (actions.Count == 0) { return ""; }
 
         var sb = new StringBuilder();
-        sb.Append("<div class=\"panel\"><h2 style=\"margin-top:0\">What to do first</h2>");
+        sb.Append("<div class=\"panel\"><h2>What to do first</h2>");
         sb.Append("<ol class=\"hub-actions\">");
         foreach (var a in actions)
         {
@@ -269,10 +275,10 @@ public static class HubPage
         if (withPages.Count == 0) { return ""; }
 
         var sb = new StringBuilder();
-        sb.Append("<div class=\"panel\"><h2 style=\"margin-top:0\">Jump straight to</h2>");
+        sb.Append("<div class=\"panel\"><h2>Jump straight to</h2>");
         foreach (var l in withPages)
         {
-            sb.Append($"<p style=\"margin:.4rem 0\"><strong>{Html.Encode(l.Title)}</strong> ");
+            sb.Append($"<p class=\"jump-row\"><strong>{Html.Encode(l.Title)}</strong> ");
             sb.Append(string.Join(" · ", l.Pages!.Select(p =>
                 $"<a href=\"{l.Id}/{Html.Encode(p.Href)}\">{Html.Encode(p.Title)}</a>")));
             sb.Append("</p>");
@@ -291,8 +297,8 @@ public static class HubPage
         var matched = dbLinks.Count(d => d.Href.Length > 0);
         var sb = new StringBuilder();
         sb.Append("<div class=\"panel\">");
-        sb.Append($"<h2 style=\"margin-top:0\">Code ↔ SQL <span class=\"badge accent\">{matched} of {dbLinks.Count} matched</span></h2>");
-        sb.Append("<p class=\"lede\" style=\"margin:.2rem 0 .6rem\">Databases the scanned code connects to, "
+        sb.Append($"<h2>Code ↔ SQL <span class=\"badge accent\">{matched} of {dbLinks.Count} matched</span></h2>");
+        sb.Append("<p class=\"lede tight\">Databases the scanned code connects to, "
                 + "matched against the SQL model from this same run. A match links straight to that catalog's objects.</p>");
         sb.Append("<ul class=\"hub-dbs\">");
         foreach (var d in dbLinks)

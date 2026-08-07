@@ -67,7 +67,11 @@ public static class PageShell
             foreach (var (href, navTitle, icon) in items)
             {
                 var active = href == activeHref ? " class=\"active\"" : "";
-                nav.Append($"<a href=\"{relRoot}{href}\"{active}><span class=\"nav-icon\">{icon}</span>{Html.Encode(navTitle)}</a>\n");
+                // aria-hidden on the icon: these glyphs are decoration duplicating the label
+                // beside them. Without it a screen reader announces "black diamond Overview",
+                // "telephone Call Graph" on every page. HubPage already does this for .hub-mark.
+                var current = href == activeHref ? " aria-current=\"page\"" : "";
+                nav.Append($"<a href=\"{relRoot}{href}\"{active}{current}><span class=\"nav-icon\" aria-hidden=\"true\">{icon}</span>{Html.Encode(navTitle)}</a>\n");
             }
         }
 
@@ -76,17 +80,29 @@ public static class PageShell
         // leading newline so the "" case leaves no blank line behind.
         var hasSearch = shell.SearchInputPlaceholder.Length > 0;
         var searchButtonHtml = hasSearch
-            ? $"    <button class=\"btn search-open\" id=\"search-open\" type=\"button\" title=\"{shell.SearchButtonTitle}\">🔍 Search <kbd>Ctrl K</kbd></button>\n"
+            ? $"    <button class=\"btn search-open\" id=\"search-open\" type=\"button\" title=\"{Html.Encode(shell.SearchButtonTitle)}\">🔍 Search <kbd>Ctrl K</kbd></button>\n"
             : "";
+        // The palette is a modal: role/aria-modal so assistive tech announces it as one and
+        // treats the page behind as inert, and the combobox/listbox pair so the highlighted
+        // row is actually announced (site.js keeps aria-activedescendant in step). Without
+        // these it was a plain div of unlabelled <li>, silent to a screen reader.
         var paletteHtml = hasSearch
-            ? "<div class=\"palette-overlay\" id=\"palette\" hidden data-rel-root=\"" + relRoot + "\">\n"
+            ? "<div class=\"palette-overlay\" id=\"palette\" hidden data-rel-root=\"" + relRoot + "\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Search\">\n"
               + "  <div class=\"palette\">\n"
-              + "    <input type=\"text\" id=\"palette-input\" placeholder=\"" + shell.SearchInputPlaceholder + "\" autocomplete=\"off\" spellcheck=\"false\">\n"
-              + "    <ul class=\"palette-results\" id=\"palette-results\"></ul>\n"
+              + "    <input type=\"text\" id=\"palette-input\" placeholder=\"" + Html.Encode(shell.SearchInputPlaceholder) + "\" autocomplete=\"off\" spellcheck=\"false\""
+              + " role=\"combobox\" aria-expanded=\"true\" aria-controls=\"palette-results\" aria-autocomplete=\"list\" aria-label=\"" + Html.Encode(shell.SearchInputPlaceholder) + "\">\n"
+              + "    <ul class=\"palette-results\" id=\"palette-results\" role=\"listbox\" aria-label=\"Search results\"></ul>\n"
               + "    <div class=\"palette-foot\">↑↓ navigate · Enter open · Esc close</div>\n"
               + "  </div>\n"
               + "</div>\n"
             : "";
+
+        // "Page — Site" everywhere except when the two are the same word, which produced titles
+        // like "Arch — Arch" on the hub of a folder named Arch. One word is the correct title
+        // there; the suffix exists to disambiguate, and it cannot disambiguate itself.
+        var docTitle = string.Equals(title, siteName, StringComparison.Ordinal)
+            ? Html.Encode(title)
+            : $"{Html.Encode(title)} — {Html.Encode(siteName)}";
 
         return $$"""
 <!DOCTYPE html>
@@ -94,24 +110,25 @@ public static class PageShell
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{Html.Encode(title)}} — {{Html.Encode(siteName)}}</title>
+<title>{{docTitle}}</title>
 <link rel="stylesheet" href="{{relRoot}}assets/site.css">
 {{shell.ExtraHead}}
 </head>
 <body>
 <div class="layout">
-  <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+  <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar">☰</button>
   <div class="nav-overlay" id="nav-overlay" hidden></div>
   <aside class="sidebar" id="sidebar">
-    <div class="brand"><span class="brand-mark">◆</span><div><div class="brand-name">{{shell.Brand}}</div><div class="brand-sub">{{Html.Encode(siteName)}}</div></div></div>
-{{searchButtonHtml}}    <nav>
+    <div class="brand"><span class="brand-mark" aria-hidden="true">◆</span><div><div class="brand-name">{{shell.Brand}}</div><div class="brand-sub">{{Html.Encode(siteName)}}</div></div></div>
+{{searchButtonHtml}}    <nav aria-label="Main">
 {{nav}}    </nav>
     <div class="sidebar-foot">
       <button class="btn theme-toggle" id="theme-toggle" type="button" title="Switch between light and dark theme">◐ Theme</button>{{shell.ExtraFooterButtons}}
+      <span class="sr-only" id="theme-status" role="status"></span>
     </div>
   </aside>
   <main class="content">
-    <div class="breadcrumbs">{{breadcrumbsHtml}}</div>
+    <nav class="breadcrumbs" aria-label="Breadcrumb">{{breadcrumbsHtml}}</nav>
 {{bodyHtml}}
   </main>
 </div>
