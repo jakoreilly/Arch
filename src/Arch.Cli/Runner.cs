@@ -76,7 +76,9 @@ public static class Runner
                 if (provider.Id == "code") { codeResult = model; codeArgs = providerArgs; }
                 if (provider.Id == "sql") { sqlResult = model; }
                 var (title, icon) = DisplayInfo(provider.Id);
-                links.Add(new HubPage.Link(provider.Id, title, icon, detection.Summary, HeadlineStats(model)));
+                var (grade, gradeClass, gradeDetail) = Grade(model);
+                links.Add(new HubPage.Link(provider.Id, title, icon, detection.Summary, HeadlineStats(model),
+                                           grade, gradeClass, KeyPages(provider.Id), gradeDetail));
             }
             catch (Exception ex)
             {
@@ -112,7 +114,12 @@ public static class Runner
         {
             var siteName = Path.GetFileName(sourceFull.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
             var generatedOn = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-            HubPage.Write(outDir, siteName, links, sourceFull, generatedOn, HubDbLinks(joinedDatabases));
+            var owner = codeResult is ProjectModel om ? om.Owner : "";
+            var capabilities = codeResult is ProjectModel cm
+                ? cm.Capabilities.Select(c => c.Name).ToList()
+                : [];
+            HubPage.Write(outDir, siteName, links, sourceFull, generatedOn, HubDbLinks(joinedDatabases),
+                          TopActions(codeResult, sqlResult), owner, capabilities);
             indexPath = Path.Combine(outDir, "index.html");
         }
 
@@ -143,6 +150,134 @@ public static class Runner
         SqlModel s => SqlStats(s),
         _ => [],
     };
+
+    /// <summary>The subsite's overall grade, normalised to ONE vocabulary. Both analysers grade on
+    /// the same Ok/Watch/Fail scale but print it differently on their own pages ("AT RISK" vs
+    /// "Fail"), which is fine in isolation and actively misleading when the two sit side by side on
+    /// the hub. The words below are the hub's, and the badge colour is the shared semantic token.</summary>
+    private static (string Grade, string Class, string Detail) Grade(object? model)
+    {
+        switch (model)
+        {
+            case ProjectModel p:
+            {
+                var card = ScorecardBuilder.Build(p);
+                var rank = card.Overall switch
+                {
+                    ScorecardBuilder.Status.Ok => 0,
+                    ScorecardBuilder.Status.Watch => 1,
+                    ScorecardBuilder.Status.Fail => 2,
+                    _ => 3,
+                };
+                var attention = card.Rows.Count(r => r.Status is ScorecardBuilder.Status.Watch or ScorecardBuilder.Status.Fail);
+                var graded = card.Rows.Count(r => r.Status != ScorecardBuilder.Status.NA);
+                return GradeWords(rank, attention, graded);
+            }
+            case SqlModel s:
+            {
+                var card = Arch.Sql.Analysis.SqlScorecard.Build(s);
+                var rank = card.Overall switch
+                {
+                    Arch.Sql.Analysis.SqlScorecard.Status.Ok => 0,
+                    Arch.Sql.Analysis.SqlScorecard.Status.Watch => 1,
+                    Arch.Sql.Analysis.SqlScorecard.Status.Fail => 2,
+                    _ => 3,
+                };
+                var attention = card.Rows.Count(r => r.Status is Arch.Sql.Analysis.SqlScorecard.Status.Watch
+                                                              or Arch.Sql.Analysis.SqlScorecard.Status.Fail);
+                var graded = card.Rows.Count(r => r.Status != Arch.Sql.Analysis.SqlScorecard.Status.NA);
+                return GradeWords(rank, attention, graded);
+            }
+            default:
+                return ("", "", "");
+        }
+    }
+
+    private static (string, string, string) GradeWords(int rank, int attention, int graded)
+    {
+        var detail = graded == 0
+            ? "nothing could be measured"
+            : attention == 0
+                ? $"all {graded:N0} signals passing"
+                : $"{attention:N0} of {graded:N0} signals need attention";
+        return rank switch
+        {
+            0 => ("HEALTHY", "ok", detail),
+            1 => ("NEEDS WORK", "warn", detail),
+            2 => ("AT RISK", "danger", detail),
+            _ => ("NOT GRADED", "", detail),
+        };
+    }
+
+    /// <summary>The pages worth a direct link from the hub. Hard-coded per provider rather than
+    /// discovered, because "which pages matter" is an editorial judgement, not a fact about the
+    /// output directory — and a link to a page that exists but nobody needs is noise.</summary>
+    private static IReadOnlyList<HubPage.Page> KeyPages(string providerId) => providerId switch
+    {
+        "code" =>
+        [
+            new("System Brief", "brief.html"),
+            new("Scorecard", "scorecard.html"),
+            new("Refactoring", "refactor.html"),
+            new("Ops & Network", "ops.html"),
+            new("Config & Secrets", "config.html"),
+        ],
+        "sql" =>
+        [
+            new("Objects", "objects.html"),
+            new("ER Diagram", "er.html"),
+            new("Lint", "lint.html"),
+            new("Scorecard", "scorecard.html"),
+            new("Impact", "impact.html"),
+        ],
+        _ => [],
+    };
+
+    /// <summary>The merged backlog, worst first, capped at five. Code items come from the
+    /// refactoring backlog (which already ranks itself); SQL items from its scorecard's failing
+    /// rows, since Arch.Sql has no backlog of its own. Ordering is severity-then-source so the
+    /// list is stable run to run — two items of equal severity must not be free to swap.</summary>
+    private static IReadOnlyList<HubPage.Action> TopActions(object? codeResult, object? sqlResult)
+    {
+        var actions = new List<(int Rank, HubPage.Action Action)>();
+
+        if (codeResult is ProjectModel code)
+        {
+            foreach (var item in RefactoringBacklog.Build(code).Take(5))
+            {
+                var (label, cls, rank) = item.Severity switch
+                {
+                    RefactoringBacklog.Sev.Critical => ("critical", "danger", 0),
+                    RefactoringBacklog.Sev.High => ("high", "danger", 1),
+                    RefactoringBacklog.Sev.Medium => ("medium", "warn", 2),
+                    _ => ("low", "", 3),
+                };
+                actions.Add((rank, new HubPage.Action(label, cls, item.Title, $"code/{item.Link}", "Code Analysis")));
+            }
+        }
+
+        if (sqlResult is SqlModel sql)
+        {
+            foreach (var row in Arch.Sql.Analysis.SqlScorecard.Build(sql).Rows
+                         .Where(r => r.Status is Arch.Sql.Analysis.SqlScorecard.Status.Fail
+                                              or Arch.Sql.Analysis.SqlScorecard.Status.Watch))
+            {
+                var fail = row.Status == Arch.Sql.Analysis.SqlScorecard.Status.Fail;
+                var href = row.Link.Length > 0 ? $"sql/{row.Link}" : "sql/scorecard.html";
+                actions.Add((fail ? 1 : 2,
+                    new HubPage.Action(fail ? "high" : "medium", fail ? "danger" : "warn",
+                                       $"{row.Metric}: {row.Value}", href, "SQL Analysis")));
+            }
+        }
+
+        return actions
+            .OrderBy(a => a.Rank)
+            .ThenBy(a => a.Action.Source, StringComparer.Ordinal)
+            .ThenBy(a => a.Action.Text, StringComparer.Ordinal)
+            .Take(5)
+            .Select(a => a.Action)
+            .ToList();
+    }
 
     private static IReadOnlyList<HubPage.Stat> CodeStats(ProjectModel model) =>
     [

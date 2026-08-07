@@ -31,7 +31,20 @@ public static class SiteDiscovery
             if (jsonPath is null) { continue; }
             try
             {
-                var model = JsonSerializer.Deserialize<ProjectModel>(File.ReadAllText(jsonPath), ModelJson.Options);
+                var json = File.ReadAllText(jsonPath);
+                // A SQL-ONLY site writes a SqlModel to the same root path a code site uses, and
+                // both call their top-level array "files" — so deserializing it as a ProjectModel
+                // fails deep inside with "FileNode was missing required properties including
+                // 'language'", which reads like a corrupt file rather than the ordinary situation
+                // it is. Named explicitly here because a group run makes it common: point `arch
+                // group` at a set of repos and one of them being SQL-only is unremarkable.
+                if (IsSqlModel(json))
+                {
+                    diagnostics.Add($"Skipped {id}: it is a SQL-only site, which has no code model to "
+                                  + "federate. Its own site is still complete and linked from wherever you generated it.");
+                    continue;
+                }
+                var model = JsonSerializer.Deserialize<ProjectModel>(json, ModelJson.Options);
                 if (model is null) { diagnostics.Add($"Skipped {jsonPath}: deserialized to null."); continue; }
                 // The folder root, not the model's own folder: that is the site's front door in
                 // both shapes — the code site's index for a single-provider site, the hub (which
@@ -45,5 +58,24 @@ public static class SiteDiscovery
             }
         }
         return sites;
+    }
+
+    /// <summary>True when the JSON is a SqlModel rather than a ProjectModel. Keyed on "objects",
+    /// which every SqlModel has at its root and no ProjectModel does — a property peek rather than
+    /// a type reference, because Arch.Code cannot see Arch.Sql (and should not learn to).</summary>
+    private static bool IsSqlModel(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.ValueKind == JsonValueKind.Object
+                && doc.RootElement.TryGetProperty("objects", out var objects)
+                && objects.ValueKind == JsonValueKind.Array
+                && !doc.RootElement.TryGetProperty("projects", out _);
+        }
+        catch (JsonException)
+        {
+            return false; // let the real deserialization report it
+        }
     }
 }

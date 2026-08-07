@@ -48,6 +48,29 @@ public class SiteDiscoveryTests : IDisposable
         Assert.Equal(new[] { "site-a", "site-b", "site-c" }, sites.Select(s => s.Id).OrderBy(x => x));
     }
 
+    /// <summary>A SQL-only site writes a SqlModel to the same root path a code site uses, and both
+    /// call their top-level array "files". Before this was named explicitly it failed deep inside
+    /// deserialization with "FileNode was missing required properties including 'language'" — a
+    /// message that reads like a corrupt file rather than the ordinary situation it is. `arch group`
+    /// makes it common, since one SQL-only repo in a set of ten is unremarkable.</summary>
+    [Fact]
+    public void Discover_skips_a_sql_only_site_with_an_explanatory_diagnostic()
+    {
+        WriteSite("site-a", "a");
+        Directory.CreateDirectory(Path.Combine(_root, "site-db"));
+        File.WriteAllText(Path.Combine(_root, "site-db", "model.json"), """
+            { "rootName": "db", "files": [ { "relPath": "x.sql", "slug": "x_sql" } ], "objects": [], "foreignKeys": [] }
+            """);
+
+        var diagnostics = new List<string>();
+        var sites = SiteDiscovery.Discover(_root, Path.Combine(_root, "site-landscape"), diagnostics);
+
+        Assert.Equal(new[] { "site-a" }, sites.Select(s => s.Id));
+        var note = Assert.Single(diagnostics);
+        Assert.Contains("site-db", note, StringComparison.Ordinal);
+        Assert.Contains("SQL-only", note, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Discover_with_only_filters_to_named_subset()
     {

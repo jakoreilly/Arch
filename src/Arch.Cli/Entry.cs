@@ -22,6 +22,11 @@ internal static class Entry
             // the verb is a rename of that entry point, not a second implementation of it.
             case "landscape":
                 return Arch.Code.Cli.Verbs.RunLandscape(["--landscape", .. args[1..]]);
+            // `landscape` federates sites that already exist; `group` is the orchestration that
+            // creates them. The capability ArchDiagram carried in Launch-ArchDiagram.ps1 and that
+            // never came across in the migration — see continue.md.
+            case "group":
+                return GroupRunner.Run(args[1..]);
             case "--demo":
                 Console.Error.WriteLine("arch: --demo is not yet available.");
                 return 2;

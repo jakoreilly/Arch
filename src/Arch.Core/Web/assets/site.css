@@ -370,9 +370,19 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
 .hub-stats b { color: var(--text); font-weight: 700; }
 /* The cross-layer join rows. Not .member-list — that one is monospace, for code members;
    these are prose labels and a status chip. */
-.hub-dbs { list-style: none; margin: .25rem 0 0; padding: 0; }
-.hub-dbs li { display: flex; align-items: center; gap: .5rem; padding: .35rem 0; border-top: 1px dashed var(--border); }
-.hub-dbs li:first-child { border-top: none; }
+/* Merged "what to do first" on the hub. Numbered, because the order is the recommendation. */
+.hub-actions { margin: .4rem 0 0; padding-left: 1.4rem; }
+.hub-actions li { padding: .3rem 0; }
+.hub-actions li + li { border-top: 1px dashed var(--border); }
+/* Muted trailing attribution ("Code Analysis"). Deliberately NOT .note, which is a bordered
+   callout and renders as a grey box when inlined mid-sentence. */
+.hub-action-src { font-size: .8rem; color: var(--text-soft); }
+/* Compact separated rows, shared by the health summary (.hub-rows) and the cross-layer join
+   list (.hub-dbs). Two names for one look on purpose: RunnerTests asserts on "hub-dbs" to
+   prove the Code<->SQL panel is absent, so that class must stay unique to that panel. */
+.hub-rows, .hub-dbs { list-style: none; margin: .25rem 0 0; padding: 0; }
+.hub-rows li, .hub-dbs li { display: flex; align-items: center; gap: .5rem; padding: .35rem 0; border-top: 1px dashed var(--border); }
+.hub-rows li:first-child, .hub-dbs li:first-child { border-top: none; }
 
 /* ---- Search ---- */
 .search-open {
