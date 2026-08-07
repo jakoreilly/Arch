@@ -25,6 +25,7 @@ public static class PageTemplate
         ("calls.html", "Call Graph", "☎"),
         ("packages.html", "Packages", "📦"),
         ("config.html", "Config & Secrets", "🔑"),
+        ("ops.html", "Ops & Network", "🌐"),
         ("hotspots.html", "Hotspots", "◉"),
     ];
 
@@ -38,6 +39,10 @@ public static class PageTemplate
         ("Health", [("scorecard.html", "Scorecard", "✔"), ("refactor.html", "Refactoring", "🔧"), ("metrics.html", "Metrics", "📐"), ("hotspots.html", "Hotspots", "◉"), ("evolution.html", "Evolution", "🕓")]),
         ("Code", [("types.html", "Types & Members", "❖"), ("api.html", "API Surface", "⧉"), ("calls.html", "Call Graph", "☎")]),
         ("Supply chain", [("packages.html", "Dependencies & Stack", "📦"), ("config.html", "Config & Secrets", "🔑")]),
+        // Its own section rather than folded into "Supply chain": that section is about what the
+        // build pulls in, this one is about how the thing is deployed and reachable. Appending a
+        // section also keeps the nav delta purely additive — no existing label changes.
+        ("Deployment", [("ops.html", "Ops & Network", "🌐")]),
     ];
 
     // ArchDiagram's pre-paint script also flips hide-tests from the "archdiagram-show-tests"

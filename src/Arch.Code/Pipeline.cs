@@ -71,6 +71,11 @@ public static class Pipeline
         var databases = CsprojScanner.BuildDbNodes(projects);
         var deps = ImportResolver.Resolve(files);
         var calls = CallGraphBuilder.Build(files);
+        // Its own read pass over a bounded file set (config + infrastructure + .cs), rather than
+        // riding along in AnalyzeOne: the files that carry deployment facts are mostly ones
+        // AnalyzeOne skips (an extensionless Dockerfile is language "Other" and never read), and
+        // keeping it separate keeps it independently testable.
+        var network = NetworkSurface.Analyze(options.SourcePath, entries, diagnostics);
 
         var rootName = Path.GetFileName(options.SourcePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         if (string.IsNullOrWhiteSpace(rootName)) { rootName = "project"; }
@@ -93,6 +98,7 @@ public static class Pipeline
             SourceLink = options.SourceLinkType is "none" or ""
                 ? null
                 : new SourceLink { Type = options.SourceLinkType, Base = options.SourceLinkBase, Ref = options.SourceLinkRef },
+            Network = network,
         };
     }
 

@@ -29,6 +29,11 @@ public sealed record ProjectModel
     /// working copy (a dropped-in folder, or a --from-model rebuild). Drives the Evolution
     /// page and the churn/ownership fields on each <see cref="FileNode"/>. Additive.</summary>
     public GitInfo? Git { get; init; }
+
+    /// <summary>Deployment-facing facts for the Ops &amp; Network page: egress hosts, listening
+    /// ports, configuration environments and container images. Never null; empty on a codebase
+    /// with no config or infrastructure files. Appended last, per the model.json convention.</summary>
+    public NetworkSurfaceModel Network { get; init; } = new();
 }
 
 /// <summary>Whole-repo git facts. <see cref="Available"/> is false when git or a .git dir was
@@ -211,4 +216,68 @@ public sealed record SqlCrossLink
     /// connection); false when it matched by catalog name only, an unverified guess (see plan.md
     /// GOTCHA (server-name-forms)). Meaningless when Matched is false.</summary>
     public bool Verified { get; init; }
+}
+
+/// <summary>One host this system talks out to, identified by structure (scheme + host + port)
+/// rather than by the full URL — paths, query strings and tokens are never captured.</summary>
+public sealed record NetworkEndpoint
+{
+    public required string Scheme { get; init; }
+    public required string Host { get; init; }
+    /// <summary>0 = the scheme's default port was used (not written in the URL).</summary>
+    public int Port { get; init; }
+    /// <summary>First "relPath:line" this endpoint was seen at, in path order.</summary>
+    public required string Evidence { get; init; }
+    /// <summary>Loopback or link-local host — a configuration smell in committed config rather
+    /// than a real external dependency, so it is reported but badged apart.</summary>
+    public bool IsLoopback { get; init; }
+    /// <summary>The host is a deploy-time token ("{serviceHost}"), so the real target is unknown
+    /// to a static scan. Still a dependency; just an unresolvable one.</summary>
+    public bool IsPlaceholder { get; init; }
+    /// <summary>The scheme carries no transport encryption (http, ws, amqp, redis, …).</summary>
+    public bool IsPlaintext { get; init; }
+    /// <summary>How many places referenced this same endpoint.</summary>
+    public int ReferenceCount { get; init; }
+}
+
+/// <summary>A port this system is configured to listen on, and where that was declared.</summary>
+public sealed record ListeningPort
+{
+    public required int Port { get; init; }
+    /// <summary>"http"/"https" from launchSettings, "tcp"/"udp" from a Dockerfile or compose file.</summary>
+    public required string Scheme { get; init; }
+    /// <summary>"launchSettings" | "Dockerfile" | "compose".</summary>
+    public required string Source { get; init; }
+    public required string Evidence { get; init; }
+}
+
+/// <summary>One appsettings file as a configuration environment. Only key *names* are captured —
+/// never values — so a secret sitting in a config file cannot reach the output through this path.</summary>
+public sealed record ConfigEnvironment
+{
+    /// <summary>"" for the base appsettings.json; otherwise the environment ("Production").</summary>
+    public required string Name { get; init; }
+    public required string RelPath { get; init; }
+    /// <summary>Dotted key paths, two levels deep, sorted.</summary>
+    public List<string> Keys { get; init; } = [];
+}
+
+/// <summary>A container image the deployment is built on or runs alongside.</summary>
+public sealed record ContainerImage(string Image, string Evidence);
+
+/// <summary>The deployment-facing view: egress, ingress, environments and runtime images.
+/// Empty on a codebase with no config or infrastructure files, which is normal.</summary>
+public sealed record NetworkSurfaceModel
+{
+    public List<NetworkEndpoint> Outbound { get; init; } = [];
+    public List<ListeningPort> Listeners { get; init; } = [];
+    public List<ConfigEnvironment> Environments { get; init; } = [];
+    public List<ContainerImage> Images { get; init; } = [];
+
+    /// <summary>Derived convenience for the page, not part of the model.json contract — without
+    /// the attribute it serialises as an "isEmpty" field that restates the four lists above and
+    /// would have to be kept true by any future reader.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsEmpty => Outbound.Count == 0 && Listeners.Count == 0
+        && Environments.Count == 0 && Images.Count == 0;
 }

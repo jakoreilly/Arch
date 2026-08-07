@@ -84,6 +84,10 @@ public static class SiteGenerator
             Html.Crumbs(("index.html", "Overview"), (null, "Config & Secrets")),
             ConfigSecretsPage.Body(model));
 
+        WritePage(outDir, "ops.html", "Ops & Network", model, "ops.html", "",
+            Html.Crumbs(("index.html", "Overview"), (null, "Ops & Network")),
+            OpsPage.Body(model));
+
         WritePage(outDir, "hotspots.html", "Hotspots & Metrics", model, "hotspots.html", "",
             Html.Crumbs(("index.html", "Overview"), (null, "Hotspots")),
             HotspotsPage.Body(ctx, showComplexity));

@@ -22,7 +22,7 @@ src/Arch.Core/    Html, Crumbs, PageShell, Glossary, SiteAssets, ModelJson,
 src/Arch.Code/    namespace Arch.Code.*, assets-code overlay
 src/Arch.Sql/     namespace Arch.Sql.*,  assets-sql overlay
 src/Arch.Cli/     the unified exe: Entry (the verb table), Runner, HubPage, CrossLink
-tests/            Arch.Code.Tests (212), Arch.Sql.Tests (183), Arch.Cli.Tests (22)
+tests/            Arch.Code.Tests (256), Arch.Sql.Tests (183), Arch.Cli.Tests (22)
 tools/golden.sh   the byte-identical-output regression net
 ```
 
@@ -37,7 +37,7 @@ tools/golden.sh   the byte-identical-output regression net
 
 ```bash
 dotnet build Arch.slnx --nologo     # 0 warnings, 0 errors
-dotnet test  Arch.slnx --nologo     # 417 passed (~90s — not a hang)
+dotnet test  Arch.slnx --nologo     # 461 passed (~90s — not a hang)
 bash tools/golden.sh                # GOLDEN OK
 bash tools/golden.sh accept         # re-baseline (golden/ is gitignored; regenerate after a clone)
 ```
@@ -63,6 +63,12 @@ baseline on top of the change you are verifying — and it cannot see `Arch.Cli`
 - **`.gitignore` ignores `*.md` by default** and re-includes named docs one by one. A new
   Markdown file is silently untracked until you add a `!` line for it — `git status` will
   not mention it at all. Check with `git check-ignore -v <file>`.
+- **There are two `SiteGenerator.cs` files, and only one is live.**
+  `src/Arch.Code/SiteGenerator.cs` (`Arch.Code.SiteGenerator`) is the one every caller uses.
+  `src/Arch.Code/Site/SiteGenerator.cs` (`Arch.Code.Site.SiteGenerator`) is an unreferenced
+  stale copy that already lacks the Evolution and Explore pages. Adding a page to the wrong
+  one compiles cleanly, passes every test, and silently does nothing. Grep for the caller
+  (`SiteGenerator.Generate`) before editing either. **Deleting the dead copy is worth doing.**
 
 ## Environment
 

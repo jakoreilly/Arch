@@ -20,6 +20,7 @@ public static class GuidePage
         ("types.html", "Types & Members", "Every C# type and method found by syntax-only parsing, grouped by namespace."),
         ("calls.html", "Call Graph", "Method-to-method calls per type (heuristic — matched by name + parameter count)."),
         ("hotspots.html", "Hotspots", "Coupling (fan-in / fan-out), largest files, most-used packages, all TODO/FIXME markers, and the most complex methods with cyclomatic/cognitive scores (hidden by --no-complexity)."),
+        ("ops.html", "Ops & Network", "The deployment view: hosts this system calls out to, ports it listens on, how its config differs per environment, and the container images it runs in — read from config and infrastructure files, reported by shape and never by value."),
     ];
 
     private static readonly (string Term, string Def)[] Glossary =

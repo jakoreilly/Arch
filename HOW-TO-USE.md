@@ -160,7 +160,7 @@ into the SQL site's object list.
 **Code site** — Start: Overview, System Brief, Guide · Structure: Structure,
 Dependencies, Modules, Dependency Direction, Graph (3D), Explore · Health: Scorecard,
 Refactoring, Metrics, Hotspots, Evolution · Code: Types & Members, API Surface, Call
-Graph · Supply chain: Dependencies & Stack, Config & Secrets.
+Graph · Supply chain: Dependencies & Stack, Config & Secrets · Deployment: Ops & Network.
 
 **SQL site** — Start: Overview, Guide, Explore · Schema: Objects, Domains, ER Diagram,
 Relationships, Dependencies, 3D Graph, CRUD Matrix · Health: Lint, Scorecard, Metrics,
@@ -170,6 +170,30 @@ Impact, Activity, Indexes, Schema Diff · Reference: Config & Secrets.
 
 Every site carries its own **Guide** page explaining each of these in context. That is the
 authoritative tour; this list is just the map.
+
+## The deployment view
+
+The **Ops & Network** page on every code site answers what the dependency graph cannot:
+how the system is wired into a network. It reads `appsettings*.json`, `*.config`,
+`launchSettings.json`, `Dockerfile`, `docker-compose*.yml` and `.cs` source, and reports:
+
+- **Outbound** — every host the code is configured to reach, with its scheme and port, and
+  whether the transport is encrypted. The list an egress-policy conversation starts from.
+  Hard-coded `localhost` addresses are listed separately: they work on a dev box and fail
+  everywhere else.
+- **Listening ports** — what the system binds, from all three places that declare it.
+- **Environments** — a matrix of which settings each `appsettings.<Env>.json` overlay
+  declares. A key set in one environment but not another is where config drift hides, and
+  those rows are flagged.
+- **Container images** — with unpinned tags (`latest`, or no tag) called out.
+
+Two guarantees carry over from the rest of the tool. Endpoints are reported **by shape** —
+scheme, host and port — so no path, query string or token is ever captured. The
+environment matrix lists **key names only**; no configuration value is read or stored.
+
+It is static, so a URL assembled at runtime, injected by a service mesh, or held only in a
+secret store is invisible. Treat it as the floor of the network surface, not the ceiling.
+XML namespace URIs, documentation links and package-registry hosts are filtered out.
 
 ## The estate view
 
