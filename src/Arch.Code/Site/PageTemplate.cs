@@ -12,7 +12,7 @@ public static class PageTemplate
     public static readonly (string Href, string Title, string Icon)[] Nav =
     [
         ("index.html", "Overview", "◈"),
-        ("guide.html", "Guide", "❓"),
+        ("guide.html", "Guide", "📖"),
         ("structure.html", "Structure", "🗀"),
         ("dependencies.html", "Dependencies", "⇄"),
         ("modules.html", "Modules", "⬡"),
@@ -33,7 +33,7 @@ public static class PageTemplate
     /// flat <see cref="Nav"/> for callers/tests that just need the hrefs.</summary>
     public static readonly (string Section, (string Href, string Title, string Icon)[] Items)[] NavSections =
     [
-        ("Start", [("index.html", "Overview", "◈"), ("brief.html", "System Brief", "📄"), ("guide.html", "Guide", "❓")]),
+        ("Start", [("index.html", "Overview", "◈"), ("brief.html", "System Brief", "📄"), ("guide.html", "Guide", "📖")]),
         ("Structure", [("structure.html", "Structure", "🗀"), ("dependencies.html", "Dependencies", "⇄"),
                        ("modules.html", "Modules", "⬡"), ("layers.html", "Dependency Direction", "≡"), ("graph.html", "Graph (3D)", "🕸"), ("explore.html", "Explore", "🔎")]),
         ("Health", [("scorecard.html", "Scorecard", "✔"), ("refactor.html", "Refactoring", "🔧"), ("metrics.html", "Metrics", "📐"), ("hotspots.html", "Hotspots", "◉"), ("evolution.html", "Evolution", "🕓")]),
