@@ -6,8 +6,10 @@ namespace Arch.Cli.Tests;
 /// otherwise launch a real browser) and an explicit --out under a per-test temp dir, so
 /// nothing here touches the repo or leaks into the working directory. Console.Error is
 /// captured for the assertions that need it — this class runs its tests sequentially
-/// (xunit's default within one class), which is what makes that safe; a second class
-/// capturing Console.Error in this assembly would race with this one.</summary>
+/// (xunit's default within one class), which is what makes that safe. Every other class
+/// that captures Console.Error joins the same collection, so they serialise against this
+/// one too rather than interleaving on a process-global stream.</summary>
+[Collection(ConsoleCaptureCollection.Name)]
 public class RunnerTests : IDisposable
 {
     private static readonly string FixturesRoot = Path.Combine(AppContext.BaseDirectory, "Fixtures");

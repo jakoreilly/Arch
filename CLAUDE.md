@@ -8,7 +8,9 @@ core and one `arch` executable.
 - **`Arch.Sql`** (`archsql`) — analyses SQL scripts, or connects to a live server.
 - **`Arch.Cli`** (`arch`) — detects which applies to a folder and runs it; runs both and
   writes a hub page when both apply; cross-links code→SQL when a connection string in
-  the code matches the SQL model's catalog.
+  the code matches the SQL model's catalog. `arch landscape <parent>` federates the sites
+  already generated under a folder into one estate view (shared databases, cross-repo
+  package edges, service calls) — it reads their `model.json` files, never source.
 
 Output is a **fully offline** static site — no CDN, no network, opens from `file://`.
 
@@ -19,8 +21,8 @@ src/Arch.Core/    Html, Crumbs, PageShell, Glossary, SiteAssets, ModelJson,
                     IAnalysisProvider/Detection, and the shared assets (site.css/js)
 src/Arch.Code/    namespace Arch.Code.*, assets-code overlay
 src/Arch.Sql/     namespace Arch.Sql.*,  assets-sql overlay
-src/Arch.Cli/     the unified exe: Runner, HubPage, CrossLink
-tests/            Arch.Code.Tests (209), Arch.Sql.Tests (183), Arch.Cli.Tests (15)
+src/Arch.Cli/     the unified exe: Entry (the verb table), Runner, HubPage, CrossLink
+tests/            Arch.Code.Tests (212), Arch.Sql.Tests (183), Arch.Cli.Tests (22)
 tools/golden.sh   the byte-identical-output regression net
 ```
 
@@ -35,7 +37,7 @@ tools/golden.sh   the byte-identical-output regression net
 
 ```bash
 dotnet build Arch.slnx --nologo     # 0 warnings, 0 errors
-dotnet test  Arch.slnx --nologo     # 407 passed (~90s — not a hang)
+dotnet test  Arch.slnx --nologo     # 417 passed (~90s — not a hang)
 bash tools/golden.sh                # GOLDEN OK
 bash tools/golden.sh accept         # re-baseline (golden/ is gitignored; regenerate after a clone)
 ```

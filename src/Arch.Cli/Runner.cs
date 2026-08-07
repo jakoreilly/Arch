@@ -243,6 +243,8 @@ public static class Runner
         Console.Error.WriteLine("       arch code <args>    (drop-in for running archdiagram directly)");
         Console.Error.WriteLine("       arch sql <args>     (drop-in for running archsql directly)");
         Console.Error.WriteLine("       arch connect (--conn-file <path> | --env) [--out <dir>] [--no-open] ...");
+        Console.Error.WriteLine("       arch landscape <parent-dir> [--out <dir>] [--only <a,b>] [--title <t>] [--no-open]");
+        Console.Error.WriteLine("                           cross-reference every site already generated under <parent-dir>");
     }
 
     private static void PrintEmptyState()

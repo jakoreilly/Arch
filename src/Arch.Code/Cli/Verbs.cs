@@ -28,7 +28,23 @@ internal static class Verbs
     /// Cross-references every site-*/model.json under &lt;parent-dir&gt; into a parent viewer.</summary>
     internal static int RunLandscape(string[] args)
     {
+        if (args.Length > 1 && args[1] is "-h" or "--help")
+        {
+            Console.Error.WriteLine("Usage: arch landscape <parent-dir> [--out <dir>] [--only <a,b,...>] [--title <text>] [--no-open]");
+            Console.Error.WriteLine("  Cross-references every already-generated site under <parent-dir> (each subfolder holding");
+            Console.Error.WriteLine("  a model.json, or a code/model.json for a combined-mode site) into one estate view: shared");
+            Console.Error.WriteLine("  databases, cross-repo package edges and service calls. Generate the sites first.");
+            Console.Error.WriteLine("  <parent-dir> defaults to the current directory; --out defaults to <parent-dir>/site-landscape.");
+            return 0;
+        }
         var parent = args.Length > 1 && !args[1].StartsWith("--") ? Path.GetFullPath(args[1]) : Directory.GetCurrentDirectory();
+        if (!Directory.Exists(parent))
+        {
+            // SiteDiscovery enumerates this directory directly; without the guard a mistyped path
+            // surfaces as an unhandled DirectoryNotFoundException instead of a usage error.
+            Console.Error.WriteLine($"error: '{parent}' is not a directory.");
+            return 2;
+        }
         string? lOut = null, only = null, title = null;
         var lOpen = true;
         for (var i = 1; i < args.Length; i++)

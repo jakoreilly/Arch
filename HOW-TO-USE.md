@@ -63,6 +63,7 @@ arch <path> [options]                       detect content, generate the right s
 arch code <path> [options]                  force code analysis only
 arch sql  <path> [options]                  force SQL analysis only
 arch connect (--conn-file <p> | --env) …    read a live SQL Server, read-only
+arch landscape <parent-dir> [options]       federate the sites already generated under a folder
 arch -h | --help
 ```
 
@@ -165,8 +166,51 @@ Graph · Supply chain: Dependencies & Stack, Config & Secrets.
 Relationships, Dependencies, 3D Graph, CRUD Matrix · Health: Lint, Scorecard, Metrics,
 Impact, Activity, Indexes, Schema Diff · Reference: Config & Secrets.
 
+**Landscape site** (`arch landscape`) — Overview, Databases, Interconnections.
+
 Every site carries its own **Guide** page explaining each of these in context. That is the
 authoritative tour; this list is just the map.
+
+## The estate view
+
+One `arch` run documents one folder. `arch landscape` documents **everything you have
+already generated**, by cross-referencing their `model.json` files:
+
+```
+arch landscape <parent-dir> [--out <dir>] [--only <a,b,…>] [--title <text>] [--no-open]
+```
+
+```bash
+arch C:\src\Orders   --out C:\reports\site-orders   --no-open
+arch C:\src\Billing  --out C:\reports\site-billing  --no-open
+arch landscape C:\reports
+```
+
+Each immediate subfolder of `<parent-dir>` holding a model is one node. It reads no source
+— the sites are the input — so it is fast and can be re-run as often as you like.
+
+| Option | Default | Effect |
+|---|---|---|
+| `--out <dir>` | `<parent-dir>/site-landscape` | Where to write the estate site. |
+| `--only <a,b>` | all | Restrict to named subfolders — scope the view to one group. |
+| `--title <text>` | derived | Heading for the estate site. |
+| `--no-open` | opens | Don't launch a browser. |
+
+It answers the questions a single-repo site structurally cannot:
+
+- **Which systems share a database.** The one that matters for a change-impact or
+  data-ownership conversation, and the one nobody can answer from a single repo.
+- **Which repo produces the package another repo consumes**, as directed edges.
+- **Which external packages are shared** across the estate — your real common dependency
+  surface, and where a CVE lands.
+- **Cross-service calls**, matched heuristically from client code.
+
+Both site shapes are discovered: a single-provider site (`model.json` at the folder root)
+and an `arch` combined-mode site (`code/model.json`, hub at the root). Either way the
+landscape links to that folder's own `index.html`, so a combined site opens on its hub.
+
+`<parent-dir>` defaults to the current directory, and a folder with no models yet produces
+an empty-state page telling you to generate the sites first rather than an error.
 
 ## Analysing a live SQL Server
 
