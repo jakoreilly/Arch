@@ -99,6 +99,9 @@ public static class Pipeline
                 ? null
                 : new SourceLink { Type = options.SourceLinkType, Base = options.SourceLinkBase, Ref = options.SourceLinkRef },
             Network = network,
+            Owner = authored.Owner,
+            Capabilities = CapabilityRollup.Build(files, authored.Capabilities),
+            UnattributedFileCount = CapabilityRollup.Unattributed(files, authored.Capabilities).Count,
         };
     }
 

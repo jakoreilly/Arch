@@ -34,6 +34,38 @@ public sealed record ProjectModel
     /// ports, configuration environments and container images. Never null; empty on a codebase
     /// with no config or infrastructure files. Appended last, per the model.json convention.</summary>
     public NetworkSurfaceModel Network { get; init; } = new();
+
+    /// <summary>Who owns the system, from the descriptions sidecar ("" = not stated). Authored,
+    /// never inferred. Additive.</summary>
+    public string Owner { get; init; } = "";
+
+    /// <summary>Authored business capabilities with scanned figures rolled up against them. Empty
+    /// unless the descriptions sidecar declares capabilities — a capability map cannot be inferred
+    /// from source, only asserted. Additive.</summary>
+    public List<CapabilityNode> Capabilities { get; init; } = [];
+
+    /// <summary>First-party files matched by no capability path. 0 when no capabilities are
+    /// declared (nothing is claimed, so nothing is missing). Additive.</summary>
+    public int UnattributedFileCount { get; init; }
+}
+
+/// <summary>One business capability: what a human asserted, plus what the scan actually found
+/// under the paths they attributed to it.</summary>
+public sealed record CapabilityNode
+{
+    public required string Name { get; init; }
+    public string Description { get; init; } = "";
+    public string Owner { get; init; } = "";
+    /// <summary>"critical" | "high" | "medium" | "low", or whatever the author wrote ("" = none).</summary>
+    public string Criticality { get; init; } = "";
+    /// <summary>Free text ("PII", "PCI", "public") — badged, never interpreted.</summary>
+    public string DataClassification { get; init; } = "";
+    public List<string> Paths { get; init; } = [];
+    /// <summary>First-party files under this capability's paths. 0 means the author's paths match
+    /// nothing — a stale map, and the most useful thing this page can tell them.</summary>
+    public int FileCount { get; init; }
+    public int Loc { get; init; }
+    public int TypeCount { get; init; }
 }
 
 /// <summary>Whole-repo git facts. <see cref="Available"/> is false when git or a .git dir was

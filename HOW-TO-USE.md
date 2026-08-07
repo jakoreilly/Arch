@@ -9,6 +9,9 @@ The complete reference. If you just want a report out of a folder, read
 - [Options](#options)
 - [What you get](#what-you-get)
 - [The pages](#the-pages)
+- [The business view — what Arch cannot infer](#the-business-view--what-arch-cannot-infer)
+- [The deployment view](#the-deployment-view)
+- [The estate view](#the-estate-view)
 - [Analysing a live SQL Server](#analysing-a-live-sql-server)
 - [Using it in CI](#using-it-in-ci)
 - [Guarantees](#guarantees)
@@ -105,7 +108,7 @@ it exits 2 with a note saying so.
 | `--source-link-type <github\|gitlab\|local>` | `none` | Link code back to its host. |
 | `--source-link-base <url>` | — | Repo/web base for those links. |
 | `--source-link-ref <branch>` | `main` | Branch/tag/commit for web links. |
-| `--descriptions <path>` | probes the source root | Authored descriptions sidecar. |
+| `--descriptions <path>` | probes the source root | Authored descriptions + capability sidecar. |
 | `--fail-on <gate>[,…]` | none | CI gates: `cycles`, `layering`, `secrets`, `drift`, `scorecard`. |
 | `--sarif <path>` | — | Write a SARIF 2.1.0 log for code-scanning dashboards. |
 
@@ -170,6 +173,61 @@ Impact, Activity, Indexes, Schema Diff · Reference: Config & Secrets.
 
 Every site carries its own **Guide** page explaining each of these in context. That is the
 authoritative tour; this list is just the map.
+
+## The business view — what Arch cannot infer
+
+Static analysis can see `src/Claims/`. It cannot know that folder is "Claims Intake, owned
+by the Payments squad, business-critical, handles PII". Guessing produces confident
+nonsense in front of the audience least able to check it, so Arch never guesses — you
+assert it, in an optional `archdiagram.descriptions.json` at the source root (or
+`--descriptions <path>`):
+
+```json
+{
+  "project": "Takes an order from basket to fulfilment.",
+  "owner": "Commerce Platform",
+  "files": {
+    "src/Checkout/Basket.cs": "The basket aggregate.",
+    "src/Reporting/": "Nightly finance extracts."
+  },
+  "capabilities": [
+    {
+      "name": "Checkout",
+      "description": "Takes a basket to a paid order.",
+      "owner": "Payments Squad",
+      "criticality": "critical",
+      "dataClassification": "PCI",
+      "paths": ["src/Checkout/", "src/Payments/"]
+    }
+  ]
+}
+```
+
+Everything is optional; a file with only `project` and `files` behaves exactly as before.
+
+| Field | Effect |
+|---|---|
+| `project` | An **About** panel on the Overview and System Brief. |
+| `owner` | Who owns the system, shown beside it. |
+| `files` | Overrides the heuristic purpose. A key ending `/` describes a folder. |
+| `capabilities[]` | The capability table on the **System Brief**. |
+| `…criticality` | `critical`, `high`, `medium` or `low` — badged by severity. |
+| `…dataClassification` | Free text (`PII`, `PCI`, `public`) — badged, never interpreted. |
+| `…paths` | Source paths implementing it. This is what makes the claim checkable. |
+
+The `paths` are the point. Arch rolls the **scanned** file and line counts up against each
+capability, so the table is a claim measured against reality rather than prose repeated
+back — and it reports two things you cannot get any other way:
+
+- A capability whose paths match nothing is badged **no code matched**. That is a stale
+  map, and it is the most useful thing the page can tell you.
+- The **coverage** line — "6 of 9 first-party files (67%) are attributed to a capability,
+  3 unattributed". A map that silently covers two-thirds of the system is worse than no
+  map, because it reads as complete.
+
+Paths match on whole segments, so `src/Claim` does not match `src/Claims/`. Windows
+separators and a leading `./` are normalised. Everything authored is badged `authored` on
+the page, so a reader can always tell an assertion from a measurement.
 
 ## The deployment view
 

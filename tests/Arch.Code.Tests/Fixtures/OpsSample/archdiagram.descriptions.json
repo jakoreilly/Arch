@@ -1,0 +1,24 @@
+{
+  "project": "A sample order API used to exercise the authored-capability map.",
+  "owner": "Commerce Platform",
+  "files": {
+    "Api/Clients.cs": "Outbound HTTP and broker endpoints this service depends on."
+  },
+  "capabilities": [
+    {
+      "name": "Checkout",
+      "description": "Takes a basket to a paid order.",
+      "owner": "Payments Squad",
+      "criticality": "critical",
+      "dataClassification": "PCI",
+      "paths": ["Api/"]
+    },
+    {
+      "name": "Reporting",
+      "description": "Nightly extracts for the finance team.",
+      "owner": "Data Squad",
+      "criticality": "low",
+      "paths": ["Reporting/"]
+    }
+  ]
+}
