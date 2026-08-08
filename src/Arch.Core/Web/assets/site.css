@@ -207,8 +207,10 @@ a.tile:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent);
 /* ---- Diagram cards ---- */
 .diagram-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; margin: .75rem 0 1.5rem; }
 .toolbar { display: flex; align-items: center; gap: .4rem; padding: .5rem .75rem; border-bottom: 1px solid var(--border); background: var(--bg-sunken); }
-.btn { padding: .3rem .75rem; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-panel); color: var(--text); cursor: pointer; font-size: .85rem; }
+.btn { padding: .3rem .75rem; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-panel); color: var(--text); cursor: pointer; font-size: .85rem;
+  transition: border-color 120ms ease, color 120ms ease, filter 120ms ease, transform 120ms ease-out; }
 .btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn:active { transform: scale(.97); }
 /* --accent-on, not #fff: the dark theme's accent is a LIGHT blue (#6aa9dd), and white on it
    measures 2.52:1 — a fails-AA primary button on every diagram toolbar. The token carries the
    readable ink for each theme (light 5.27:1, dark 7.16:1). Brightening on hover is dropped for
@@ -228,12 +230,21 @@ a.tile:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent);
   width: 1.05em; height: 1.05em; padding: 0; margin: 0 .15em; border: 1px solid var(--accent);
   border-radius: 50%; background: none; color: var(--accent); cursor: pointer; opacity: .75;
   vertical-align: middle; line-height: 1; font-size: .82em; font-style: italic;
-  font-weight: 700; font-family: Georgia, "Times New Roman", serif; }
+  font-weight: 700; font-family: Georgia, "Times New Roman", serif;
+  transition: background-color 120ms ease, color 120ms ease, opacity 120ms ease; }
 .explain:hover, .explain:focus { opacity: 1; background: var(--accent); color: var(--bg-panel); }
 .explain:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 .explain-pop {
   position: fixed; z-index: 60; max-width: 360px; background: var(--bg-panel); color: var(--text);
   border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); padding: .7rem .85rem; font-size: .85rem;
+  transform-origin: var(--transform-origin, top); opacity: 1; transform: scale(1);
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+}
+/* Entrance only — it appears via [hidden] toggling off, which @starting-style treats as
+   a display:none -> visible transition. No exit animation to match: closing is instant,
+   same as every other popover/overlay on this sheet (palette, hover-tip). */
+@starting-style {
+  .explain-pop { opacity: 0; transform: scale(.95); }
 }
 .explain-pop .exp-term { font-weight: 700; margin-bottom: .25rem; }
 .explain-pop .exp-simple { color: var(--text); }
@@ -512,7 +523,7 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
 .legend-line.dashed { border-top-style: dashed; }
 
 /* Clickable diagram nodes (href map wired by site.js). */
-.clickable-node { cursor: pointer; }
+.clickable-node { cursor: pointer; transition: filter 120ms ease; }
 .clickable-node:hover { filter: brightness(.96); }
 
 /* ---- Responsive ---- */
@@ -570,7 +581,7 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
   }
   .sidebar {
     position: fixed; left: 0; top: 0; height: 100vh; z-index: 48;
-    transform: translateX(-100%); transition: transform .2s ease; box-shadow: var(--shadow);
+    transform: translateX(-100%); transition: transform .22s cubic-bezier(.32, .72, 0, 1); box-shadow: var(--shadow);
   }
   .layout.nav-open .sidebar { transform: translateX(0); }
   .layout.nav-open .nav-overlay { display: block; position: fixed; inset: 0; z-index: 47; background: var(--scrim); }

@@ -1171,9 +1171,12 @@
     var r = btn.getBoundingClientRect();
     var x = Math.min(r.left, window.innerWidth - pop.offsetWidth - 10);
     var y = r.bottom + 6;
-    if (y + pop.offsetHeight > window.innerHeight - 8) { y = Math.max(8, r.top - pop.offsetHeight - 6); }
+    var above = false;
+    if (y + pop.offsetHeight > window.innerHeight - 8) { y = Math.max(8, r.top - pop.offsetHeight - 6); above = true; }
     pop.style.left = Math.max(8, x) + "px";
     pop.style.top = y + "px";
+    // Scale in from whichever edge sits against the trigger, not the popover's own center.
+    pop.style.setProperty("--transform-origin", above ? "bottom" : "top");
   }
 
   document.addEventListener("click", function (e) {
