@@ -9,7 +9,15 @@
     return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
   }
 
+  // Pages with no diagram at all don't load mermaid.min.js (a 3.3 MB bundle otherwise parsed
+  // on every navigation for nothing) — see PageTemplate.Render's needsMermaid sniff. Every
+  // mermaid touchpoint below must tolerate that absence instead of throwing, since a thrown
+  // error here would abort this whole IIFE partway through and take the search palette, theme
+  // toggle and every other unrelated feature down with it.
+  var hasMermaid = typeof mermaid !== "undefined";
+
   function initMermaid() {
+    if (!hasMermaid) { return; }
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: "loose",
@@ -122,7 +130,12 @@
       var svgRect = svg.getBoundingClientRect();
       var natW = svgRect.width / scale, natH = svgRect.height / scale;
       if (!natW || !natH) { natW = size.w; natH = size.h; }
-      scale = Math.min((stageRect.width - pad) / natW, (stageRect.height - pad) / natH, 4);
+      // Floored at 0.3: with no lower bound, a very dense diagram (a star-shaped call graph, a
+      // huge dependency fan) auto-fit itself down to an illegible smudge just to make every node
+      // visible at once. Below this floor the labels stop being readable regardless, so it's
+      // better to show a legible slice and let the reader pan/zoom the rest — which they can,
+      // since the stage still supports drag-to-pan past this point.
+      scale = Math.max(0.3, Math.min((stageRect.width - pad) / natW, (stageRect.height - pad) / natH, 4));
       tx = (stageRect.width - natW * scale) / 2;
       ty = (stageRect.height - natH * scale) / 2;
       apply();
@@ -299,7 +312,20 @@
 
       if (url) {
         node.classList.add("clickable-node");
-        node.addEventListener("click", function () { window.location.href = url; });
+        // Mermaid draws a plain <g>, not an <a> — with no href, a keyboard user could not
+        // reach it at all (the focus/blur handlers bindTip wires up could never fire either),
+        // and a click always navigated in-place even with Ctrl/Cmd or the middle button held.
+        node.setAttribute("tabindex", "0");
+        node.setAttribute("role", "link");
+        var openNode = function (newTab) {
+          if (newTab) { window.open(url, "_blank", "noopener"); } else { window.location.href = url; }
+        };
+        node.addEventListener("click", function (e) { openNode(e.ctrlKey || e.metaKey); });
+        // Middle-click fires "auxclick", not "click", for a non-anchor element.
+        node.addEventListener("auxclick", function (e) { if (e.button === 1) { e.preventDefault(); openNode(true); } });
+        node.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openNode(e.ctrlKey || e.metaKey); }
+        });
       } else if (text) {
         node.style.cursor = "pointer";
       }
@@ -377,9 +403,41 @@
     input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); findAndGo(); } });
   }
 
-  // Selector groups: <select data-diagram-select="group"> shows one card per group.
+  // Selector groups: <select data-diagram-select="group"> shows one card per group. The
+  // selection is reflected into the URL hash (one "group=value" pair per group, so a page with
+  // more than one selector still round-trips correctly) — without this, "look at the call graph
+  // for OrderService" could not be sent to a colleague or bookmarked. replaceState rather than
+  // pushState, matching the recenter pattern object.html/impact.html already use: one shareable
+  // URL per view, not a new history entry per selection.
+  function hashParams() {
+    var params = {};
+    (location.hash || "").replace(/^#/, "").split("&").forEach(function (pair) {
+      var eq = pair.indexOf("=");
+      if (eq < 0) { return; }
+      var k = decodeURIComponent(pair.slice(0, eq));
+      if (k) { params[k] = decodeURIComponent(pair.slice(eq + 1)); }
+    });
+    return params;
+  }
+  function setHashParam(key, value) {
+    var params = hashParams();
+    params[key] = value;
+    var next = Object.keys(params).map(function (k) {
+      return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
+    }).join("&");
+    history.replaceState(null, "", (next ? "#" + next : location.pathname + location.search));
+  }
+
   document.querySelectorAll("select[data-diagram-select]").forEach(function (sel) {
     var group = sel.getAttribute("data-diagram-select");
+
+    // Restore a selection carried in the URL (a shared or bookmarked link), if it names a real
+    // option — a stale/foreign hash value just leaves the select at its normal default.
+    var fromHash = hashParams()[group];
+    if (fromHash && Array.prototype.some.call(sel.options, function (o) { return o.value === fromHash; })) {
+      sel.value = fromHash;
+    }
+
     function update() {
       document.querySelectorAll(".diagram-card[data-group='" + group + "']").forEach(function (card) {
         var show = card.id === sel.value;
@@ -387,7 +445,7 @@
         if (show) { renderCard(card); }
       });
     }
-    sel.addEventListener("change", update);
+    sel.addEventListener("change", function () { setHashParam(group, sel.value); update(); });
     update();
   });
 
@@ -1129,11 +1187,32 @@
       });
     }
 
-    function go() { render(run(input.value)); }
+    // Land on a real answer instead of an empty console: a query box with nothing typed and
+    // nothing shown teaches a new reader nothing about what it can ask. The last query run in
+    // this browser is restored across visits; failing that, the most depended-upon files is the
+    // default — interesting on any repo and never empty, unlike a blank result set.
+    var STORE_KEY = "arch-explore-last-query";
+    function persistQuery(q) {
+      try { if (q) { localStorage.setItem(STORE_KEY, q); } else { localStorage.removeItem(STORE_KEY); } } catch (e) { }
+    }
+    function topByFanIn(n) {
+      return data.nodes.slice().sort(function (a, b) { return (b.fanIn || 0) - (a.fanIn || 0); }).slice(0, n);
+    }
+
+    function go() { var q = input.value; persistQuery(q.trim()); render(run(q)); }
     input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); go(); } });
     box.querySelectorAll(".query-example").forEach(function (btn) {
       btn.addEventListener("click", function () { input.value = btn.textContent; go(); input.focus(); });
     });
+
+    var restoredQuery = "";
+    try { restoredQuery = localStorage.getItem(STORE_KEY) || ""; } catch (e) { }
+    if (restoredQuery) {
+      input.value = restoredQuery;
+      render(run(restoredQuery));
+    } else {
+      render({ nodes: topByFanIn(10), note: "most depended-upon files — edit the box above to ask something else" });
+    }
   })();
 })();
 

@@ -11,7 +11,9 @@ namespace Arch.Code.Site;
 /// and heuristic-call edges. Deterministic ordering (model file order).</summary>
 public static class GraphDataWriter
 {
-    private const int MaxNodes = 2000, MaxEdges = 8000;
+    // Public: GraphPage and ExplorePage both need the same cap to warn a reader when the graph
+    // or the Explore console answers from a truncated subset of the codebase, not the whole thing.
+    public const int MaxNodes = 2000, MaxEdges = 8000;
 
     public static void Write(ProjectModel model, string path) => WriteJson(BuildJson(model), path);
 
@@ -33,7 +35,26 @@ public static class GraphDataWriter
             fanIn[e.ToSlug] = fanIn.GetValueOrDefault(e.ToSlug) + 1;
         }
 
-        var nodes = model.Files.Take(MaxNodes).Select(f => new
+        // Truncation, when the repo has more files than the cap, keeps the most-CONNECTED files
+        // rather than the first N in file order — a blind Take() dropped whatever came late in
+        // path-sort order, so "orphans"/"importedby:" on a large repo silently answered from an
+        // arbitrary slice instead of the interesting half. Selection is by connectivity; the kept
+        // set is then re-filtered in original file order so the payload stays diff-stable run to
+        // run instead of reshuffling every time a fan-in count changes slightly.
+        var filesForGraph = model.Files;
+        if (model.Files.Count > MaxNodes)
+        {
+            var keep = new HashSet<string>(
+                model.Files
+                    .OrderByDescending(f => fanIn.GetValueOrDefault(f.Slug) + fanOut.GetValueOrDefault(f.Slug))
+                    .ThenBy(f => f.RelPath, StringComparer.Ordinal)
+                    .Take(MaxNodes)
+                    .Select(f => f.Slug),
+                StringComparer.Ordinal);
+            filesForGraph = model.Files.Where(f => keep.Contains(f.Slug)).ToList();
+        }
+
+        var nodes = filesForGraph.Select(f => new
         {
             id = f.Slug,
             label = f.RelPath.Split('/')[^1],

@@ -52,12 +52,15 @@ public static class SiteGenerator
 
         Directory.CreateDirectory(Path.Combine(outDir, "files"));
         var fileSearchIndexHtml = SearchIndex.ScriptSrc("../");
-        foreach (var file in model.Files)
+        // Each iteration only reads shared, already-built state and writes its own distinct path
+        // (file.Slug is unique), so this is safe to parallelize — same reasoning as Arch.Code's
+        // twin loop.
+        Parallel.ForEach(model.Files, file =>
         {
             var crumbs = Html.Crumbs(("../objects.html", "Objects"), (null, file.RelPath));
             var html = PageTemplate.Render(file.RelPath, model.RootName, "", "../", crumbs, ObjectFilePage.Body(ctx, file), fileSearchIndexHtml);
             File.WriteAllText(Path.Combine(outDir, "files", file.Slug + ".html"), html, Utf8NoBom);
-        }
+        });
 
         ModelJsonWriter.Write(model, Path.Combine(outDir, "model.json"));
 

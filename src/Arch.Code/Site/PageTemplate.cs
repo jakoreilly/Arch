@@ -79,8 +79,17 @@ public static class PageTemplate
         var sourceLinkScript = sourceLink is null
             ? ""
             : $"<script>window.ARCH_SOURCELINK={JsonSerializer.Serialize(sourceLink, ModelJson.Options)};</script>\n";
+        // Mermaid is a 3.3 MB vendored bundle, parsed and compiled on every navigation of this
+        // multi-page site — real cost paid by pages with no diagram at all (Scorecard, Explore,
+        // Config & Secrets, ...). bodyHtml is the actual rendered markup for THIS page, so
+        // sniffing it for a real diagram card is exact, not a guess: every diagram — including
+        // deferred/client-filled ones like the landscape card and object.html's neighborhood
+        // card — passes through PageTemplate/PageShell's own DiagramBlock, which always emits
+        // this literal class.
+        var needsMermaid = bodyHtml.Contains("class=\"diagram-card\"", StringComparison.Ordinal);
+        var mermaidScript = needsMermaid ? $"<script src=\"{relRoot}assets/lib/mermaid.min.js\"></script>\n" : "";
         var extraScripts =
-            $"<script src=\"{relRoot}assets/lib/mermaid.min.js\"></script>\n"
+            mermaidScript
             + $"<script src=\"{relRoot}assets/search-index.js\"></script>\n"
             + $"{sourceLinkScript}<script src=\"{relRoot}assets/sourcelink.js\"></script>";
 
@@ -120,6 +129,12 @@ public static class PageTemplate
               + $"<strong>{diagram.TotalNodes:N0}</strong> nodes — the rest were collapsed into the dashed "
               + "“… and N more” node to keep this diagram readable. Open the file pages or the 3D graph for the full set.</p>"
             : "";
+        // A handful of nodes doesn't need the same 66vh box a 60-node graph gets — it just
+        // floats a tiny diagram in a lot of empty chrome. .stage.small (a fixed, compact height)
+        // used to be a FilePage-only special case, applied by string-replacing this exact class
+        // attribute after the fact; deciding it here from the diagram's own size covers every
+        // caller instead of just the one that happened to ask for it.
+        var stageClass = diagram.ShownNodes > 0 && diagram.ShownNodes <= 6 ? "stage small" : "stage";
         return $"""
 <div class="diagram-card" id="{Html.Encode(id)}" data-png-name="{Html.Encode(pngName)}"{groupAttr}{hiddenAttr}{deferredAttr}>
   {trimBanner}<div class="toolbar">
@@ -133,7 +148,7 @@ public static class PageTemplate
     <input class="filter-input diagram-find" type="search" data-act="find" placeholder="Find node…" autocomplete="off" spellcheck="false" title="Jump to a node by name (Enter)">
     <span class="tb-hint">Scroll to zoom · drag to pan · hover a node to trace its links · click a node to open it</span>
   </div>
-  <div class="stage"><pre class="mermaid-src" hidden>{Html.Encode(diagram.Mermaid)}</pre><div class="render-target"></div></div>
+  <div class="{stageClass}"><pre class="mermaid-src" hidden>{Html.Encode(diagram.Mermaid)}</pre><div class="render-target"></div></div>
   <script type="application/json" class="tooltips">{tooltipJson}</script>
   <script type="application/json" class="hrefs">{hrefJson}</script>
   <script type="application/json" class="adjacency">{adjacencyJson}</script>

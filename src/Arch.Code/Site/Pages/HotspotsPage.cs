@@ -8,6 +8,10 @@ namespace Arch.Code.Site.Pages;
 /// Everything links back into the per-file pages.</summary>
 public static class HotspotsPage
 {
+    /// <summary>Convenience overload for a caller with only a <see cref="ProjectModel"/> — builds
+    /// a whole new <see cref="SiteContext"/>. Called once per site generation (this page isn't
+    /// per-file), so it's harmless today; prefer the <see cref="SiteContext"/> overload when one
+    /// is already in hand.</summary>
     public static string Body(ProjectModel model, bool showComplexity = false) =>
         Body(SiteContext.Build(model), showComplexity);
 

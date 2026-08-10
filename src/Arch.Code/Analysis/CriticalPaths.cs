@@ -65,6 +65,12 @@ public static class CriticalPaths
     public static IReadOnlyList<string>? ToFile(ProjectModel model, string targetSlug) =>
         ShortestPath(BuildGraph(model), targetSlug);
 
+    /// <summary>Slugs of files nothing internal imports but which import something themselves —
+    /// the same definition <see cref="BuildGraph"/> uses. Exposed so a caller (the API Surface
+    /// page) can tell "this file IS an entry point" apart from "no entry point reaches this
+    /// file", which <see cref="ToFile"/>'s single null return cannot distinguish on its own.</summary>
+    public static IReadOnlyList<string> EntryPoints(ProjectModel model) => BuildGraph(model).EntryPoints;
+
     public sealed record KeyPath(string TargetSlug, string TargetLabel, IReadOnlyList<string> Nodes);
 
     /// <summary>Critical paths to the top <paramref name="take"/> most-central first-party files:

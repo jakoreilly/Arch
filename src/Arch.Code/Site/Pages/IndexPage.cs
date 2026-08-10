@@ -6,6 +6,10 @@ namespace Arch.Code.Site.Pages;
 
 public static class IndexPage
 {
+    /// <summary>Convenience overload for a caller with only a <see cref="ProjectModel"/> — builds
+    /// a whole new <see cref="SiteContext"/>. Called once per site generation (this page isn't
+    /// per-file), so it's harmless today; prefer the <see cref="SiteContext"/> overload when one
+    /// is already in hand.</summary>
     public static string Body(ProjectModel model, int maxNodes, string generatedOn) =>
         Body(SiteContext.Build(model), maxNodes, generatedOn);
 

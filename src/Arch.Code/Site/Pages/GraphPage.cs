@@ -40,6 +40,13 @@ Toggle import and call edges independently, or type in the filter box to spotlig
 Click a node and choose <strong>↯ Trace data flow</strong> to light up everything reachable downstream from it —
 the blast radius of a change or the paths a request can take — coloured by hops from that entry, with an optional animated pulse.</p>
 """);
+        if (model.Files.Count > GraphDataWriter.MaxNodes)
+        {
+            sb.Append($"<p class=\"note\">Showing the <strong>{GraphDataWriter.MaxNodes:N0}</strong> most-connected "
+                    + $"of <strong>{model.Files.Count:N0}</strong> files — the rest were left out of this graph (and "
+                    + "of the Explore console, which queries the same data) to keep both usable. Open a file's own "
+                    + "page for its full neighbourhood regardless of this cap.</p>");
+        }
         sb.Append(Embed(model, compact: false, relRoot: "", graphJson));
         return sb.ToString();
     }

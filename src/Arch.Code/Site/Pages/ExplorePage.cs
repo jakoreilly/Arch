@@ -25,6 +25,13 @@ public static class ExplorePage
         sb.Append("<p class=\"lede\">Ask the dependency graph questions. Type a query and press Enter — "
                 + "everything runs in your browser against the model embedded in this page. Click any result "
                 + "to open its file. Examples below; click one to try it.</p>");
+        if (model.Files.Count > GraphDataWriter.MaxNodes)
+        {
+            sb.Append($"<p class=\"note\">Every answer here is scoped to the <strong>{GraphDataWriter.MaxNodes:N0}</strong> "
+                    + $"most-connected of <strong>{model.Files.Count:N0}</strong> files in this codebase — the same cap "
+                    + "the 3D graph uses. <code>orphans</code> and similar results are complete within that set, not "
+                    + "necessarily the whole repo.</p>");
+        }
 
         sb.Append("<div id=\"query-console\">");
         sb.Append("<div class=\"select-row\">"

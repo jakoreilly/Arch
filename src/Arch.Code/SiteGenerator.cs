@@ -104,12 +104,16 @@ public static class SiteGenerator
             Html.Crumbs(("index.html", "Overview"), (null, "Explore")),
             ExplorePage.Body(model, ctx.GraphJson));
 
-        foreach (var file in model.Files)
+        // One page per file — each iteration reads only shared, already-built (read-only) state
+        // (ctx, model) and writes its own distinct path (file.Slug is unique per MakeSlug), so
+        // this is safe to run in parallel. On a large repo this loop, not the analysis pass, is
+        // the slow part of generation.
+        Parallel.ForEach(model.Files, file =>
         {
             var crumbs = Html.Crumbs(("../index.html", "Overview"), ("../structure.html", "Structure"), (null, file.RelPath));
             var html = PageTemplate.Render(file.RelPath, model.RootName, "", "../", crumbs, FilePage.Body(ctx, file, maxNodes, showComplexity, showSnippets), navItems: null, sourceLink: model.SourceLink);
             File.WriteAllText(Path.Combine(outDir, "files", file.Slug + ".html"), html, Utf8NoBom);
-        }
+        });
 
         ModelJsonWriter.Write(model, Path.Combine(outDir, "model.json"));
         GraphDataWriter.WriteJson(ctx.GraphJson, Path.Combine(outDir, "graph.json"));

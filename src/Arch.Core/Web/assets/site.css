@@ -164,8 +164,12 @@ h2 { font-size: 1.15rem; margin: 1.75rem 0 .6rem; text-wrap: balance; }
 
 /* ---- Cards, tiles ---- */
 .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 1rem 1.25rem; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .75rem; margin: 1rem 0 1.5rem; }
-.tile { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: .8rem 1rem; overflow-wrap: anywhere; }
+/* Flexbox, not grid: grid's auto-fill/auto-fit columns are shared down the WHOLE grid, so a
+   trailing row with fewer tiles than fit a full row is still divided into that many columns and
+   leaves a gap — a lone last tile does not stretch. flex-wrap distributes leftover space per
+   ROW independently, so any trailing tile count fills its own line correctly. */
+.tiles { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1rem 0 1.5rem; }
+.tile { flex: 1 1 150px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: .8rem 1rem; overflow-wrap: anywhere; }
 .tile .num { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .tile .lbl { font-size: .78rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: .05em; }
 

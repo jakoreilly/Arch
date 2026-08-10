@@ -10,6 +10,10 @@ namespace Arch.Code.Site.Pages;
 /// and heuristic (module level, syntax-only analysis).</summary>
 public static class MetricsPage
 {
+    /// <summary>Convenience overload for a caller with only a <see cref="ProjectModel"/> — builds
+    /// a whole new <see cref="SiteContext"/>. Called once per site generation (this page isn't
+    /// per-file), so it's harmless today; prefer the <see cref="SiteContext"/> overload when one
+    /// is already in hand.</summary>
     public static string Body(ProjectModel model) => Body(SiteContext.Build(model));
 
     /// <summary>Reuses the metrics computed once in <paramref name="ctx"/> instead of

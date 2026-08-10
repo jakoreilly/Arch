@@ -31,6 +31,14 @@ public static class PageTemplate
     /// caller keeps compiling).</param>
     public static string Render(string title, string siteName, string activeHref, string relRoot, string breadcrumbsHtml, string bodyHtml, string searchIndexHtml = "")
     {
+        // Mermaid is a 3.3 MB vendored bundle, parsed on every navigation for nothing on pages
+        // with no diagram at all (Impact, Lint, Config & Secrets, ...). bodyHtml is this page's
+        // actual rendered markup, so sniffing it for a real diagram card is exact — every
+        // diagram, including deferred ones like object.html's neighborhood card, passes through
+        // this file's own DiagramBlock, which always emits this literal class. See site.js's
+        // hasMermaid guard, required for pages that now omit the script.
+        var needsMermaid = bodyHtml.Contains("class=\"diagram-card\"", StringComparison.Ordinal);
+        var mermaidScript = needsMermaid ? $"<script src=\"{relRoot}assets/lib/mermaid.min.js\"></script>" : "";
         var shell = new ShellOptions
         {
             // See Arch.Code's PageTemplate for why this is "Arch SQL" and not "ArchSql".
@@ -39,7 +47,7 @@ public static class PageTemplate
             SearchButtonTitle = "Search objects (Ctrl+K)",
             SearchInputPlaceholder = "Search objects…",
             ExtraHead = PrePaintScript,
-            ExtraScripts = $"{searchIndexHtml}\n<script src=\"{relRoot}assets/lib/mermaid.min.js\"></script>",
+            ExtraScripts = $"{searchIndexHtml}\n{mermaidScript}",
         };
         return PageShell.Render(shell, title, siteName, activeHref, relRoot, breadcrumbsHtml, bodyHtml);
     }

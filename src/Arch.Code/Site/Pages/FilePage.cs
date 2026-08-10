@@ -6,6 +6,12 @@ namespace Arch.Code.Site.Pages;
 
 public static class FilePage
 {
+    /// <summary>Convenience overload for a caller (tests, mainly) that only has a
+    /// <see cref="ProjectModel"/>. Builds a whole-site <see cref="SiteContext"/> — every
+    /// dependency/call edge indexed — just to render ONE file's page. Never call this in a
+    /// per-file loop; <see cref="SiteGenerator"/> builds <c>ctx</c> once and calls the
+    /// <see cref="SiteContext"/> overload below for every file, which is the only correct way
+    /// to render more than one file page.</summary>
     public static string Body(ProjectModel model, FileNode file, int maxNodes,
         bool showComplexity = false, bool showSnippets = false) =>
         Body(SiteContext.Build(model), file, maxNodes, showComplexity, showSnippets);
@@ -79,8 +85,10 @@ public static class FilePage
     {
         sb.Append("<h2>Connections</h2>");
         sb.Append("<p class=\"lede\">Files that import this one (left) and everything this file imports (right). Grey dashed nodes are external packages.</p>");
-        var block = PageTemplate.DiagramBlock("filedeps", BuildNeighbourDiagram(file, incoming, outgoing, bySlug, maxNodes), file.Slug + "-connections");
-        sb.Append(block.Replace("class=\"stage\"", "class=\"stage small\""));
+        // DiagramBlock itself now picks the compact "small" stage for a handful of nodes — this
+        // was previously the only caller that wanted it, applied by string-replacing the class
+        // after the fact.
+        sb.Append(PageTemplate.DiagramBlock("filedeps", BuildNeighbourDiagram(file, incoming, outgoing, bySlug, maxNodes), file.Slug + "-connections"));
         sb.Append(PageTemplate.Legend());
     }
 

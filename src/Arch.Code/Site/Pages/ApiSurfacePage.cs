@@ -86,14 +86,19 @@ public static class ApiSurfacePage
         return sb.ToString();
     }
 
-    /// <summary>Critical paths: for the most central files, the shortest chain from an entry
-    /// point (a file nothing imports) that reaches it — the code path a reader follows to get there.</summary>
+    /// <summary>Critical paths: for the most central files, the shortest MULTI-HOP chain from an
+    /// entry point (a file nothing imports) that reaches it — the code path a reader follows to
+    /// get there. A key file one hop from an entry point isn't a "chain"; it's said plainly
+    /// instead of dressed up as a two-node path, and a file no entry point reaches at all is
+    /// distinguished from a file that genuinely IS an entry point — both used to render the same
+    /// "entry point / root" badge, which was simply wrong for the unreachable case.</summary>
     private static void AppendCriticalPaths(StringBuilder sb, ProjectModel model, Dictionary<string, FileNode> bySlug)
     {
         var key = Analysis.ImportanceScorer.Rank(model, 8).Where(s => Analysis.CodebaseStats.IsFirstParty(s.File)).ToList();
         // Build the dependency graph once (not per file) and look each key file's path up.
         var paths = Analysis.CriticalPaths.AllToKeyFiles(model, 8)
             .ToDictionary(p => p.TargetSlug, p => p.Nodes, StringComparer.Ordinal);
+        var entryPoints = new HashSet<string>(Analysis.CriticalPaths.EntryPoints(model), StringComparer.Ordinal);
         sb.Append("<h2>Critical paths <span class=\"badge accent\">to key files</span></h2>");
         if (key.Count == 0)
         {
@@ -101,8 +106,9 @@ public static class ApiSurfacePage
                     + "<p>No dependency links were detected, so there are no code paths to trace yet.</p></div>");
             return;
         }
-        sb.Append("<p class=\"lede\">How the code reaches the files that matter most: the shortest chain of imports from an "
-                + "entry point (a file nothing else imports) to each key file. Read left-to-right to follow the dependency path in.</p>");
+        sb.Append("<p class=\"lede\">How the code reaches the files that matter most: the shortest multi-hop chain of "
+                + "imports from an entry point (a file nothing else imports) to each key file, when one exists. Read "
+                + "left-to-right to follow the dependency path in.</p>");
         sb.Append("<div class=\"panel\"><ul class=\"member-list\" style=\"font-family:inherit\">");
         var first = true;
         foreach (var s in key)
@@ -111,17 +117,33 @@ public static class ApiSurfacePage
             first = false;
             paths.TryGetValue(s.File.Slug, out var path);
             string body;
-            if (path is { Count: > 1 })
+            if (path is { Count: >= 3 })
             {
                 body = string.Join(" <span class=\"crumb-sep\">→</span> ",
                     path.Select(slug => bySlug.TryGetValue(slug, out var f)
                         ? $"<a href=\"files/{f.Slug}.html\">{Html.Encode(f.RelPath.Split('/')[^1])}</a>"
                         : Html.Encode(slug)));
             }
-            else
+            else if (path is { Count: 2 })
+            {
+                // A direct entry->target edge is not a multi-hop chain — say so rather than
+                // rendering a two-node "path" that reads as a diagram bug.
+                var entryLink = bySlug.TryGetValue(path[0], out var ef)
+                    ? $"<a href=\"files/{ef.Slug}.html\">{Html.Encode(ef.RelPath.Split('/')[^1])}</a>"
+                    : Html.Encode(path[0]);
+                var targetLink = $"<a href=\"files/{s.File.Slug}.html\">{Html.Encode(s.File.RelPath.Split('/')[^1])}</a>";
+                body = $"{targetLink} <span class=\"badge\">direct import</span> — no multi-hop path; "
+                     + $"imported directly by entry point {entryLink}.";
+            }
+            else if (entryPoints.Contains(s.File.Slug))
             {
                 body = $"<a href=\"files/{s.File.Slug}.html\">{Html.Encode(s.File.RelPath.Split('/')[^1])}</a> "
                      + "<span class=\"badge\">entry point / root</span>";
+            }
+            else
+            {
+                body = $"<a href=\"files/{s.File.Slug}.html\">{Html.Encode(s.File.RelPath.Split('/')[^1])}</a> "
+                     + "<span class=\"badge warn\">no entry point reaches this file</span>";
             }
             sb.Append($"<li{style}>{body}</li>");
         }

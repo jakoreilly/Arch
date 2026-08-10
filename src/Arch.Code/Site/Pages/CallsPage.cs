@@ -39,15 +39,27 @@ means several declared methods matched (ambiguous); very common names like <code
 Test files are excluded from this graph.</p>
 """);
 
-        // Types that participate in at least one edge, ordered by participation.
+        // Types that participate in at least one edge, ranked so a coordinator — a type that
+        // both calls out and is called into, like a service or pipeline step — outranks a
+        // one-directional utility that is merely called from everywhere (e.g. a hash helper).
+        // Raw edge-count ranking picked exactly that utility as the default view, which opens
+        // on the least interesting type in the codebase. Fan-in-only participation still breaks
+        // the tie among coordinators, so widely-depended-on types still sort first within that group.
+        var fanIn = new Dictionary<string, int>(StringComparer.Ordinal);
+        var fanOut = new Dictionary<string, int>(StringComparer.Ordinal);
         var participation = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (var e in calls)
         {
+            fanOut[e.CallerType] = fanOut.GetValueOrDefault(e.CallerType) + 1;
+            fanIn[e.CalleeType] = fanIn.GetValueOrDefault(e.CalleeType) + 1;
             participation[e.CallerType] = participation.GetValueOrDefault(e.CallerType) + 1;
             participation[e.CalleeType] = participation.GetValueOrDefault(e.CalleeType) + 1;
         }
-        var types = participation.OrderByDescending(kv => kv.Value).ThenBy(kv => kv.Key, StringComparer.Ordinal)
-            .Select(kv => kv.Key).ToList();
+        var types = participation.Keys
+            .OrderByDescending(t => fanIn.GetValueOrDefault(t) > 0 && fanOut.GetValueOrDefault(t) > 0 ? 1 : 0)
+            .ThenByDescending(t => participation[t])
+            .ThenBy(t => t, StringComparer.Ordinal)
+            .ToList();
 
         sb.Append("<div class=\"select-row\"><label for=\"call-select\">Type:</label><select id=\"call-select\" data-diagram-select=\"calls\">");
         foreach (var t in types)
