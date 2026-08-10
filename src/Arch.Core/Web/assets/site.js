@@ -56,11 +56,33 @@
 
     mermaid.render("mmd-" + (++seq), src.textContent).then(function (out) {
       target.innerHTML = out.svg;
+      growViewBoxToContent(target.querySelector("svg"));
       setupCard(card);
     }).catch(function (err) {
       target.innerHTML = "<div class='diagram-error'>Diagram failed to render: " +
         String(err && err.message || err).replace(/</g, "&lt;") + "</div>";
     });
+  }
+
+  // Mermaid sometimes sizes a flowchart's viewBox from node/edge positions alone, and an edge
+  // label or a wide shape (the database cylinder, a long site name) that overhangs the
+  // rightmost/bottommost rank ends up outside it — invisible, since SVG hard-crops to the
+  // viewBox. getBBox() measures what was actually drawn, so grow (never shrink, in case a
+  // rendering quirk makes it return something smaller) the viewBox to contain it.
+  function growViewBoxToContent(svg) {
+    if (!svg) { return; }
+    var vb = (svg.getAttribute("viewBox") || "").split(/[\s,]+/).map(Number);
+    if (vb.length !== 4 || !isFinite(vb[0]) || !isFinite(vb[1]) || vb[2] <= 0 || vb[3] <= 0) { return; }
+    var box;
+    try { box = svg.getBBox(); } catch (e) { return; }
+    if (!box || !isFinite(box.width) || !isFinite(box.height) || box.width <= 0 || box.height <= 0) { return; }
+    var pad = 4;
+    var minX = Math.min(vb[0], box.x - pad), minY = Math.min(vb[1], box.y - pad);
+    var maxX = Math.max(vb[0] + vb[2], box.x + box.width + pad);
+    var maxY = Math.max(vb[1] + vb[3], box.y + box.height + pad);
+    if (maxX - minX !== vb[2] || maxY - minY !== vb[3] || minX !== vb[0] || minY !== vb[1]) {
+      svg.setAttribute("viewBox", minX + " " + minY + " " + (maxX - minX) + " " + (maxY - minY));
+    }
   }
 
   function setupCard(card) {

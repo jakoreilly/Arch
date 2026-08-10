@@ -38,6 +38,13 @@ public sealed record GroupConfig
         public string Ref { get; init; } = "";
         /// <summary>Site folder name; defaults to the repo/folder leaf, slugified.</summary>
         public string Name { get; init; } = "";
+        /// <summary>"github" | "gitlab", same meaning as <c>--source-link-type</c>. A cloned
+        /// project's own <c>origin</c> remote is auto-detected already (see
+        /// <see cref="Arch.Code.Analysis.GitRemote.ParseRemote"/>), but that only recognises a
+        /// host whose name contains "github"/"gitlab" — a self-hosted instance on a company
+        /// domain (e.g. <c>dev.internal</c>) needs this told explicitly, exactly as the
+        /// standalone CLI does. Empty leaves auto-detection in charge.</summary>
+        public string SourceLinkType { get; init; } = "";
     }
 
     /// <summary>Reads and validates a config. Returns null with <paramref name="error"/> set on

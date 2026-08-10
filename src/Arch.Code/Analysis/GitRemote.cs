@@ -76,17 +76,40 @@ public static class GitRemote
     /// must not survive into the output.</para></summary>
     public static (string Type, string Base) ParseRemote(string raw)
     {
-        var url = (raw ?? "").Trim();
-        if (url.Length == 0) { return ("", ""); }
+        if (!TryParseHostPath(raw, out var host, out var path)) { return ("", ""); }
 
-        string host, path;
+        // Classified by hostname because the blob URL SHAPE differs between the two
+        // (/blob/<ref>/ vs /-/blob/<ref>/) and nothing else in the remote reveals which.
+        // A self-hosted instance under a company domain is deliberately NOT guessed at;
+        // --source-link-type still covers it explicitly.
+        var type = host.Contains("github", StringComparison.OrdinalIgnoreCase) ? "github"
+                 : host.Contains("gitlab", StringComparison.OrdinalIgnoreCase) ? "gitlab"
+                 : "";
+        return type.Length == 0 ? ("", "") : (type, $"https://{host}/{path}");
+    }
+
+    /// <summary>Builds the web base for a remote whose host cannot be guessed from its name (a
+    /// self-hosted GitLab/GitHub Enterprise instance) but whose <paramref name="type"/> the caller
+    /// already knows — e.g. <c>arch group</c>, where a config entry is explicitly declared as a
+    /// GitLab URL rather than sniffed from an origin remote. Same credential-stripping and shape
+    /// handling as <see cref="ParseRemote"/>, just without the hostname gate.</summary>
+    public static string WebBase(string raw) => TryParseHostPath(raw, out var host, out var path) ? $"https://{host}/{path}" : "";
+
+    /// <summary>Handles the four shapes a remote actually takes: scp-like
+    /// (<c>git@host:org/repo.git</c>), <c>ssh://</c>, <c>git://</c> and <c>https://</c> — the last
+    /// of which may carry userinfo that must not survive into the output.</summary>
+    private static bool TryParseHostPath(string raw, out string host, out string path)
+    {
+        host = ""; path = "";
+        var url = (raw ?? "").Trim();
+        if (url.Length == 0) { return false; }
 
         var scheme = url.IndexOf("://", StringComparison.Ordinal);
         if (scheme >= 0)
         {
             var rest = url[(scheme + 3)..];
             var slash = rest.IndexOf('/');
-            if (slash < 0) { return ("", ""); }
+            if (slash < 0) { return false; }
             host = rest[..slash];
             path = rest[(slash + 1)..];
         }
@@ -96,7 +119,7 @@ public static class GitRemote
             // ("C:/src/app") also matches that shape, which is why the host is required to
             // look like a hostname below.
             var colon = url.IndexOf(':');
-            if (colon <= 0) { return ("", ""); }
+            if (colon <= 0) { return false; }
             host = url[..colon];
             path = url[(colon + 1)..];
         }
@@ -110,19 +133,10 @@ public static class GitRemote
         var portSep = host.LastIndexOf(':');
         if (portSep > 0) { host = host[..portSep]; }
 
-        if (host.Length == 0 || !host.Contains('.')) { return ("", ""); }
+        if (host.Length == 0 || !host.Contains('.')) { return false; }
 
         path = path.Trim('/');
         if (path.EndsWith(".git", StringComparison.OrdinalIgnoreCase)) { path = path[..^4]; }
-        if (path.Length == 0) { return ("", ""); }
-
-        // Classified by hostname because the blob URL SHAPE differs between the two
-        // (/blob/<ref>/ vs /-/blob/<ref>/) and nothing else in the remote reveals which.
-        // A self-hosted instance under a company domain is deliberately NOT guessed at;
-        // --source-link-type still covers it explicitly.
-        var type = host.Contains("github", StringComparison.OrdinalIgnoreCase) ? "github"
-                 : host.Contains("gitlab", StringComparison.OrdinalIgnoreCase) ? "gitlab"
-                 : "";
-        return type.Length == 0 ? ("", "") : (type, $"https://{host}/{path}");
+        return path.Length > 0;
     }
 }

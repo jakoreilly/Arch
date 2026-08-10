@@ -64,7 +64,9 @@ internal static class GroupRunner
                 // Every project's site is generated with --no-open regardless of the run's own
                 // --no-open: a ten-project group must not open ten browser tabs. Only the final
                 // landscape is offered to the browser.
-                var code = Runner.Run([source, "--out", Path.Combine(outDir, id), "--no-open"]);
+                var runArgs = new List<string> { source, "--out", Path.Combine(outDir, id), "--no-open" };
+                AddSourceLinkArgs(runArgs, project);
+                var code = Runner.Run([.. runArgs]);
                 if (code is 0 or 3) { ids.Add(id); }   // 3 = a --fail-on gate tripped; the site still exists
                 else { failures.Add($"{group.Name}/{id}: arch exited {code}"); }
             }
@@ -121,6 +123,21 @@ internal static class GroupRunner
 
         if (!ok) { failures.Add($"{leaf}: git clone/update failed (see the git output above)"); return null; }
         return dest;
+    }
+
+    /// <summary>A cloned repo's <c>origin</c> already feeds Arch.Code's own auto-detection
+    /// (<see cref="Arch.Code.Analysis.GitRemote.ParseRemote"/>), which recognises github.com and
+    /// gitlab.com by name. A self-hosted GitLab on a company domain does not name itself, so
+    /// there is nothing to sniff — <c>sourceLinkType</c> tells us explicitly, and the web base is
+    /// derived from the same URL this project was cloned from, not re-read from the clone.</summary>
+    private static void AddSourceLinkArgs(List<string> args, GroupConfig.Project project)
+    {
+        if (string.IsNullOrWhiteSpace(project.SourceLinkType) || string.IsNullOrWhiteSpace(project.Url)) { return; }
+        var webBase = Arch.Code.Analysis.GitRemote.WebBase(project.Url);
+        if (webBase.Length == 0) { return; }
+        args.Add("--source-link-type"); args.Add(project.SourceLinkType);
+        args.Add("--source-link-base"); args.Add(webBase);
+        if (project.Ref.Length > 0) { args.Add("--source-link-ref"); args.Add(project.Ref); }
     }
 
     private static bool Clone(string url, string gitRef, string dest)
@@ -210,12 +227,16 @@ internal static class GroupRunner
         Console.Error.WriteLine("    \"groups\": [");
         Console.Error.WriteLine("      { \"name\": \"Backend\", \"projects\": [");
         Console.Error.WriteLine("          { \"path\": \"C:/src/api\" },");
-        Console.Error.WriteLine("          { \"url\": \"https://gitlab.com/org/worker.git\", \"ref\": \"main\" } ] }");
+        Console.Error.WriteLine("          { \"url\": \"git@gitlab.company.local:org/worker.git\", \"ref\": \"main\", \"sourceLinkType\": \"gitlab\" } ] }");
         Console.Error.WriteLine("    ]");
         Console.Error.WriteLine("  }");
         Console.Error.WriteLine();
         Console.Error.WriteLine("  Paths in the config resolve against the config file's folder. A \"url\" project is");
         Console.Error.WriteLine("  cloned into <out>/_repos/ and the clone is analysed — nothing is ever written to a");
         Console.Error.WriteLine("  repository you pointed at. Exit 3 means some projects failed and the rest succeeded.");
+        Console.Error.WriteLine();
+        Console.Error.WriteLine("  Source links (jump-to-repo from a file page) are auto-detected from a github.com/gitlab.com");
+        Console.Error.WriteLine("  clone URL. A self-hosted GitLab/GitHub on a company domain needs \"sourceLinkType\": \"gitlab\"");
+        Console.Error.WriteLine("  (or \"github\") on that project — the web base is then derived from its own \"url\".");
     }
 }
