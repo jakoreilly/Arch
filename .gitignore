@@ -9,14 +9,15 @@ golden/
 .DS_Store
 
 # Ignore Markdown files by default, but keep the project docs tracked.
+# plan.md/continue.md/todo.md are deliberately NOT allowlisted here: they are
+# session-to-session working notes for AI-assisted development and are excluded from
+# the public repo (kept locally, untracked) — see git history for the removal commit.
 *.md
 !README.md
 !CONTRIBUTING.md
 !SECURITY.md
-!plan.md
-!continue.md
 !CLAUDE.md
-!todo.md
+!THIRD-PARTY-NOTICES.md
 # User-facing documentation for the tool itself, as opposed to the repo's own notes.
 !IDIOTS-GUIDE.md
 !HOW-TO-USE.md

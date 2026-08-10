@@ -11,7 +11,6 @@ regression net is three layers, and **each catches things the others structurall
 cannot**. Run all three.
 
 ```bash
-cd c:/Users/jakor/Documents/Code/Arch
 dotnet build Arch.slnx --nologo        # expect 0 warnings, 0 errors
 dotnet test  Arch.slnx --nologo        # expect 407 passed, 0 failed  (~90s, not a hang)
 bash tools/golden.sh                   # expect GOLDEN OK

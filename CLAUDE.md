@@ -28,10 +28,14 @@ tools/golden.sh   the byte-identical-output regression net
 
 ## Read these before starting work
 
-- **[continue.md](continue.md)** — where work stopped, and the findings from each phase.
-  Start here. It has a "Do not re-litigate" section; respect it.
-- **[plan.md](plan.md)** — the source of truth for the migration: hard constraints, and a
-  GOTCHA block for every trap found so far.
+- **continue.md** — where work stopped, and the findings from each phase. Start here. It
+  has a "Do not re-litigate" section; respect it.
+- **plan.md** — the source of truth for the migration: hard constraints, and a GOTCHA
+  block for every trap found so far.
+
+Both are local, gitignored session-continuity notes — present on the machine this
+repo was developed on, not in a fresh clone. If they're missing, there's no migration
+history to reconstruct; treat the codebase and tests as the source of truth instead.
 
 ## Commands
 
@@ -84,6 +88,5 @@ baseline on top of the change you are verifying — and it cannot see `Arch.Cli`
 
 ## Scope
 
-This repo has **no remote** and nothing has been pushed. The original ArchDiagram and
-ArchSQL repos are not to be touched — **any change to a file outside `Arch/` is out of
-scope; stop and ask.**
+The original ArchDiagram and ArchSQL repos are not to be touched — **any change to a
+file outside `Arch/` is out of scope; stop and ask.**

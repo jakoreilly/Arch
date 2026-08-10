@@ -27,7 +27,7 @@ small to show a layout problem.
 Then open it:
 
 ```bash
-cmd.exe /c start "" "C:\Users\jakor\Documents\Code\Arch\work\demo\index.html"
+cmd.exe /c start "" "$(pwd -W)/work/demo/index.html"
 ```
 
 Dropping `--no-open` makes the CLI open a tab itself — that path is worth exercising
@@ -39,7 +39,7 @@ There is no `chromium-cli` here. Edge is Chromium and does the job:
 
 ```bash
 EDGE="/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
-WIN="C:/Users/jakor/Documents/Code/Arch"
+WIN="$(pwd -W)"
 "$EDGE" --headless=new --disable-gpu --hide-scrollbars \
         --virtual-time-budget=6000 --window-size=1500,1150 \
         --screenshot="$WIN/work/shots/page.png" \
