@@ -1,0 +1,58 @@
+name: Deploy demo site to GitHub Pages
+
+# Runs Arch against its own repository — both C# and SQL fixtures are present, so this
+# exercises combined mode (hub page + code/ + sql/) on a real, non-trivial tree — and
+# publishes the result as a live demo. --fail-on secrets is defence in depth on top of
+# the code-level guarantee that connection strings are reported by shape only; it should
+# never trip, and if it ever does, that's exactly what should block a public deploy.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history — GitHistory.cs shells out to `git log` for evolution/hotspots
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.300"
+
+      - name: Build
+        run: dotnet build Arch.slnx --nologo -c Release
+
+      - name: Generate demo site
+        shell: bash
+        run: |
+          dotnet run --project src/Arch.Cli -c Release --no-build -- . \
+            --out ./site-pages --no-open --fail-on secrets
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site-pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
