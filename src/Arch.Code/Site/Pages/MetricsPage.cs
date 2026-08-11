@@ -47,7 +47,12 @@ public static class MetricsPage
         AppendLegend(sb, open: true);
 
         // Rank the "worst distance" over real problems only — a concrete leaf with no
-        // dependents shows D≈1 purely as a formula artifact, so exclude BenignLeaf.
+        // dependents shows D≈1 purely as a formula artifact, so exclude BenignLeaf. And when
+        // no module anywhere has an abstract/interface type, D collapses to |Instability − 1|
+        // for every module and stops discriminating anything — ScorecardBuilder already treats
+        // this as unmeasurable (see BuildWorstDistanceRow); this tile must agree with it.
+        var maxAbstractness = r.Modules.Count > 0 ? r.Modules.Max(m => m.Abstractness) : 0.0;
+        var distanceIsMeaningful = maxAbstractness > 0;
         var ranked = r.Modules
             .Where(m => ArchitectureMetrics.Classify(m.Instability, m.Abstractness, m.Ca, m.IsPureData) != ArchitectureMetrics.Zone.BenignLeaf)
             .ToList();
@@ -56,7 +61,14 @@ public static class MetricsPage
         Tile(sb, r.Modules.Count.ToString("N0"), "Modules");
         Tile(sb, r.PropagationCost.ToString("P0", CultureInfo.InvariantCulture), "Propagation cost");
         Tile(sb, r.Cycles.Count.ToString("N0"), "Dependency cycles", r.Cycles.Count > 0);
-        Tile(sb, worst.Distance.ToString("F2", CultureInfo.InvariantCulture), "Worst distance (D)", worst.Distance > 0.6);
+        if (distanceIsMeaningful)
+        {
+            Tile(sb, worst.Distance.ToString("F2", CultureInfo.InvariantCulture), "Worst distance (D)", worst.Distance > 0.6);
+        }
+        else
+        {
+            TileText(sb, "n/a", "Worst distance (D)");
+        }
         sb.Append("</div>");
 
         AppendFormulaCard(sb, r);
@@ -258,6 +270,11 @@ public static class MetricsPage
     {
         var cls = warn ? " style=\"border-color:var(--warn)\"" : "";
         sb.Append($"<div class=\"tile\"{cls}><div class=\"num\">{num}</div><div class=\"lbl\">{Html.Encode(label)}</div></div>");
+    }
+
+    private static void TileText(StringBuilder sb, string text, string label)
+    {
+        sb.Append($"<div class=\"tile\"><div class=\"num\">{Html.Encode(text)}</div><div class=\"lbl\">{Html.Encode(label)}</div></div>");
     }
 
     private static string Strip(string key, string prefix) =>
