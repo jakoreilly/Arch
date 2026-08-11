@@ -130,14 +130,15 @@ public static class TreemapRenderer
         foreach (var p in placed)
         {
             var f = p.Item.File;
-            var fill = LanguagePalette.ColorFor(f.Language);
+            var fill = LanguagePalette.TokenFor(f.Language);
+            var hexForContrast = LanguagePalette.HexFor(f.Language);
             var name = f.RelPath.Split('/')[^1];
             var title = $"{f.RelPath}\n{f.Language} · {f.Loc:N0} LOC";
             sb.Append(CultureInfo.InvariantCulture,
                 $"<a href=\"files/{Html.Encode(f.Slug)}.html\"><rect x=\"{p.Rect.X:0.##}\" y=\"{p.Rect.Y:0.##}\" width=\"{p.Rect.W:0.##}\" height=\"{p.Rect.H:0.##}\" fill=\"{fill}\" stroke=\"var(--bg-panel)\" stroke-width=\"1\"><title>{Html.Encode(title)}</title></rect>");
             if (p.Rect.W >= MinLabelW && p.Rect.H >= MinLabelH)
             {
-                var textColor = TextColorFor(fill);
+                var textColor = TextColorFor(hexForContrast);
                 sb.Append(CultureInfo.InvariantCulture,
                     $"<text x=\"{p.Rect.X + 3:0.##}\" y=\"{p.Rect.Y + 11:0.##}\" font-size=\"9\" font-family=\"Segoe UI, sans-serif\" fill=\"{textColor}\">{Html.Encode(Clip(name, p.Rect.W))}</text>");
             }

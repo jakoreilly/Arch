@@ -75,7 +75,7 @@ graphs, and a dedicated page per file. Every diagram supports pan, zoom, hover d
             var colors = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (var (lang, loc) in ordered)
             {
-                var color = LanguagePalette.ColorFor(lang, ref fallbackIdx);
+                var color = LanguagePalette.TokenFor(lang, ref fallbackIdx);
                 colors[lang] = color;
                 var pct = 100.0 * loc / totalLoc;
                 sb.Append($"<span style=\"width:{pct:F2}%;background:{color}\" title=\"{Html.Encode(lang)}: {loc:N0} LOC ({pct:F1}%)\"></span>");

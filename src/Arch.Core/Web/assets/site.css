@@ -42,6 +42,32 @@
   --cat-3: #7a5195;
   --cat-4: #1f8a8a;
   --cat-5: #488f31;
+  /* Per-language fills for the Overview language bar and the Structure treemap.
+     Same "fills only, never text" contract as --cat-1..5 above — LanguagePalette.cs
+     keeps its own literal hex copy of the light values below, used only to compute
+     each swatch's label text colour (black or white), never emitted as a colour
+     itself. Dark values are the light values blended 40% toward white (the same
+     lighten-for-dark technique already used for --accent/--ok/--warn/--danger above),
+     not independently tuned — retune any single value here if it reads poorly. */
+  --lang-csharp: #2f6fab;
+  --lang-tsjs: #e8b73a;
+  --lang-python: #3572a5;
+  --lang-powershell: #6b46c1;
+  --lang-sql: #c0392b;
+  --lang-html: #e34c26;
+  --lang-css: #563d7c;
+  --lang-json: #8a8a8a;
+  --lang-yaml: #6fbf73;
+  --lang-xml: #0060ac;
+  --lang-markdown: #4a4a4a;
+  --lang-msbuild: #68217a;
+  --lang-razor: #512bd4;
+  --lang-protobuf: #4d7e65;
+  --lang-fallback-1: #1f8a8a;
+  --lang-fallback-2: #b7791f;
+  --lang-fallback-3: #7a5195;
+  --lang-fallback-4: #ef5675;
+  --lang-fallback-5: #488f31;
   color-scheme: light;
 }
 :root[data-theme="dark"] {
@@ -78,6 +104,25 @@
   --cat-3: #a986c4;
   --cat-4: #4fbcbc;
   --cat-5: #7fbf5f;
+  --lang-csharp: #82a9cd;
+  --lang-tsjs: #f1d489;
+  --lang-python: #86aac9;
+  --lang-powershell: #a690da;
+  --lang-sql: #d98880;
+  --lang-html: #ee947d;
+  --lang-css: #9a8bb0;
+  --lang-json: #b9b9b9;
+  --lang-yaml: #a9d9ab;
+  --lang-xml: #66a0cd;
+  --lang-markdown: #929292;
+  --lang-msbuild: #a47aaf;
+  --lang-razor: #9780e5;
+  --lang-protobuf: #94b2a3;
+  --lang-fallback-1: #79b9b9;
+  --lang-fallback-2: #d4af79;
+  --lang-fallback-3: #af97bf;
+  --lang-fallback-4: #f59aac;
+  --lang-fallback-5: #91bc83;
   color-scheme: dark;
 }
 
@@ -332,6 +377,25 @@ table.grid tr:last-child td { border-bottom: none; }
     --cat-3: #7a5195;
     --cat-4: #1f8a8a;
     --cat-5: #488f31;
+    --lang-csharp: #2f6fab;
+    --lang-tsjs: #e8b73a;
+    --lang-python: #3572a5;
+    --lang-powershell: #6b46c1;
+    --lang-sql: #c0392b;
+    --lang-html: #e34c26;
+    --lang-css: #563d7c;
+    --lang-json: #8a8a8a;
+    --lang-yaml: #6fbf73;
+    --lang-xml: #0060ac;
+    --lang-markdown: #4a4a4a;
+    --lang-msbuild: #68217a;
+    --lang-razor: #512bd4;
+    --lang-protobuf: #4d7e65;
+    --lang-fallback-1: #1f8a8a;
+    --lang-fallback-2: #b7791f;
+    --lang-fallback-3: #7a5195;
+    --lang-fallback-4: #ef5675;
+    --lang-fallback-5: #488f31;
     --diagram-bg: #ffffff;
     color-scheme: light;
   }
