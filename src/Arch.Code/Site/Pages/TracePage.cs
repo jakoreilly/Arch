@@ -19,16 +19,26 @@ public static class TracePage
 
         sb.Append("<div id=\"trace-console\">");
         sb.Append("<div class=\"select-row\">"
-                + "<input class=\"filter-input\" id=\"trace-from\" type=\"search\" autocomplete=\"off\" "
-                + "placeholder=\"Start: a route, class, method, or file…\">"
-                + "<input class=\"filter-input\" id=\"trace-to\" type=\"search\" autocomplete=\"off\" "
-                + "placeholder=\"End: leave blank to follow everything downstream\">"
+                + "<div class=\"ac-field\"><input class=\"filter-input\" id=\"trace-from\" type=\"search\" "
+                + "autocomplete=\"off\" placeholder=\"Start: a route, class, method, or file…\" "
+                + "role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"list\" aria-controls=\"trace-from-list\">"
+                + "<ul class=\"ac-list palette-results\" id=\"trace-from-list\" role=\"listbox\" hidden></ul></div>"
+                + "<div class=\"ac-field\"><input class=\"filter-input\" id=\"trace-to\" type=\"search\" "
+                + "autocomplete=\"off\" placeholder=\"End: leave blank to follow everything downstream\" "
+                + "role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"list\" aria-controls=\"trace-to-list\">"
+                + "<ul class=\"ac-list palette-results\" id=\"trace-to-list\" role=\"listbox\" hidden></ul></div>"
                 + "</div>");
         sb.Append("<div class=\"select-row\">"
                 + "<label class=\"lf-check\"><input type=\"checkbox\" id=\"trace-imports\" checked> Follow imports</label>"
                 + "<label class=\"lf-check\"><input type=\"checkbox\" id=\"trace-calls\" checked> Follow calls</label>"
                 + "<label class=\"lf-check\"><input type=\"checkbox\" id=\"trace-data\" checked> Follow data access</label>"
+                + "<span class=\"filter-count\" id=\"trace-count\"></span>"
                 + "</div>");
+        // Filled in by site.js from the embedded node data (real routes/classes from this
+        // codebase), the same "land on a real example" idea as Explore's query-example chips —
+        // static verbs don't apply here since Trace operates on named entities, not a fixed
+        // query vocabulary, so the chips can't be pre-rendered server-side.
+        sb.Append("<div class=\"lang-legend\" id=\"trace-examples\" style=\"gap:.4rem;margin:.2rem 0 .6rem\"></div>");
 
         // Pre-rendered so the "nothing typed yet" affordance is visible even without
         // JavaScript; site.js's ArchTrace re-renders the identical markup on load once the

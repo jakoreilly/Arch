@@ -25,4 +25,30 @@ public class TracePageTests
 
         Assert.Contains("Type a class, method, route, or file name above to trace from it.", html);
     }
+
+    [Fact]
+    public void Both_inputs_carry_a_combobox_wired_to_their_own_autocomplete_list()
+    {
+        var model = new ProjectModel { RootName = "Sample", SourcePath = "C:/sample" };
+
+        var html = TracePage.Body(model, "{\"nodes\":[],\"edges\":[]}");
+
+        Assert.Contains("id=\"trace-from\"", html);
+        Assert.Contains("aria-controls=\"trace-from-list\"", html);
+        Assert.Contains("id=\"trace-from-list\" role=\"listbox\"", html);
+        Assert.Contains("id=\"trace-to\"", html);
+        Assert.Contains("aria-controls=\"trace-to-list\"", html);
+        Assert.Contains("id=\"trace-to-list\" role=\"listbox\"", html);
+    }
+
+    [Fact]
+    public void Carries_a_result_count_span_and_an_examples_container_for_site_js_to_fill_in()
+    {
+        var model = new ProjectModel { RootName = "Sample", SourcePath = "C:/sample" };
+
+        var html = TracePage.Body(model, "{\"nodes\":[],\"edges\":[]}");
+
+        Assert.Contains("id=\"trace-count\"", html);
+        Assert.Contains("id=\"trace-examples\"", html);
+    }
 }

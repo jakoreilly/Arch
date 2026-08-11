@@ -1286,21 +1286,137 @@
 
   window.ArchTrace = { trace: trace, closure: closure, nodeById: function (id) { return byId[id]; } };
 
-  // ---- Wiring: type-ahead over data.nodes by path/label, run on input, render results ----
+  // ---- Wiring: ranked matching + an inline autocomplete dropdown (modelled on the Ctrl+K
+  // search palette's combobox pattern — aria-activedescendant, arrow keys, click-to-select),
+  // so "which node did my typed text resolve to" is never silent. ----
   var fromInput = document.getElementById("trace-from");
   var toInput = document.getElementById("trace-to");
+  var fromList = document.getElementById("trace-from-list");
+  var toList = document.getElementById("trace-to-list");
   var results = document.getElementById("trace-results");
+  var countEl = document.getElementById("trace-count");
+  var examplesEl = document.getElementById("trace-examples");
   var cbImports = document.getElementById("trace-imports");
   var cbCalls = document.getElementById("trace-calls");
   var cbData = document.getElementById("trace-data");
 
-  function matchNode(term) {
+  // Ranked, not array-order: exact-prefix beats mid-string, name beats path-only. Explore's
+  // path:/imports: verbs can afford a silent first-match (you see the whole result set right
+  // there); Trace hinges its entire answer on this one pick, so ranking plus the dropdown below
+  // are what make a wrong guess visible and fixable instead of a silently mistraced chain.
+  function scoreNode(n, q) {
+    var name = (n.label || n.path || n.id || "").toLowerCase();
+    var path = (n.path || "").toLowerCase();
+    var i = name.indexOf(q);
+    if (i === 0) { return 100; }
+    if (i > 0) { return 60 - Math.min(40, i); }
+    var pi = path.indexOf(q);
+    if (pi === 0) { return 55; }
+    if (pi > 0) { return 30 - Math.min(20, pi); }
+    return 0;
+  }
+
+  function matchNodes(term) {
     var t = (term || "").trim().toLowerCase();
-    if (!t) { return null; }
-    var hit = data.nodes.filter(function (n) {
-      return (n.path || n.label || "").toLowerCase().indexOf(t) >= 0;
+    if (!t) { return []; }
+    var scored = [];
+    for (var i = 0; i < data.nodes.length; i++) {
+      var s = scoreNode(data.nodes[i], t);
+      if (s > 0) { scored.push([s, data.nodes[i]]); }
+    }
+    scored.sort(function (a, b) { return b[0] - a[0]; });
+    return scored.map(function (x) { return x[1]; });
+  }
+
+  function matchNode(term) { return matchNodes(term)[0] || null; }
+
+  // One dropdown behaviour, attached to both the "from" and "to" fields.
+  function attachAutocomplete(input, listEl) {
+    if (!input || !listEl) { return { setExternally: function () {} }; }
+    var hits = [], sel = -1;
+
+    function close() {
+      listEl.hidden = true; listEl.innerHTML = "";
+      input.setAttribute("aria-expanded", "false");
+      input.removeAttribute("aria-activedescendant");
+      sel = -1;
+    }
+    function paint() {
+      listEl.innerHTML = "";
+      if (!hits.length) { close(); return; }
+      hits.forEach(function (n, i) {
+        var li = document.createElement("li");
+        li.id = input.id + "-opt-" + i;
+        li.setAttribute("role", "option");
+        li.setAttribute("aria-selected", i === sel ? "true" : "false");
+        if (i === sel) { li.className = "selected"; }
+        var name = document.createElement("span");
+        name.className = "palette-name";
+        name.textContent = n.label || n.path || n.id;
+        var detail = document.createElement("span");
+        detail.className = "palette-detail";
+        detail.textContent = n.path && n.path !== name.textContent ? n.path : (n.lang || n.layer || "");
+        li.appendChild(name); li.appendChild(detail);
+        // mousedown (not click) fires before the input's blur, so choosing an option never
+        // races the blur-triggered close() below.
+        li.addEventListener("mousedown", function (e) { e.preventDefault(); choose(n); });
+        li.addEventListener("mousemove", function () { if (sel !== i) { sel = i; paint(); } });
+        listEl.appendChild(li);
+      });
+      listEl.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+      if (sel >= 0) { input.setAttribute("aria-activedescendant", input.id + "-opt-" + sel); }
+      else { input.removeAttribute("aria-activedescendant"); }
+    }
+    function choose(n) {
+      input.value = n.label || n.path || n.id;
+      close();
+      render();
+    }
+    function refresh() {
+      hits = matchNodes(input.value).slice(0, 8);
+      sel = -1;
+      paint();
+    }
+    input.addEventListener("input", function () { refresh(); render(); });
+    input.addEventListener("keydown", function (e) {
+      if (listEl.hidden && (e.key === "ArrowDown" || e.key === "ArrowUp")) { refresh(); }
+      if (e.key === "ArrowDown" && hits.length) { e.preventDefault(); sel = Math.min(hits.length - 1, sel + 1); paint(); }
+      else if (e.key === "ArrowUp" && hits.length) { e.preventDefault(); sel = Math.max(0, sel - 1); paint(); }
+      else if (e.key === "Enter" && sel >= 0 && hits[sel]) { e.preventDefault(); choose(hits[sel]); }
+      else if (e.key === "Escape" && !listEl.hidden) { close(); }
     });
-    return hit.length ? hit[0] : null;
+    // A blur means focus left the field for good (the mousedown above already beat this for
+    // clicks on an option), so it's safe to always close here.
+    input.addEventListener("blur", function () { close(); });
+    return { setExternally: choose };
+  }
+
+  var fromAC = attachAutocomplete(fromInput, fromList);
+  var toAC = attachAutocomplete(toInput, toList);
+
+  // "Try:" chips from the real graph — routes first (the page's own copy leads with
+  // "an endpoint"), padded out with the most downstream-reaching files. Never empty unless the
+  // codebase genuinely has neither, same "land on a real example" reasoning as Explore's default.
+  if (examplesEl) {
+    var routePicks = data.nodes.filter(function (n) { return n.layer === "route"; }).slice(0, 2);
+    var filePicks = data.nodes.filter(function (n) { return n.layer === "file"; })
+      .slice().sort(function (a, b) { return (b.fanOut || 0) - (a.fanOut || 0); });
+    var picks = routePicks.concat(filePicks).slice(0, 4);
+    if (picks.length) {
+      var lbl = document.createElement("span");
+      lbl.textContent = "Try:";
+      examplesEl.appendChild(lbl);
+      picks.forEach(function (n) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn";
+        btn.style.cssText = "padding:.15rem .5rem;font-size:.75rem";
+        btn.textContent = n.label || n.path;
+        btn.addEventListener("click", function () { fromAC.setExternally(n); fromInput.focus(); });
+        examplesEl.appendChild(btn);
+      });
+    }
   }
 
   function activeEdgeFilter() {
@@ -1329,9 +1445,18 @@
     return null;
   }
 
+  // Two files can share a bare label ("Program.cs" in two different projects) — the label
+  // alone would make such a hop look identical to its neighbour, so the full path rides
+  // alongside it whenever it says more than the label already does.
+  function hopMeta(n) {
+    if (!n || !n.path || n.path === (n.label || n.path)) { return ""; }
+    return ' <span class="hop-meta">' + esc(n.path) + '</span>';
+  }
+
   function renderHop(entry, isFirst) {
     var n = entry.node;
     var label = nodeHref(n) ? '<a href="' + nodeHref(n) + '">' + nodeLabel(n) + '</a>' : nodeLabel(n);
+    label += hopMeta(n);
     var evidence = "";
     if (entry.via) {
       var kind = entry.via.kind;
@@ -1354,10 +1479,13 @@
     return "<li>" + sep + label + evidence + "</li>";
   }
 
+  function setCount(text) { if (countEl) { countEl.textContent = text; } }
+
   function render() {
     if (!results) { return; }
     var fromNode = matchNode(fromInput ? fromInput.value : "");
     if (!fromNode) {
+      setCount("");
       results.innerHTML = '<div class="panel empty-state"><div class="big">🧭</div>'
         + "<p>Type a class, method, route, or file name above to trace from it.</p></div>";
       return;
@@ -1367,31 +1495,36 @@
     var filter = activeEdgeFilter();
 
     if (toTerm.trim() && !toNode) {
+      setCount("");
       results.innerHTML = '<p class="note">No file, route, or table matches “' + esc(toTerm) + '”.</p>';
       return;
     }
 
     if (!toNode) {
       var reachable = closure(fromNode.id, filter);
-      var html = '<p class="lede">' + reachable.length + " thing(s) reachable downstream of "
-        + nodeLabel(fromNode) + ".</p><ul class=\"member-list\">";
+      setCount(reachable.length + " reachable");
+      var html = '<p class="lede">Everything reachable downstream of ' + nodeLabel(fromNode) + ".</p><ul class=\"member-list\">";
       reachable.slice(0, 200).forEach(function (n) {
         var href = nodeHref(n);
-        html += "<li>" + (href ? '<a href="' + href + '">' + nodeLabel(n) + "</a>" : nodeLabel(n)) + "</li>";
+        html += "<li>" + (href ? '<a href="' + href + '">' + nodeLabel(n) + "</a>" : nodeLabel(n)) + hopMeta(n) + "</li>";
       });
       html += "</ul>";
+      if (reachable.length > 200) { html += '<p class="note">Showing the first 200 of ' + reachable.length + ".</p>"; }
       results.innerHTML = html;
       return;
     }
 
     var result = traceFiltered(fromNode.id, toNode.id, filter);
     if (!result.spine) {
+      setCount("");
       results.innerHTML = '<p class="note">No path from <strong>' + nodeLabel(fromNode) + "</strong> to <strong>"
         + nodeLabel(toNode) + "</strong> within " + MAX_HOPS + " hops. This is a heuristic graph — a real path "
         + "may exist through code this scan can't see (reflection, dynamic dispatch, configuration-driven wiring). "
         + "Try widening what Trace follows, above.</p>";
       return;
     }
+    var hops = result.spine.length - 1;
+    setCount(hops + " hop" + (hops === 1 ? "" : "s"));
     var header = result.degraded
       ? '<p class="lede"><span class="badge warn">ambiguous path</span> No fully-certain path exists — at least '
         + "one hop below matched more than one declared method. Each ambiguous hop names how many candidates it "
@@ -1415,7 +1548,9 @@
     return { spine: any, degraded: !!any };
   }
 
-  [fromInput, toInput, cbImports, cbCalls, cbData].forEach(function (el) {
+  // fromInput/toInput are wired above by attachAutocomplete (their "input" handler already
+  // calls render()) — only the checkboxes need generic wiring here.
+  [cbImports, cbCalls, cbData].forEach(function (el) {
     if (!el) { return; }
     el.addEventListener("input", render);
     el.addEventListener("change", render);
