@@ -31,12 +31,20 @@ public static class ScorecardBuilder
         return new Card(rows, overall);
     }
 
-    private static Row BuildCyclesRow(ArchitectureMetrics.Result m) =>
-        new("Dependency cycles", m.Cycles.Count.ToString("N0"),
+    private static Row BuildCyclesRow(ArchitectureMetrics.Result m)
+    {
+        if (m.ClosureSkipped)
+        {
+            return new Row("Dependency cycles", "n/a", Status.NA,
+                "Too many modules to compute cycles efficiently for this repository size — skipped.",
+                "", "metrics.html");
+        }
+        return new("Dependency cycles", m.Cycles.Count.ToString("N0"),
             m.Cycles.Count == 0 ? Status.Ok : Status.Fail,
             m.Cycles.Count == 0 ? "Dependencies flow one way." : "Modules transitively depend on each other, so none can be built, tested or understood in isolation.",
             m.Cycles.Count == 0 ? "" : "Break the cycle: introduce an interface owned by one module and depend on it, or move the shared type down into a lower module.",
             "metrics.html");
+    }
 
     // Propagation cost is only meaningful once there are a few modules to propagate across;
     // a 1–2 module graph is trivially ~100%, which would be a false alarm.
@@ -111,6 +119,11 @@ public static class ScorecardBuilder
 
     private static Row BuildDriftRow(ProjectModel model)
     {
+        if (model.Projects.Count == 0)
+        {
+            return new Row("Package version drift", "n/a", Status.NA,
+                "No .csproj files were found to check — this signal covers NuGet package references only.");
+        }
         var driftCount = model.Projects
             .SelectMany(p => p.Packages)
             .GroupBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
@@ -124,6 +137,11 @@ public static class ScorecardBuilder
 
     private static Row BuildSecretsRow(ProjectModel model)
     {
+        if (model.Projects.Count == 0)
+        {
+            return new Row("Credentials in source", "n/a", Status.NA,
+                "No .csproj files were found to check — this signal reads connection strings discovered under a project, not the whole tree.");
+        }
         var secrets = model.Projects.SelectMany(p => p.ConnectionStrings).Count(u => u.HasCredential);
         return new Row("Credentials in source", secrets.ToString("N0"),
             secrets == 0 ? Status.Ok : Status.Fail,

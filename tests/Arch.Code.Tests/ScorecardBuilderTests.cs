@@ -12,12 +12,40 @@ public class ScorecardBuilderTests
         m.Files.Add(new FileNode { RelPath = "src/A.cs", Slug = "a", Language = "C#", Loc = 100,
             Types = [new TypeInfo { Name = "A", Kind = "class", Namespace = "NA" }] });
         m.Files.Add(new FileNode { RelPath = "tests/ATests.cs", Slug = "at", Language = "C#", Loc = 60, IsTest = true });
+        // A real (clean) .csproj so drift/secrets are actually measured, not n/a for lack of data.
+        m.Projects.Add(new CsprojInfo { Name = "Api", RelPath = "Api/Api.csproj",
+            Packages = [new PackageRef("Serilog", "3.0.0")] });
         var card = ScorecardBuilder.Build(m);
         // No cycles, no committed secrets, no version drift, healthy test ratio → those signals pass.
         Assert.Equal(ScorecardBuilder.Status.Ok, Row(card, "Dependency cycles"));
         Assert.Equal(ScorecardBuilder.Status.Ok, Row(card, "Credentials in source"));
         Assert.Equal(ScorecardBuilder.Status.Ok, Row(card, "Package version drift"));
         Assert.Equal(ScorecardBuilder.Status.Ok, Row(card, "Test-code ratio"));
+    }
+
+    [Fact]
+    public void Drift_and_secrets_are_na_without_any_csproj()
+    {
+        // No .csproj at all (e.g. a non-.NET repo) — these signals were never checked, so
+        // they must report n/a rather than a false-clean "Ok: 0".
+        var m = new ProjectModel { RootName = "R", SourcePath = "C:/r" };
+        m.Files.Add(new FileNode { RelPath = "src/a.py", Slug = "a", Language = "Python", Loc = 10 });
+        var card = ScorecardBuilder.Build(m);
+        Assert.Equal(ScorecardBuilder.Status.NA, Row(card, "Package version drift"));
+        Assert.Equal(ScorecardBuilder.Status.NA, Row(card, "Credentials in source"));
+    }
+
+    [Fact]
+    public void Cycles_are_na_when_the_closure_is_skipped_for_size()
+    {
+        var m = new ProjectModel { RootName = "R", SourcePath = "C:/r" };
+        for (var i = 0; i < 401; i++)
+        {
+            m.Files.Add(new FileNode { RelPath = $"src/F{i}.cs", Slug = $"f{i}", Language = "C#", Loc = 5,
+                Types = [new TypeInfo { Name = $"F{i}", Kind = "class", Namespace = $"N{i}" }] });
+        }
+        var card = ScorecardBuilder.Build(m);
+        Assert.Equal(ScorecardBuilder.Status.NA, Row(card, "Dependency cycles"));
     }
 
     [Fact]
