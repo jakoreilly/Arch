@@ -44,6 +44,12 @@ public static class ModulesPage
         sb.Append("</div>");
 
         // Module -> module diagram.
+        sb.Append("""
+<div class="landscape-filters" id="mod-filters" hidden>
+  <label class="lf-range">Min imports <input type="range" id="mod-threshold" min="0" max="50" step="1" value="0"> <span class="filter-count" id="mod-threshold-val">0</span></label>
+  <span class="filter-count" id="mod-summary" style="margin-left:auto"></span>
+</div>
+""");
         sb.Append(PageTemplate.DiagramBlock("modules", BuildDiagram(graph, maxNodes), model.RootName + "-modules"));
         sb.Append(PageTemplate.Legend());
 

@@ -893,6 +893,59 @@
     rebuild();
   })();
 
+  /* ---- Modules page: min-import-weight filter ----
+     Same rebuild-the-Mermaid-source-then-rerenderCard technique as the Landscape
+     layer filters above, adapted to the Modules diagram's edge shape: a solid arrow
+     ("-->", not Landscape's dashed "-.->"), and a label of "N imports" that is OMITTED
+     entirely (not "1 imports") when N is exactly 1 — an unlabeled edge must count as
+     weight 1, not be skipped. Self-guards: on any page without #mod-filters it
+     returns immediately. */
+  (function () {
+    var card = document.getElementById("modules");
+    var bar = document.getElementById("mod-filters");
+    var src = card && card.querySelector(".mermaid-src");
+    if (!card || !bar || !src || !window.ArchViewer) { return; }
+
+    var header = [], nodes = [], edges = [];
+    src.textContent.split(/\r?\n/).forEach(function (raw) {
+      var line = raw.trim();
+      if (!line) { return; }
+      if (/^flowchart/.test(line) || /^classDef/.test(line)) { header.push(line); return; }
+      var labeled = /^(\S+)\s*-->\|"(\d+)\s*imports?"\|\s*(\S+)/.exec(line);
+      if (labeled) { edges.push({ from: labeled[1], to: labeled[3], count: +labeled[2], raw: line }); return; }
+      var bare = /^(\S+)\s*-->\s*(\S+)\s*$/.exec(line);
+      if (bare) { edges.push({ from: bare[1], to: bare[2], count: 1, raw: line }); return; }
+      var node = /^(n\d{3,})\s*[\[({]/.exec(line);
+      if (node) { nodes.push(line); }
+    });
+
+    var maxCount = edges.reduce(function (m, e) { return Math.max(m, e.count); }, 1);
+    var thresholdEl = document.getElementById("mod-threshold");
+    thresholdEl.max = Math.max(1, maxCount);
+
+    var valEl = document.getElementById("mod-threshold-val");
+    var summaryEl = document.getElementById("mod-summary");
+
+    function rebuild() {
+      var thr = +thresholdEl.value;
+      valEl.textContent = thr;
+      var lines = header.slice().concat(nodes);
+      var shown = 0;
+      edges.forEach(function (e) {
+        if (e.count < thr) { return; }
+        lines.push(e.raw);
+        shown++;
+      });
+      src.textContent = lines.join("\n");
+      window.ArchViewer.rerenderCard(card);
+      summaryEl.textContent = shown + " of " + edges.length + " links (≥" + thr + " import" + (thr === 1 ? "" : "s") + ")";
+    }
+
+    thresholdEl.addEventListener("input", rebuild);
+    bar.hidden = false;
+    rebuild();
+  })();
+
   /* ---- Dependencies page: internal/external layer toggle + highlight filter ----
      Parses the visible dep card's embedded Mermaid source and rebuilds it from the
      control state, then re-renders. External nodes carry ":::external"; edges to them
