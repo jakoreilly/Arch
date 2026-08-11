@@ -25,6 +25,27 @@ public sealed record CliOptions
     /// <summary>Path to an earlier scan's model.json to diff against; null = no drift page.</summary>
     public string? BaselineModelPath { get; init; }
 
+    /// <summary>Every flag <see cref="Parse"/> recognizes, mapped to whether it consumes a
+    /// following value — kept in sync with the <c>boolFlags</c>/<c>valueFlags</c> dictionaries
+    /// and the <c>--max-nodes</c>/<c>--fail-on</c> branches below by hand, same as the usage
+    /// string already is. Exposed for <see cref="SqlAnalysisProvider.KnownFlags"/>, which
+    /// Arch.Cli's Runner uses to filter combined-mode argv (see IAnalysisProvider.KnownFlags);
+    /// a flag added here but forgotten in Parse only fails the same way it does today, it does
+    /// not regress anything.</summary>
+    public static readonly IReadOnlyDictionary<string, bool> KnownFlags = new Dictionary<string, bool>(StringComparer.Ordinal)
+    {
+        ["--no-open"] = false,
+        ["--out"] = true,
+        ["--exclude"] = true,
+        ["--exclude-pattern"] = true,
+        ["--config"] = true,
+        ["--dialect"] = true,
+        ["--sarif"] = true,
+        ["--baseline"] = true,
+        ["--max-nodes"] = true,
+        ["--fail-on"] = true,
+    };
+
     public static CliOptions? Parse(string[] args, out int exitCode)
     {
         exitCode = 0;

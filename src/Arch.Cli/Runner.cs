@@ -69,7 +69,7 @@ public static class Runner
         foreach (var (provider, detection) in applying)
         {
             var providerOutDir = combined ? Path.Combine(outDir, provider.Id) : outDir;
-            var providerArgs = BuildProviderArgs(args, providerOutDir);
+            var providerArgs = BuildProviderArgs(args, providerOutDir, provider, combined);
             try
             {
                 var model = provider.Generate(sourceFull, providerOutDir, providerArgs);
@@ -355,16 +355,49 @@ public static class Runner
         return slug.Length == 0 ? "project" : slug;
     }
 
+    /// <summary>Union of every provider's own <see cref="IAnalysisProvider.KnownFlags"/>,
+    /// used only to decide arity (does a flag take a following value?) when
+    /// <see cref="BuildProviderArgs"/> drops a flag that belongs to a *different* provider.
+    /// Both providers agree on the arity of every flag name they happen to share, so there is
+    /// no ambiguity to resolve.</summary>
+    private static readonly IReadOnlyDictionary<string, bool> AllKnownFlags = BuildAllKnownFlags();
+
+    private static Dictionary<string, bool> BuildAllKnownFlags()
+    {
+        // Not a plain ToDictionary: both providers declare --out/--no-open (with the same
+        // arity), which ToDictionary would reject as a duplicate key even though there is no
+        // real conflict — last-write-wins here, which is fine since every shared name agrees.
+        var combined = new Dictionary<string, bool>(StringComparer.Ordinal);
+        foreach (var provider in Providers)
+        {
+            foreach (var (name, takesValue) in provider.KnownFlags) { combined[name] = takesValue; }
+        }
+        return combined;
+    }
+
     /// <summary>The original argv, with --out replaced by this provider's actual output
     /// folder and --no-open forced on — Runner opens exactly one browser tab at the end,
-    /// not each provider independently. Every other flag (--exclude, --sarif, --max-nodes,
-    /// --fail-on, ...) passes through untouched for the provider's own CliOptions.Parse.</summary>
-    private static string[] BuildProviderArgs(string[] args, string providerOutDir)
+    /// not each provider independently. In single-provider mode every other flag passes
+    /// through untouched, same as always. In combined mode (more than one provider applies)
+    /// the same argv is offered to each provider in turn, so a flag only a *different*
+    /// provider declares — e.g. Arch.Sql's --dialect reaching Arch.Code, or vice versa — is
+    /// dropped here (its value too, if it takes one) instead of reaching this provider's own
+    /// CliOptions.Parse, which would otherwise hard-fail on it as an unknown argument
+    /// (continue.md's disclosed Phase 5 limitation). A flag neither provider declares is left
+    /// alone either way, so Parse still reports a genuinely bad flag itself.</summary>
+    private static string[] BuildProviderArgs(string[] args, string providerOutDir, IAnalysisProvider provider, bool combined)
     {
-        var list = new List<string>(args);
-        for (var i = list.Count - 1; i >= 1; i--)
+        var list = new List<string> { args[0] };
+        for (var i = 1; i < args.Length; i++)
         {
-            if (list[i] == "--out") { list.RemoveRange(i, Math.Min(2, list.Count - i)); }
+            var arg = args[i];
+            if (arg == "--out") { i++; continue; }
+            if (!combined || provider.KnownFlags.ContainsKey(arg) || !AllKnownFlags.TryGetValue(arg, out var takesValue))
+            {
+                list.Add(arg);
+                continue;
+            }
+            if (takesValue && i + 1 < args.Length) { i++; }   // owned by another provider — drop it and its value
         }
         if (!list.Contains("--no-open")) { list.Add("--no-open"); }
         list.Add("--out");

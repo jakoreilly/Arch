@@ -168,6 +168,23 @@ public class RunnerTests : IDisposable
         Assert.DoesNotContain("hub-dbs", hub);
     }
 
+    /// <summary>Combined mode offers the same argv to both providers. A flag only one of
+    /// them declares (--dialect is SQL-only) must not reach the other's CliOptions.Parse,
+    /// which would otherwise hard-fail on it as an unknown argument — the disclosed,
+    /// now-fixed Phase 5 limitation (continue.md). Also covers a code-only flag
+    /// (--no-wiki) reaching the SQL side, the mirror case.</summary>
+    [Fact]
+    public void Combined_fixture_tolerates_flags_only_one_provider_recognizes()
+    {
+        var (exitCode, stderr) = RunCaptured(
+            Path.Combine(FixturesRoot, "Combined"), "--out", _outDir, "--no-open", "--dialect", "tsql", "--no-wiki");
+
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("FAILED", stderr);
+        Assert.True(File.Exists(Path.Combine(_outDir, "code", "index.html")));
+        Assert.True(File.Exists(Path.Combine(_outDir, "sql", "index.html")));
+    }
+
     [Fact]
     public void Combined_fixture_hub_and_subsites_all_carry_the_shared_assets()
     {

@@ -383,11 +383,6 @@ analysers) takes about 7 seconds, so there is nothing to optimise there anyway.
 
 ## Known limitations
 
-- **Provider-specific flags don't degrade in combined mode.** When a folder has both code
-  and SQL, every option is forwarded to *both* analysers. A flag only one understands (say
-  `--dialect`, which is SQL-only) makes the other reject it, and Arch reports that
-  provider as `FAILED` — misleading, since nothing really failed. **Workaround:** run
-  `arch code <path>` and `arch sql <path> --dialect …` separately.
 - **The verified code↔SQL join isn't reachable in one command.** Matching by *server and
   catalog* needs a live connection, and `arch connect` doesn't also scan code. Any single
   `arch <path>` run can therefore only reach the unverified, catalog-name match — which is
@@ -408,9 +403,6 @@ path is one level off.
 **A build fails saying a file is locked.** Something is holding the output — a running
 `arch.exe`, or an IDE. Close it and rebuild. This is environmental, not a code problem.
 
-**A provider reports `FAILED` in combined mode.** Check whether you passed a flag only the
-other analyser understands — see Known limitations.
-
 **The browser didn't open.** Open the `index.html` the tool prints on its last line. Add
 `--no-open` if you never want it to try.
 
@@ -420,5 +412,5 @@ it. Move or zip the whole output folder, not just the HTML.
 ---
 
 Contributing to Arch itself? [CLAUDE.md](CLAUDE.md) has the repo conventions,
-[continue.md](continue.md) has the state of the work, and `tools/golden.sh` is the
-regression net you must run before committing.
+`prompts/continue.md` (local, gitignored) has the state of the work, and
+`tools/golden.sh` is the regression net you must run before committing.

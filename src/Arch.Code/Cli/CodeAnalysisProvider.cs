@@ -12,6 +12,7 @@ public sealed class CodeAnalysisProvider : IAnalysisProvider
 {
     public string Id => "code";
     public string Describes => "source files (C#, TypeScript, Python, Go, Java, Rust, …)";
+    public IReadOnlyDictionary<string, bool> KnownFlags => CliOptions.KnownFlags;
 
     public Detection Detect(string sourcePath)
     {

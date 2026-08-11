@@ -34,6 +34,31 @@ public sealed record CliOptions
     /// failed scorecard signal (for code-scanning dashboards); null = don't write one.</summary>
     public string? SarifPath { get; init; }
 
+    /// <summary>Every flag <see cref="Parse"/> recognizes, mapped to whether it consumes a
+    /// following value — kept in sync with the <c>boolFlags</c>/<c>valueFlags</c> dictionaries
+    /// and the <c>--max-nodes</c>/<c>--fail-on</c> branches below by hand, same as the usage
+    /// string already is. Exposed for <see cref="CodeAnalysisProvider.KnownFlags"/>, which
+    /// Arch.Cli's Runner uses to filter combined-mode argv (see IAnalysisProvider.KnownFlags);
+    /// a flag added here but forgotten in Parse only fails the same way it does today, it does
+    /// not regress anything.</summary>
+    public static readonly IReadOnlyDictionary<string, bool> KnownFlags = new Dictionary<string, bool>(StringComparer.Ordinal)
+    {
+        ["--no-open"] = false,
+        ["--no-complexity"] = false,
+        ["--no-snippets"] = false,
+        ["--no-wiki"] = false,
+        ["--no-source-link"] = false,
+        ["--out"] = true,
+        ["--exclude"] = true,
+        ["--source-link-type"] = true,
+        ["--source-link-base"] = true,
+        ["--source-link-ref"] = true,
+        ["--descriptions"] = true,
+        ["--sarif"] = true,
+        ["--max-nodes"] = true,
+        ["--fail-on"] = true,
+    };
+
     public static CliOptions? Parse(string[] args, out int exitCode)
     {
         exitCode = 0;

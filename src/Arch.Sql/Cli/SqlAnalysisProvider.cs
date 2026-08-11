@@ -13,6 +13,7 @@ public sealed class SqlAnalysisProvider : IAnalysisProvider
 {
     public string Id => "sql";
     public string Describes => "SQL scripts (*.sql)";
+    public IReadOnlyDictionary<string, bool> KnownFlags => CliOptions.KnownFlags;
 
     public Detection Detect(string sourcePath)
     {

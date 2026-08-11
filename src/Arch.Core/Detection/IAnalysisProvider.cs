@@ -29,4 +29,11 @@ public interface IAnalysisProvider
     /// <paramref name="outDir"/>. Returns the model for cross-provider linking
     /// (Phase 6); providers that expose nothing linkable return null.</summary>
     object? Generate(string sourcePath, string outDir, string[] args);
+
+    /// <summary>Every CLI flag this provider's own arg parser recognizes, mapped to whether
+    /// it consumes a following value. In combined mode (both providers apply) the same argv
+    /// reaches every provider, so a flag only one of them understands must not reach the
+    /// other's parser — Runner uses this to filter argv down to what fits before calling
+    /// <see cref="Generate"/>.</summary>
+    IReadOnlyDictionary<string, bool> KnownFlags { get; }
 }

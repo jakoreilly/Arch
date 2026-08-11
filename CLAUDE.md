@@ -28,14 +28,15 @@ tools/golden.sh   the byte-identical-output regression net
 
 ## Read these before starting work
 
-- **continue.md** — where work stopped, and the findings from each phase. Start here. It
-  has a "Do not re-litigate" section; respect it.
-- **plan.md** — the source of truth for the migration: hard constraints, and a GOTCHA
-  block for every trap found so far.
+- **prompts/continue.md** — where work stopped, and the findings from each phase. Start
+  here. It has a "Do not re-litigate" section; respect it.
+- **prompts/plan.md** — the source of truth for the migration: hard constraints, and a
+  GOTCHA block for every trap found so far.
 
-Both are local, gitignored session-continuity notes — present on the machine this
-repo was developed on, not in a fresh clone. If they're missing, there's no migration
-history to reconstruct; treat the codebase and tests as the source of truth instead.
+Both live under `prompts/`, local and gitignored session-continuity notes — present on
+the machine this repo was developed on, not in a fresh clone. If they're missing,
+there's no migration history to reconstruct; treat the codebase and tests as the source
+of truth instead.
 
 ## Commands
 

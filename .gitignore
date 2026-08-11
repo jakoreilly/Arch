@@ -8,10 +8,13 @@ golden/
 .vs/
 .DS_Store
 
+# Session-to-session working notes for AI-assisted development (plan.md, continue.md,
+# todo.md and their -hardening siblings) live here, excluded from the public repo —
+# kept locally, untracked. Named explicitly (not just relying on *.md below) so the
+# whole folder stays ignored even if a non-.md scratch file ends up in it.
+prompts/
+
 # Ignore Markdown files by default, but keep the project docs tracked.
-# plan.md/continue.md/todo.md are deliberately NOT allowlisted here: they are
-# session-to-session working notes for AI-assisted development and are excluded from
-# the public repo (kept locally, untracked) — see git history for the removal commit.
 *.md
 !README.md
 !CONTRIBUTING.md
