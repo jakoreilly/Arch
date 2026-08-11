@@ -542,17 +542,6 @@ table.matrix-legend td:nth-child(2) { word-break: break-word; }
 .clickable-node { cursor: pointer; transition: filter 120ms ease; }
 .clickable-node:hover { filter: brightness(.96); }
 
-/* ---- Responsive ---- */
-@media (max-width: 820px) {
-  .layout { flex-direction: column; }
-  .sidebar { position: static; width: 100%; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: .5rem; }
-  .sidebar nav { flex-direction: row; flex-wrap: wrap; }
-  .brand { border-bottom: none; padding-bottom: .25rem; margin-bottom: 0; }
-  .search-open { width: auto; margin-bottom: 0; }
-  .sidebar-foot { margin-top: 0; padding-top: 0; border-top: none; margin-left: auto; }
-  .content { padding: 1rem; }
-}
-
 /* ---- 3D dependency graph ---- */
 #graph3d-root { position: relative; }
 .graph3d-canvas { height: 66vh; border-radius: 12px; background: var(--diagram-bg); overflow: hidden; }
