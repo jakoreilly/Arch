@@ -94,6 +94,27 @@ public static class PageTemplate
             + $"<script src=\"{relRoot}assets/search-index.js\"></script>\n"
             + $"{sourceLinkScript}<script src=\"{relRoot}assets/sourcelink.js\"></script>";
 
+        // The shared hydration source for every lazy (hidden) diagram card's toolbar —
+        // see DiagramBlock. Gated on needsMermaid: no point emitting it on a page with no
+        // diagram card at all. A <template>'s contents never render regardless of where in
+        // <body> it sits, so appending it after the real content (below) is safe.
+        var toolbarTemplate = needsMermaid
+            ? """
+              <template id="diagram-toolbar-tpl">
+                <button class="btn" data-act="zoom-in" type="button" title="Zoom in">+</button>
+                <button class="btn" data-act="zoom-out" type="button" title="Zoom out">&minus;</button>
+                <button class="btn" data-act="zoom-reset" type="button" title="Reset view">Reset</button>
+                <button class="btn" data-act="fit" type="button" title="Fit diagram to the visible area">Fit</button>
+                <button class="btn btn-primary" data-act="png" type="button" title="Download this diagram as a PNG image">⬇ PNG</button>
+                <button class="btn" data-act="svg" type="button" title="Download this diagram as a scalable SVG">⬇ SVG</button>
+                <button class="btn" data-act="copy" type="button" title="Copy the Mermaid source of this diagram to the clipboard">Copy Mermaid</button>
+                <input class="filter-input diagram-find" type="search" data-act="find" placeholder="Find node…" autocomplete="off" spellcheck="false" title="Jump to a node by name (Enter)">
+                <span class="tb-hint">Scroll to zoom · drag to pan · hover a node to trace its links · click a node to open it</span>
+              </template>
+              """
+            : "";
+        bodyHtml += toolbarTemplate;
+
         var shell = new ShellOptions
         {
             // One product, three entry points. The brand names the ANALYSER ("Arch Code"),
@@ -138,19 +159,31 @@ public static class PageTemplate
         // (Trace) whose diagram starts empty at build time and is filled in by client JS, so
         // ShownNodes can't predict the real (small, path-shaped) size yet.
         var stageClass = forceSmall || (diagram.ShownNodes > 0 && diagram.ShownNodes <= 6) ? "stage small" : "stage";
+        // Only the initially-visible card gets its toolbar as literal server-rendered HTML —
+        // every hidden card (161 of 162 on calls.html) gets an empty hydration target instead,
+        // filled from the shared <template id="diagram-toolbar-tpl"> (see Render() below) by
+        // site.js's setupCard the first time that card is actually shown. Deliberately
+        // duplicates the toolbar markup with the <template> below rather than sharing a C#
+        // constant — see this method's own history/PR for why that indirection isn't worth it
+        // for a one-time, unlikely-to-change block.
+        var toolbarHtml = hidden
+            ? "<div class=\"toolbar\" data-toolbar-lazy></div>"
+            : """
+              <div class="toolbar">
+                <button class="btn" data-act="zoom-in" type="button" title="Zoom in">+</button>
+                <button class="btn" data-act="zoom-out" type="button" title="Zoom out">&minus;</button>
+                <button class="btn" data-act="zoom-reset" type="button" title="Reset view">Reset</button>
+                <button class="btn" data-act="fit" type="button" title="Fit diagram to the visible area">Fit</button>
+                <button class="btn btn-primary" data-act="png" type="button" title="Download this diagram as a PNG image">⬇ PNG</button>
+                <button class="btn" data-act="svg" type="button" title="Download this diagram as a scalable SVG">⬇ SVG</button>
+                <button class="btn" data-act="copy" type="button" title="Copy the Mermaid source of this diagram to the clipboard">Copy Mermaid</button>
+                <input class="filter-input diagram-find" type="search" data-act="find" placeholder="Find node…" autocomplete="off" spellcheck="false" title="Jump to a node by name (Enter)">
+                <span class="tb-hint">Scroll to zoom · drag to pan · hover a node to trace its links · click a node to open it</span>
+              </div>
+              """;
         return $"""
 <div class="diagram-card" id="{Html.Encode(id)}" data-png-name="{Html.Encode(pngName)}"{groupAttr}{hiddenAttr}{deferredAttr}>
-  {trimBanner}<div class="toolbar">
-    <button class="btn" data-act="zoom-in" type="button" title="Zoom in">+</button>
-    <button class="btn" data-act="zoom-out" type="button" title="Zoom out">&minus;</button>
-    <button class="btn" data-act="zoom-reset" type="button" title="Reset view">Reset</button>
-    <button class="btn" data-act="fit" type="button" title="Fit diagram to the visible area">Fit</button>
-    <button class="btn btn-primary" data-act="png" type="button" title="Download this diagram as a PNG image">⬇ PNG</button>
-    <button class="btn" data-act="svg" type="button" title="Download this diagram as a scalable SVG">⬇ SVG</button>
-    <button class="btn" data-act="copy" type="button" title="Copy the Mermaid source of this diagram to the clipboard">Copy Mermaid</button>
-    <input class="filter-input diagram-find" type="search" data-act="find" placeholder="Find node…" autocomplete="off" spellcheck="false" title="Jump to a node by name (Enter)">
-    <span class="tb-hint">Scroll to zoom · drag to pan · hover a node to trace its links · click a node to open it</span>
-  </div>
+  {trimBanner}{toolbarHtml}
   <div class="{stageClass}"><pre class="mermaid-src" hidden>{Html.Encode(diagram.Mermaid)}</pre><div class="render-target"></div></div>
   <script type="application/json" class="tooltips">{tooltipJson}</script>
   <script type="application/json" class="hrefs">{hrefJson}</script>

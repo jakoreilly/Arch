@@ -93,7 +93,17 @@
     }
   }
 
+  function hydrateToolbar(card) {
+    var slot = card.querySelector(".toolbar[data-toolbar-lazy]");
+    if (!slot) { return; }
+    var tpl = document.getElementById("diagram-toolbar-tpl");
+    if (!tpl) { return; }
+    slot.removeAttribute("data-toolbar-lazy");
+    slot.appendChild(tpl.content.cloneNode(true));
+  }
+
   function setupCard(card) {
+    hydrateToolbar(card);
     var stage = card.querySelector(".stage");
     var svg = stage.querySelector("svg");
     if (!svg) { return; }
