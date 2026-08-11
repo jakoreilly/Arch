@@ -121,6 +121,12 @@ public static class Runner
             HubPage.Write(outDir, siteName, links, sourceFull, generatedOn, HubDbLinks(joinedDatabases),
                           TopActions(codeResult, sqlResult), owner, capabilities);
             indexPath = Path.Combine(outDir, "index.html");
+
+            // Must run after HubPage.Write, not just after the provider loop: the hub's own
+            // outDir/assets/ (the dedup's "canonical" copy every subsite links to) is written
+            // by HubPage.Write itself (SiteAssets.CopyTo(outDir)) — running this any earlier
+            // finds no canonical file yet and silently dedupes nothing.
+            DedupeVendorAssets(outDir);
         }
 
         var outName = Path.GetFileName(outDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
@@ -404,6 +410,56 @@ public static class Runner
         list.Add(providerOutDir);
         return list.ToArray();
     }
+
+    /// <summary>Combined mode writes the hub's own assets/ plus one full copy inside each
+    /// subsite (SiteAssets.CopyTo is called independently per site — see CLAUDE.md:
+    /// "Determinism is the product" and this class's own doc comment on byte-identical
+    /// standalone output, both of which rule out changing any subsite's asset PATHS).
+    /// This collapses the large vendored libraries (mermaid.min.js, 3d-force-graph.min.js)
+    /// that are guaranteed byte-identical across every copy — same shared assets/ source
+    /// tree, never modified per-provider — down to NTFS hardlinks. Every subsite still
+    /// has its own real file at its own path with identical content; only the on-disk
+    /// bytes are shared. Content is never compared byte-by-byte: identical relative path
+    /// under every copy's own assets/lib/ is the guarantee, not a hash check, because the
+    /// files are known to originate from the same untouched vendored copy shipped in the
+    /// exe's own output directory.</summary>
+    private static void DedupeVendorAssets(string outDir)
+    {
+        var relPaths = new[] { "assets/lib/mermaid.min.js", "assets/lib/3d-force-graph.min.js" };
+        foreach (var rel in relPaths)
+        {
+            var canonical = Path.Combine(outDir, rel);
+            if (!File.Exists(canonical)) { continue; }
+            foreach (var subsite in new[] { "code", "sql" })
+            {
+                var copy = Path.Combine(outDir, subsite, rel);
+                if (!File.Exists(copy)) { continue; }
+                try
+                {
+                    File.Delete(copy);
+                    // CreateHardLink returns false (not a thrown exception) on failure — e.g.
+                    // cross-volume outDir or a filesystem without hardlink support — so a missed
+                    // check here would silently leave the just-deleted file gone. Promote it to
+                    // an exception so the catch below's fallback copy actually runs.
+                    if (!CreateHardLink(copy, canonical, IntPtr.Zero))
+                    {
+                        throw new IOException($"CreateHardLink failed (Win32 error {System.Runtime.InteropServices.Marshal.GetLastWin32Error()})");
+                    }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    // Cross-volume outDir, or a filesystem without hardlink support (e.g. a
+                    // network share). Not fatal: the copy either still exists (delete failed,
+                    // caught before the link attempt) or is gone with the link failed too, in
+                    // which case restore it exactly as SiteAssets.CopyTo originally would.
+                    if (!File.Exists(copy)) { File.Copy(canonical, copy, overwrite: true); }
+                }
+            }
+        }
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true, CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
 
     private static void PrintUsage()
     {
