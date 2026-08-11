@@ -138,9 +138,13 @@ public static class TreemapRenderer
                 $"<a href=\"files/{Html.Encode(f.Slug)}.html\"><rect x=\"{p.Rect.X:0.##}\" y=\"{p.Rect.Y:0.##}\" width=\"{p.Rect.W:0.##}\" height=\"{p.Rect.H:0.##}\" fill=\"{fill}\" stroke=\"var(--bg-panel)\" stroke-width=\"1\"><title>{Html.Encode(title)}</title></rect>");
             if (p.Rect.W >= MinLabelW && p.Rect.H >= MinLabelH)
             {
-                var textColor = TextColorFor(hexForContrast);
-                sb.Append(CultureInfo.InvariantCulture,
-                    $"<text x=\"{p.Rect.X + 3:0.##}\" y=\"{p.Rect.Y + 11:0.##}\" font-size=\"9\" font-family=\"Segoe UI, sans-serif\" fill=\"{textColor}\">{Html.Encode(Clip(name, p.Rect.W))}</text>");
+                var clipped = Clip(name, p.Rect.W);
+                if (clipped.Length > 0)
+                {
+                    var textColor = TextColorFor(hexForContrast);
+                    sb.Append(CultureInfo.InvariantCulture,
+                        $"<text x=\"{p.Rect.X + 3:0.##}\" y=\"{p.Rect.Y + 11:0.##}\" font-size=\"9\" font-family=\"Segoe UI, sans-serif\" fill=\"{textColor}\">{Html.Encode(clipped)}</text>");
+                }
             }
             sb.Append("</a>");
         }
@@ -160,10 +164,20 @@ public static class TreemapRenderer
         return luminance > 0.6 ? "#111" : "#fff";
     }
 
+    /// <summary>Clips a label to fit <paramref name="width"/> px, appending "…" when
+    /// truncated so a shortened label reads as incomplete rather than as a different,
+    /// wrong name. Below <see cref="MinReadableChars"/> a clipped fragment (plus ellipsis)
+    /// stops being worth showing at all — the caller's own MinLabelW/MinLabelH gate already
+    /// skips labels below a pixel-size floor; this is the character-count floor for the
+    /// sliver of width just above that floor.</summary>
+    private const int MinReadableChars = 4;
+
     private static string Clip(string name, double width)
     {
         var maxChars = (int)((width - 6) / 5.2);   // ~5.2px per char at font-size 9
-        return maxChars >= name.Length || maxChars < 1 ? name : name[..Math.Max(1, maxChars)];
+        if (maxChars >= name.Length) { return name; }
+        if (maxChars < MinReadableChars) { return ""; }
+        return name[..(maxChars - 1)] + "…";
     }
 
     private static string TopFolder(FileNode f)
