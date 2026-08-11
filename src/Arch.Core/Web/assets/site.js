@@ -1216,6 +1216,213 @@
   })();
 })();
 
+// ---- Trace: pick a start and optional end, find the shortest honest chain between
+// them. Two plain BFS passes (never a weighted search): first over only high-confidence
+// edges, then, only if that finds nothing within the hop cap, over every edge. Modelled
+// on the Explore console's shortestPath/closure above. Self-guards on #trace-console. ----
+(function () {
+  var data = window.ARCH_TRACE;
+  var box = document.getElementById("trace-console");
+  if (!box || !data || !data.nodes) { return; }
+
+  var byId = {};
+  data.nodes.forEach(function (n) { byId[n.id] = n; });
+  var out = {};
+  data.edges.forEach(function (e) {
+    (out[e.source] = out[e.source] || []).push(e);
+  });
+
+  var MAX_HOPS = 12;
+
+  function isCertain(e) { return e.kind !== "call" || (e.candidates || 1) <= 2; }
+
+  function bfs(fromId, toId, edgeFilter) {
+    if (fromId === toId) { return [{ node: byId[fromId], via: null }]; }
+    var prev = {}, seen = {}, queue = [fromId];
+    seen[fromId] = true;
+    while (queue.length) {
+      var cur = queue.shift();
+      var edges = (out[cur] || []).filter(edgeFilter);
+      for (var i = 0; i < edges.length; i++) {
+        var e = edges[i], nb = e.target;
+        if (seen[nb]) { continue; }
+        seen[nb] = true; prev[nb] = { from: cur, edge: e };
+        if (nb === toId) {
+          var chain = [{ node: byId[nb], via: e }];
+          for (var at = cur; at != null; ) {
+            var p = prev[at];
+            chain.unshift({ node: byId[at], via: p ? p.edge : null });
+            at = p ? p.from : null;
+          }
+          return chain;
+        }
+        if (Object.keys(seen).length <= MAX_HOPS * 50) { queue.push(nb); } // breadth guard, not a hop-count guard
+      }
+    }
+    return null;
+  }
+
+  // Downstream-only closure (no target given): everything reachable, for the
+  // "off the spine" summary. Same shape as Explore's closure(), reused, not reinvented.
+  function closure(fromId, edgeFilter) {
+    var seen = {}, queue = [fromId], result = [];
+    seen[fromId] = true;
+    while (queue.length) {
+      var cur = queue.shift();
+      (out[cur] || []).filter(edgeFilter).forEach(function (e) {
+        if (!seen[e.target]) { seen[e.target] = true; result.push(byId[e.target]); queue.push(e.target); }
+      });
+    }
+    return result;
+  }
+
+  function trace(fromId, toId) {
+    if (!toId) { return { spine: null, reachable: closure(fromId, function () { return true; }) }; }
+    var certain = bfs(fromId, toId, isCertain);
+    if (certain) { return { spine: certain, degraded: false }; }
+    var any = bfs(fromId, toId, function () { return true; });
+    return { spine: any, degraded: !!any };
+  }
+
+  window.ArchTrace = { trace: trace, closure: closure, nodeById: function (id) { return byId[id]; } };
+
+  // ---- Wiring: type-ahead over data.nodes by path/label, run on input, render results ----
+  var fromInput = document.getElementById("trace-from");
+  var toInput = document.getElementById("trace-to");
+  var results = document.getElementById("trace-results");
+  var cbImports = document.getElementById("trace-imports");
+  var cbCalls = document.getElementById("trace-calls");
+  var cbData = document.getElementById("trace-data");
+
+  function matchNode(term) {
+    var t = (term || "").trim().toLowerCase();
+    if (!t) { return null; }
+    var hit = data.nodes.filter(function (n) {
+      return (n.path || n.label || "").toLowerCase().indexOf(t) >= 0;
+    });
+    return hit.length ? hit[0] : null;
+  }
+
+  function activeEdgeFilter() {
+    var kinds = {};
+    if (!cbImports || cbImports.checked) { kinds["import"] = 1; }
+    if (!cbCalls || cbCalls.checked) { kinds["call"] = 1; }
+    if (!cbData || cbData.checked) { kinds["data-access"] = 1; kinds["route"] = 1; }
+    return function (e) { return !!kinds[e.kind]; };
+  }
+
+  // Node labels/paths and edge metadata come from the scanned codebase's own file paths,
+  // route templates and method names — arbitrary text, not markup — so every value below
+  // goes through esc() before it reaches innerHTML, matching the Explain popover's own
+  // esc() a few blocks down (rather than the DOM-builder style Explore's render() uses,
+  // since this markup is link+badge-shaped, not a plain text node per row).
+  function esc(s) { return (s == null ? "" : String(s)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+  function nodeLabel(n) {
+    if (!n) { return "?"; }
+    return esc(n.label || n.path || n.id);
+  }
+
+  function nodeHref(n) {
+    if (!n) { return null; }
+    if (n.href) { return esc(n.href); }
+    return null;
+  }
+
+  function renderHop(entry, isFirst) {
+    var n = entry.node;
+    var label = nodeHref(n) ? '<a href="' + nodeHref(n) + '">' + nodeLabel(n) + '</a>' : nodeLabel(n);
+    var evidence = "";
+    if (entry.via) {
+      var kind = entry.via.kind;
+      if (kind === "call") {
+        var cand = entry.via.candidates || 1;
+        evidence = cand > 1
+          ? ' <span class="badge warn">call · ' + cand + ' candidates</span>'
+          : ' <span class="badge">call</span>';
+      } else if (kind === "import") {
+        evidence = ' <span class="badge">import</span>';
+      } else if (kind === "route") {
+        evidence = ' <span class="badge">route</span>';
+      } else if (kind === "data-access") {
+        evidence = entry.via.confidence === 0
+          ? ' <span class="badge warn">data access · blind spot</span>'
+          : ' <span class="badge">data access · ' + esc(entry.via.ops || "") + '</span>';
+      }
+    }
+    var sep = isFirst ? "" : '<span class="crumb-sep">→</span> ';
+    return "<li>" + sep + label + evidence + "</li>";
+  }
+
+  function render() {
+    if (!results) { return; }
+    var fromNode = matchNode(fromInput ? fromInput.value : "");
+    if (!fromNode) {
+      results.innerHTML = '<div class="panel empty-state"><div class="big">🧭</div>'
+        + "<p>Type a class, method, route, or file name above to trace from it.</p></div>";
+      return;
+    }
+    var toTerm = toInput ? toInput.value : "";
+    var toNode = matchNode(toTerm);
+    var filter = activeEdgeFilter();
+
+    if (toTerm.trim() && !toNode) {
+      results.innerHTML = '<p class="note">No file, route, or table matches “' + esc(toTerm) + '”.</p>';
+      return;
+    }
+
+    if (!toNode) {
+      var reachable = closure(fromNode.id, filter);
+      var html = '<p class="lede">' + reachable.length + " thing(s) reachable downstream of "
+        + nodeLabel(fromNode) + ".</p><ul class=\"member-list\">";
+      reachable.slice(0, 200).forEach(function (n) {
+        var href = nodeHref(n);
+        html += "<li>" + (href ? '<a href="' + href + '">' + nodeLabel(n) + "</a>" : nodeLabel(n)) + "</li>";
+      });
+      html += "</ul>";
+      results.innerHTML = html;
+      return;
+    }
+
+    var result = traceFiltered(fromNode.id, toNode.id, filter);
+    if (!result.spine) {
+      results.innerHTML = '<p class="note">No path from <strong>' + nodeLabel(fromNode) + "</strong> to <strong>"
+        + nodeLabel(toNode) + "</strong> within " + MAX_HOPS + " hops. This is a heuristic graph — a real path "
+        + "may exist through code this scan can't see (reflection, dynamic dispatch, configuration-driven wiring). "
+        + "Try widening what Trace follows, above.</p>";
+      return;
+    }
+    var header = result.degraded
+      ? '<p class="lede"><span class="badge warn">ambiguous path</span> No fully-certain path exists — at least '
+        + "one hop below matched more than one declared method. Each ambiguous hop names how many candidates it "
+        + "could have meant.</p>"
+      : "";
+    var body = header + '<ul class="member-list">'
+      + result.spine.map(function (entry, i) { return renderHop(entry, i === 0); }).join("")
+      + "</ul>";
+    results.innerHTML = body;
+  }
+
+  // window.ArchTrace.trace (above) always prefers certain edges over every edge, with no
+  // filter — the stable public API. The page's own checkboxes need one more axis (which
+  // edge KINDS to follow at all), so the UI wiring below layers that on top rather than
+  // growing trace()'s signature.
+  function traceFiltered(fromId, toId, filter) {
+    if (!toId) { return { spine: null, reachable: closure(fromId, filter) }; }
+    var certain = bfs(fromId, toId, function (e) { return filter(e) && isCertain(e); });
+    if (certain) { return { spine: certain, degraded: false }; }
+    var any = bfs(fromId, toId, filter);
+    return { spine: any, degraded: !!any };
+  }
+
+  [fromInput, toInput, cbImports, cbCalls, cbData].forEach(function (el) {
+    if (!el) { return; }
+    el.addEventListener("input", render);
+    el.addEventListener("change", render);
+  });
+  render();
+})();
+
 // ---- Explain (ⓘ) popovers: Simple + Go deeper, from the embedded glossary ----
 (function () {
   var pop = document.getElementById("explain-pop");

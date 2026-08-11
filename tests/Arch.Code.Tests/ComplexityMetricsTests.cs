@@ -41,4 +41,15 @@ public class ComplexityMetricsTests
         Assert.Equal(3, m.StartLine);
         Assert.Equal(5, m.EndLine);
     }
+
+    [Fact]
+    public void Two_calls_to_the_same_method_name_and_arity_dedupe_to_one_invocation_keeping_the_first_line()
+    {
+        // Wrapped by AnalyzeSingleMethod as "class C\n{\n" + this + "\n}\n":
+        // line 1="class C", 2="{", 3="void M()", 4="{", 5="Foo(1);", 6="Bar();", 7="Foo(2);", 8="}"
+        var m = AnalyzeSingleMethod("void M()\n{\nFoo(1);\nBar();\nFoo(2);\n}");
+        var foo = Assert.Single(m.Invocations, r => r.Name == "Foo");
+        Assert.Equal(1, foo.Arity);
+        Assert.Equal(5, foo.Line);
+    }
 }

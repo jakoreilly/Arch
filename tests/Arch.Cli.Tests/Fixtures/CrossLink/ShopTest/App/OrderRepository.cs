@@ -13,4 +13,10 @@ public static class OrderRepository
     private const string OtherConnection = "Server=other-01;Database=OtherDb;";
 
     public static int TotalLength => ShopConnection.Length + OtherConnection.Length;
+
+    // Phase 4 end-to-end fixture: a Dapper call naming the table schema.sql actually declares,
+    // so the CLI acceptance run has a real DataAccessRef -> DbObject join to show, not just the
+    // pre-existing DbNode -> catalog join.
+    public static int CountOrders(System.Data.IDbConnection db) =>
+        db.Query<int>("SELECT COUNT(*) FROM dbo.Orders").Single();
 }

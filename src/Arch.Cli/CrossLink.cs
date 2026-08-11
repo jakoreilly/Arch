@@ -21,10 +21,11 @@ internal static class CrossLink
     /// same outcome on the hub page without re-running the join.</summary>
     public static IReadOnlyList<DbNode> Apply(ProjectModel codeModel, SqlModel sqlModel, string[] codeArgs, string sqlRelativeHrefPrefix)
     {
-        if (codeModel.Databases.Count == 0) { return []; }
+        if (codeModel.Databases.Count == 0 && codeModel.DataAccess.Count == 0) { return []; }
 
         var joined = codeModel.Databases.Select(db => db with { SqlLink = Join(db, sqlModel, sqlRelativeHrefPrefix) }).ToList();
-        var updated = codeModel with { Databases = joined };
+        var joinedDataAccess = codeModel.DataAccess.Select(d => d with { ResolvedObjectId = JoinObject(d, sqlModel) }).ToList();
+        var updated = codeModel with { Databases = joined, DataAccess = joinedDataAccess };
 
         var options = CliOptions.Parse(codeArgs, out _)
             ?? throw new InvalidOperationException("Arch.Cli: cross-link re-parse of the code provider's own args failed.");
@@ -32,6 +33,21 @@ internal static class CrossLink
         SiteGenerator.Generate(updated, options.OutDir, options.MaxNodes, generatedOn,
             options.ShowComplexity, options.ShowSnippets, options.Wiki);
         return joined;
+    }
+
+    /// <summary>Best-effort schema.name split ("dbo.Orders" -&gt; ("dbo","Orders"); "Orders"
+    /// -&gt; ("", "Orders")) then normalised through Arch.Sql's own identifier rules (the
+    /// only place cross-dialect identifier case/delimiter handling exists — Arch.Code must
+    /// not duplicate it) and looked up by id. Null when there is no object name to join on
+    /// at all (a blind spot) or no SQL model object matches.</summary>
+    private static string? JoinObject(DataAccessRef d, SqlModel sqlModel)
+    {
+        if (d.ObjectName.Length == 0) { return null; }
+        var dot = d.ObjectName.IndexOf('.');
+        var schema = dot >= 0 ? d.ObjectName[..dot] : "";
+        var name = dot >= 0 ? d.ObjectName[(dot + 1)..] : d.ObjectName;
+        var id = Arch.Sql.Analysis.IdentifierRules.NormalizeId(schema, name, sqlModel.Dialect);
+        return sqlModel.Objects.Any(o => o.Id == id) ? id : null;
     }
 
     /// <summary>Join on (Server, Catalog), case-insensitively — SQL Server instance and database

@@ -85,6 +85,13 @@ public static class ContentHash
             Append(sb, c.CallerSlug, c.CallerType, c.CallerMethod, c.CalleeSlug, c.CalleeType, c.CalleeMethod);
         }
         foreach (var db in model.Databases) { Append(sb, db.Hash, db.Label, db.Server, db.Catalog); }
+        // Identity only (verb+route+handler) — Line/Source are confidence/evidence metadata,
+        // not analysed content, matching the CallEdge.Ambiguous precedent (see this class's own
+        // doc comment and plan.md Hard Constraint 1).
+        foreach (var e in model.Endpoints) { Append(sb, e.Verb, e.Route, e.Slug, e.TypeName, e.MethodName); }
+        // Identity only (object+ops+handler) — Line/Source/IsBlindSpot are confidence/evidence
+        // metadata, not analysed content, matching the CallEdge.Ambiguous precedent.
+        foreach (var d in model.DataAccess) { Append(sb, d.ObjectName, d.Ops, d.Slug, d.TypeName, d.MethodName); }
 
         foreach (var (lang, loc) in model.LanguageLoc.OrderBy(kv => kv.Key, StringComparer.Ordinal))
         {

@@ -74,6 +74,8 @@ public static class Pipeline
         var databases = CsprojScanner.BuildDbNodes(projects);
         var deps = ImportResolver.Resolve(files);
         var calls = CallGraphBuilder.Build(files);
+        var endpoints = RouteScanner.Build(files);
+        var dataAccess = DataAccessScanner.Build(files);
         // Its own read pass over a bounded file set (config + infrastructure + .cs), rather than
         // riding along in AnalyzeOne: the files that carry deployment facts are mostly ones
         // AnalyzeOne skips (an extensionless Dockerfile is language "Other" and never read), and
@@ -103,6 +105,8 @@ public static class Pipeline
             Owner = authored.Owner,
             Capabilities = CapabilityRollup.Build(files, authored.Capabilities),
             UnattributedFileCount = CapabilityRollup.Unattributed(files, authored.Capabilities).Count,
+            Endpoints = endpoints,
+            DataAccess = dataAccess,
         };
 
         // Last, over the finished model: the hash summarises everything above it, so it cannot be

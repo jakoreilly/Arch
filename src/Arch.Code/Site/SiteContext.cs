@@ -43,6 +43,10 @@ public sealed class SiteContext
     /// graph.html, the compact Overview embed, and graph.json (3 serializations of the same data).</summary>
     public required string GraphJson { get; init; }
 
+    /// <summary>The Trace page's payload: GraphJson's file-level backbone plus route/table
+    /// nodes. See <see cref="TraceDataWriter"/>.</summary>
+    public required string TraceJson { get; init; }
+
     public static SiteContext Build(ProjectModel model)
     {
         var bySlug = model.Files.ToDictionary(f => f.Slug, StringComparer.Ordinal);
@@ -96,6 +100,7 @@ public sealed class SiteContext
             Metrics = Analysis.ArchitectureMetrics.Compute(model),
             Ranked = Analysis.ImportanceScorer.Rank(model, 20),
             GraphJson = GraphDataWriter.BuildJson(model),
+            TraceJson = TraceDataWriter.BuildJson(model),
         };
     }
 }

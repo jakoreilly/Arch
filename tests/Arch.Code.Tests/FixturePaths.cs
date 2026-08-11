@@ -11,4 +11,10 @@ public static class FixturePaths
     /// tree for every unrelated future change.</summary>
     public static string OpsSample =>
         Path.Combine(AppContext.BaseDirectory, "Fixtures", "OpsSample");
+
+    /// <summary>Attribute-routed, convention-routed and data-access-shaped source for
+    /// RouteScanner/DataAccessScanner. Deliberately separate from SampleRepo, which
+    /// tools/golden.sh baselines byte-for-byte.</summary>
+    public static string RouteSample =>
+        Path.Combine(AppContext.BaseDirectory, "Fixtures", "RouteSample");
 }

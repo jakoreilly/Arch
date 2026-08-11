@@ -55,9 +55,11 @@ public sealed class CSharpSyntaxAnalyzer : ILanguageAnalyzer
         var fields = new List<string>();
         if (decl is TypeDeclarationSyntax typeDecl)
         {
+            var dbSets = BuildDbSetMap(typeDecl);
             foreach (var m in typeDecl.Members.OfType<MethodDeclarationSyntax>())
             {
-                methods.Add(BuildMethod(m.Identifier.Text, m.ParameterList.Parameters.Count, BuildSignature(m), m));
+                var method = BuildMethod(m.Identifier.Text, m.ParameterList.Parameters.Count, BuildSignature(m), m);
+                methods.Add(dbSets.Count > 0 ? AttachEfCoreDataAccess(method, m, dbSets) : method);
             }
             foreach (var c in typeDecl.Members.OfType<ConstructorDeclarationSyntax>())
             {
@@ -107,6 +109,7 @@ public sealed class CSharpSyntaxAnalyzer : ILanguageAnalyzer
             Methods = methods,
             Properties = properties,
             Fields = fields,
+            Attributes = CaptureAttributes(decl.AttributeLists),
         };
     }
 
@@ -120,11 +123,12 @@ public sealed class CSharpSyntaxAnalyzer : ILanguageAnalyzer
 
         var invocations = globals
             .SelectMany(g => g.DescendantNodes().OfType<InvocationExpressionSyntax>())
-            .Select(inv => new Graph.InvocationRef(InvokedName(inv.Expression), inv.ArgumentList.Arguments.Count))
+            .Select(inv => new Graph.InvocationRef(InvokedName(inv.Expression), inv.ArgumentList.Arguments.Count, LineOf(inv, first: true)))
             .Where(r => r.Name.Length > 0)
-            .Distinct()
+            .DistinctBy(r => (r.Name, r.Arity))
             .OrderBy(r => r.Name, StringComparer.Ordinal).ThenBy(r => r.Arity)
             .ToList();
+        var mapCalls = globals.SelectMany(g => ComplexityMetrics.CollectMapCalls(g)).ToList();
         return new Graph.TypeInfo
         {
             Name = "<top-level>",
@@ -143,6 +147,7 @@ public sealed class CSharpSyntaxAnalyzer : ILanguageAnalyzer
                     StartLine = LineOf(globals[0], first: true),
                     EndLine = LineOf(globals[^1], first: false),
                     Invocations = invocations,
+                    MapCalls = mapCalls,
                 },
             ],
         };
@@ -152,9 +157,9 @@ public sealed class CSharpSyntaxAnalyzer : ILanguageAnalyzer
     {
         var pl = (decl as BaseMethodDeclarationSyntax)?.ParameterList;
         var (min, max) = ArityRange(pl, arity);
-        // Single tree walk for cyclomatic + cognitive + invocations, instead of 3 separate
-        // traversals of the same body.
-        var (cyclomatic, cognitive, invocations) = ComplexityMetrics.ComputeAll(decl);
+        // Single tree walk for cyclomatic + cognitive + invocations + data access, instead of
+        // separate traversals of the same body.
+        var (cyclomatic, cognitive, invocations, dataAccess) = ComplexityMetrics.ComputeAll(decl);
         return new()
         {
             Name = name,
@@ -169,6 +174,8 @@ public sealed class CSharpSyntaxAnalyzer : ILanguageAnalyzer
             StartLine = LineOf(decl, first: true),
             EndLine = LineOf(decl, first: false),
             Invocations = invocations,
+            DataAccess = dataAccess,
+            Attributes = decl is MemberDeclarationSyntax member ? CaptureAttributes(member.AttributeLists) : [],
         };
     }
 
@@ -202,6 +209,49 @@ public sealed class CSharpSyntaxAnalyzer : ILanguageAnalyzer
         return p.AccessorList?.Accessors.Any(a => a.Body is not null || a.ExpressionBody is not null) ?? false;
     }
 
+    /// <summary>DbSet&lt;T&gt; properties declared on this type, propertyName -&gt; tableName
+    /// (defaulting the table name to the property name — see AttachEfCoreDataAccess's doc
+    /// comment for why the [Table] cross-type lookup the design sketch describes is skipped).</summary>
+    private static Dictionary<string, string> BuildDbSetMap(TypeDeclarationSyntax typeDecl)
+    {
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var p in typeDecl.Members.OfType<PropertyDeclarationSyntax>())
+        {
+            if (p.Type is GenericNameSyntax { Identifier.Text: "DbSet" })
+            {
+                map[p.Identifier.Text] = p.Identifier.Text;
+            }
+        }
+        return map;
+    }
+
+    /// <summary>EF Core: a method that mentions SaveChanges AND accesses a DbSet property
+    /// declared on the SAME type gets a synthesized "ef-core" DataAccessRef (Ops "RU" — a
+    /// DbSet access plus SaveChanges could be a read, a write, or both, and the call site
+    /// alone can't tell which). Narrower than Hard Constraint 8's same-FILE boundary: this
+    /// is same-TYPE only, and does not resolve a [Table("...")] override on the entity type
+    /// (which usually lives in yet another type) — an honest, smaller floor, not a bug.</summary>
+    private static Graph.MethodInfo AttachEfCoreDataAccess(Graph.MethodInfo method, SyntaxNode decl, Dictionary<string, string> dbSets)
+    {
+        if (!method.Invocations.Any(i => i.Name == "SaveChanges")) { return method; }
+        var text = decl.ToString();
+        List<Graph.DataAccessRef>? refs = null;
+        foreach (var (propName, tableName) in dbSets)
+        {
+            // Same-type access is usually bare ("Orders.Add(...)", implicit this) rather than
+            // dotted, so this is a plain word-boundary match rather than requiring a leading '.'.
+            var pattern = System.Text.RegularExpressions.Regex.Escape(propName);
+            if (!System.Text.RegularExpressions.Regex.IsMatch(text, $@"\b{pattern}\b",
+                System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromMilliseconds(200))) { continue; }
+            (refs ??= new List<Graph.DataAccessRef>(method.DataAccess)).Add(new Graph.DataAccessRef
+            {
+                Slug = "", TypeName = "", MethodName = "", ObjectName = tableName, Ops = "RU",
+                Line = method.StartLine, Source = "ef-core", IsBlindSpot = false,
+            });
+        }
+        return refs is null ? method : method with { DataAccess = refs };
+    }
+
     private static string GetNamespace(SyntaxNode node)
     {
         for (var cur = node.Parent; cur is not null; cur = cur.Parent)
@@ -212,7 +262,7 @@ public sealed class CSharpSyntaxAnalyzer : ILanguageAnalyzer
     }
 
     /// <summary>1-based first or last source line of a declaration (Roslyn spans are 0-based).</summary>
-    private static int LineOf(SyntaxNode node, bool first)
+    internal static int LineOf(SyntaxNode node, bool first)
     {
         var span = node.GetLocation().GetLineSpan();
         var pos = first ? span.StartLinePosition : span.EndLinePosition;
@@ -221,14 +271,6 @@ public sealed class CSharpSyntaxAnalyzer : ILanguageAnalyzer
 
     private static string BuildSignature(MethodDeclarationSyntax m) =>
         $"{m.ReturnType} {m.Identifier.Text}({string.Join(", ", m.ParameterList.Parameters.Select(p => $"{p.Type} {p.Identifier.Text}".Trim()))})";
-
-    private static List<Graph.InvocationRef> CollectInvocations(SyntaxNode body) =>
-        body.DescendantNodes().OfType<InvocationExpressionSyntax>()
-            .Select(inv => new Graph.InvocationRef(InvokedName(inv.Expression), inv.ArgumentList.Arguments.Count))
-            .Where(r => r.Name.Length > 0)
-            .Distinct()
-            .OrderBy(r => r.Name, StringComparer.Ordinal).ThenBy(r => r.Arity)
-            .ToList();
 
     private static string InvokedName(ExpressionSyntax expr) => expr switch
     {
@@ -265,4 +307,12 @@ public sealed class CSharpSyntaxAnalyzer : ILanguageAnalyzer
         catch (System.Text.RegularExpressions.RegexMatchTimeoutException) { text = text.Trim(); }
         return text;
     }
+
+    /// <summary>Raw attribute text: name, plus argument-list text verbatim ("Route" +
+    /// "(\"api/orders\")" -&gt; "Route(\"api/orders\")"). No semantic resolution — a
+    /// using-aliased or fully-qualified attribute name is recorded as written.</summary>
+    private static List<string> CaptureAttributes(SyntaxList<AttributeListSyntax> lists) =>
+        lists.SelectMany(l => l.Attributes)
+            .Select(a => a.ArgumentList is null ? a.Name.ToString() : $"{a.Name}{a.ArgumentList}")
+            .ToList();
 }

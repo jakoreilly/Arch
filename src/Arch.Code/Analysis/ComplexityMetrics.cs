@@ -121,15 +121,29 @@ internal static class ComplexityMetrics
     /// collector separately, verified by ComplexityMetricsTests. The rare top-level
     /// ("&lt;main&gt;") path still calls the three original methods independently — it runs
     /// once per file, not once per method, so the duplication there doesn't matter.</summary>
-    internal static (int Cyclomatic, int Cognitive, List<Graph.InvocationRef> Invocations) ComputeAll(SyntaxNode body)
+    internal static (int Cyclomatic, int Cognitive, List<Graph.InvocationRef> Invocations, List<Graph.DataAccessRef> DataAccess) ComputeAll(SyntaxNode body)
     {
         var walker = new CombinedWalker();
         walker.Visit(body);
         var invocations = walker.Invocations
-            .Distinct()
+            .DistinctBy(r => (r.Name, r.Arity))
             .OrderBy(r => r.Name, StringComparer.Ordinal).ThenBy(r => r.Arity)
             .ToList();
-        return (walker.Cyclomatic, walker.Cognitive, invocations);
+        // Deduped by (ObjectName, Ops), not by line: repeated identical reads of the same
+        // table in one method are legitimately one fact, matching Invocations's philosophy.
+        var dataAccess = walker.DataAccessRefs.DistinctBy(d => (d.ObjectName, d.Ops)).ToList();
+        return (walker.Cyclomatic, walker.Cognitive, invocations, dataAccess);
+    }
+
+    /// <summary>Minimal-API route registrations (app.MapGet/MapPost/...) in a top-level
+    /// statement body. Separate from <see cref="ComputeAll"/> because only the synthesized
+    /// "&lt;main&gt;" method (CSharpSyntaxAnalyzer.BuildTopLevelType) ever needs this —
+    /// every other caller of ComputeAll would just discard it.</summary>
+    internal static List<Graph.MapCallRef> CollectMapCalls(SyntaxNode body)
+    {
+        var walker = new CombinedWalker();
+        walker.Visit(body);
+        return walker.MapCalls;
     }
 
     private static string InvokedName(ExpressionSyntax expr) => expr switch
@@ -157,7 +171,27 @@ internal static class ComplexityMetrics
         public int Cyclomatic { get; private set; } = 1;
         public int Cognitive { get; private set; }
         public List<Graph.InvocationRef> Invocations { get; } = [];
+        public List<Graph.DataAccessRef> DataAccessRefs { get; } = [];
+        public List<Graph.MapCallRef> MapCalls { get; } = [];
+        private readonly HashSet<SyntaxNode> _consumedLiterals = [];
         private int _nesting;
+
+        private static readonly string[] DapperMethodNames =
+            ["Query", "QueryFirst", "QueryFirstOrDefault", "QuerySingle", "Execute"];
+        private static readonly string[] SqlWriteVerbs = ["INSERT INTO", "UPDATE", "DELETE FROM"];
+        private static readonly (string Suffix, string Verb)[] MapVerbs =
+            [("MapGet", "GET"), ("MapPost", "POST"), ("MapPut", "PUT"), ("MapDelete", "DELETE"), ("MapPatch", "PATCH")];
+        // Case-SENSITIVE on purpose: real SQL embedded in a string literal is conventionally
+        // written in uppercase keywords (SELECT/FROM/JOIN/...); ordinary English prose in a
+        // comment or error message ("derived from the git 'origin' remote") is not. Matching
+        // case-insensitively turned "from the" into a detected read of a table named "the" —
+        // confirmed against this repo's own CliOptions.cs. Keyword casing is the cheapest
+        // signal available without a real SQL parser, and it is the one every hand-written
+        // SQL-in-C# convention already follows.
+        private static readonly System.Text.RegularExpressions.Regex SqlObjectPattern = new(
+            @"\b(?<kw>FROM|JOIN|INTO|UPDATE|EXEC(?:UTE)?)\s+\[?(?<obj>[\w\.\[\]]+)\]?",
+            System.Text.RegularExpressions.RegexOptions.Compiled,
+            TimeSpan.FromMilliseconds(200)); // S6444: every regex here gets a timeout, matching NetworkSurface's precedent
 
         private void Nested(SyntaxNode node, bool cyclomaticToo)
         {
@@ -213,8 +247,113 @@ internal static class ComplexityMetrics
         public override void VisitInvocationExpression(InvocationExpressionSyntax node)
         {
             var name = InvokedName(node.Expression);
-            if (name.Length > 0) { Invocations.Add(new Graph.InvocationRef(name, node.ArgumentList.Arguments.Count)); }
+            if (name.Length > 0) { Invocations.Add(new Graph.InvocationRef(name, node.ArgumentList.Arguments.Count, CSharpSyntaxAnalyzer.LineOf(node, first: true))); }
+            TryDapperCall(name, node);
+            TryStoredProcedureCall(node);
+            TryMapCall(name, node);
             base.VisitInvocationExpression(node);
+        }
+
+        public override void VisitLiteralExpression(LiteralExpressionSyntax node)
+        {
+            if (node.IsKind(SyntaxKind.StringLiteralExpression) && !_consumedLiterals.Contains(node))
+            {
+                var text = node.Token.ValueText;
+                if (LooksLikeSql(text)) { DataAccessRefs.Add(BuildRef(text, node)); }
+            }
+            base.VisitLiteralExpression(node);
+        }
+
+        // Interpolated/concatenated SQL: the object name is unknowable, but the attempt is
+        // not invisible — reported as a blind spot, matching Arch.Sql's CrudEntry.IsBlindSpot.
+        public override void VisitInterpolatedStringExpression(InterpolatedStringExpressionSyntax node)
+        {
+            var text = string.Concat(node.Contents.OfType<InterpolatedStringTextSyntax>().Select(c => c.TextToken.ValueText));
+            if (LooksLikeSql(text))
+            {
+                DataAccessRefs.Add(new Graph.DataAccessRef
+                {
+                    Slug = "", TypeName = "", MethodName = "", ObjectName = "", Ops = "?",
+                    Line = CSharpSyntaxAnalyzer.LineOf(node, first: true), Source = "literal", IsBlindSpot = true,
+                });
+            }
+            base.VisitInterpolatedStringExpression(node);
+        }
+
+        private void TryDapperCall(string name, InvocationExpressionSyntax node)
+        {
+            if (Array.IndexOf(DapperMethodNames, name) < 0) { return; }
+            var args = node.ArgumentList.Arguments;
+            if (args.Count == 0 || args[0].Expression is not LiteralExpressionSyntax lit
+                || !lit.IsKind(SyntaxKind.StringLiteralExpression)) { return; }
+            var text = lit.Token.ValueText;
+            if (!LooksLikeSql(text)) { return; }
+            DataAccessRefs.Add(BuildRef(text, lit, "dapper"));
+            _consumedLiterals.Add(lit);
+        }
+
+        /// <summary>CommandType.StoredProcedure as a bare identifier, paired with a
+        /// string-literal command text elsewhere in the same call — e.g.
+        /// <c>connection.Query("dbo.GetOrders", commandType: CommandType.StoredProcedure)</c>.
+        /// Narrower than the design sketch: does not attempt the [Table]-attribute cross-type
+        /// lookup EF-core detection below also skips — same-call evidence only.</summary>
+        private void TryStoredProcedureCall(InvocationExpressionSyntax node)
+        {
+            var args = node.ArgumentList.Arguments;
+            var literalArg = args.Select(a => a.Expression).OfType<LiteralExpressionSyntax>()
+                .FirstOrDefault(l => l.IsKind(SyntaxKind.StringLiteralExpression) && !LooksLikeSql(l.Token.ValueText) && l.Token.ValueText.Length > 0);
+            if (literalArg is null || _consumedLiterals.Contains(literalArg)) { return; }
+            var hasStoredProcType = args.Any(a => a.Expression is MemberAccessExpressionSyntax ma
+                && ma.Name.Identifier.Text == "StoredProcedure"
+                && ma.Expression.ToString().Contains("CommandType", StringComparison.Ordinal));
+            if (!hasStoredProcType) { return; }
+            DataAccessRefs.Add(new Graph.DataAccessRef
+            {
+                Slug = "", TypeName = "", MethodName = "", ObjectName = literalArg.Token.ValueText, Ops = "",
+                Line = CSharpSyntaxAnalyzer.LineOf(literalArg, first: true), Source = "stored-procedure", IsBlindSpot = false,
+            });
+            _consumedLiterals.Add(literalArg);
+        }
+
+        /// <summary>app.MapGet("/orders/{id}", handler)-shaped minimal-API registrations.
+        /// Only ever meaningful on the synthesized "&lt;main&gt;" method — see
+        /// CSharpSyntaxAnalyzer.BuildTopLevelType / ComplexityMetrics.CollectMapCalls.</summary>
+        private void TryMapCall(string name, InvocationExpressionSyntax node)
+        {
+            if (node.Expression is not MemberAccessExpressionSyntax) { return; }
+            var match = MapVerbs.FirstOrDefault(v => v.Suffix == name);
+            if (match.Suffix is null) { return; }
+            var args = node.ArgumentList.Arguments;
+            if (args.Count == 0 || args[0].Expression is not LiteralExpressionSyntax lit
+                || !lit.IsKind(SyntaxKind.StringLiteralExpression)) { return; }
+            MapCalls.Add(new Graph.MapCallRef(match.Verb, lit.Token.ValueText, CSharpSyntaxAnalyzer.LineOf(node, first: true)));
+        }
+
+        // Case-SENSITIVE — see SqlObjectPattern's doc comment for why (the same "from the"
+        // vs. "FROM " distinction applies here, one step earlier).
+        private static bool LooksLikeSql(string text) =>
+            text.Contains("FROM ", StringComparison.Ordinal)
+            || text.Contains("JOIN ", StringComparison.Ordinal)
+            || SqlWriteVerbs.Any(v => text.Contains(v, StringComparison.Ordinal))
+            || text.Contains("EXEC ", StringComparison.Ordinal);
+
+        private Graph.DataAccessRef BuildRef(string sql, SyntaxNode node, string? sourceOverride = null)
+        {
+            var m = SqlObjectPattern.Match(sql);
+            var obj = m.Success ? m.Groups["obj"].Value : "";
+            var isExec = m.Success && m.Groups["kw"].Value.StartsWith("EXEC", StringComparison.OrdinalIgnoreCase);
+            var source = isExec ? "stored-procedure" : sourceOverride ?? "literal";
+            var ops = isExec ? "" :
+                (sql.Contains("SELECT", StringComparison.OrdinalIgnoreCase) ? "R" : "")
+                + (sql.Contains("INSERT", StringComparison.OrdinalIgnoreCase) ? "C" : "")
+                + (sql.Contains("UPDATE", StringComparison.OrdinalIgnoreCase) ? "U" : "")
+                + (sql.Contains("DELETE", StringComparison.OrdinalIgnoreCase) ? "D" : "");
+            return new Graph.DataAccessRef
+            {
+                Slug = "", TypeName = "", MethodName = "", ObjectName = obj,
+                Ops = obj.Length == 0 ? "?" : ops, Line = CSharpSyntaxAnalyzer.LineOf(node, first: true),
+                Source = source, IsBlindSpot = obj.Length == 0,
+            };
         }
 
         public override void DefaultVisit(SyntaxNode node)

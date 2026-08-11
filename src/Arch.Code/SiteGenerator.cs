@@ -104,6 +104,10 @@ public static class SiteGenerator
             Html.Crumbs(("index.html", "Overview"), (null, "Explore")),
             ExplorePage.Body(model, ctx.GraphJson));
 
+        WritePage(outDir, "trace.html", "Trace", model, "trace.html", "",
+            Html.Crumbs(("index.html", "Overview"), (null, "Trace")),
+            TracePage.Body(model, ctx.TraceJson));
+
         // One page per file — each iteration reads only shared, already-built (read-only) state
         // (ctx, model) and writes its own distinct path (file.Slug is unique per MakeSlug), so
         // this is safe to run in parallel. On a large repo this loop, not the analysis pass, is

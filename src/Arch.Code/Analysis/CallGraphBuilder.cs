@@ -87,6 +87,8 @@ public static class CallGraphBuilder
                                 CalleeType = c.Type,
                                 CalleeMethod = c.Method,
                                 Ambiguous = ambiguous,
+                                CallerLine = inv.Line,
+                                CandidateCount = candidates.Count,
                             });
                         }
                     }

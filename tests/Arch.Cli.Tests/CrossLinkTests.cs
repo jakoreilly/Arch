@@ -26,6 +26,14 @@ public class CrossLinkTests : IDisposable
         Databases = [.. databases],
     };
 
+    private static ProjectModel MinimalCodeModelWithDataAccess(DataAccessRef dataAccess) => new()
+    {
+        RootName = "fixture",
+        SourcePath = "fixture",
+        Files = [new FileNode { RelPath = "OrderRepository.cs", Slug = dataAccess.Slug, Language = "C#" }],
+        DataAccess = [dataAccess],
+    };
+
     private static SqlModel MinimalSqlModel(string server, string catalog, int objectCount) => new()
     {
         RootName = catalog,
@@ -105,6 +113,46 @@ public class CrossLinkTests : IDisposable
         var packages = File.ReadAllText(Path.Combine(_outDir, "packages.html"));
         Assert.Contains("matched by name only", packages);
         Assert.Contains("5 objects", packages);
+    }
+
+    [Fact]
+    public void DataAccessRef_resolves_to_a_real_sql_object_and_links_to_it()
+    {
+        var dataAccess = new DataAccessRef
+        {
+            Slug = "orders-repo", TypeName = "OrderRepository", MethodName = "CountOrders",
+            ObjectName = "dbo.Orders", Ops = "R", Source = "literal",
+        };
+        var codeModel = MinimalCodeModelWithDataAccess(dataAccess);
+        var sqlModel = MinimalSqlModel("sql-prod-01", "ShopDb", objectCount: 1) with
+        {
+            Objects = [new DbObject { Id = "dbo.orders", Schema = "dbo", Name = "Orders", Kind = "table", Dialect = "tsql" }],
+        };
+        var codeArgs = new[] { FixturesRoot, "--out", _outDir };
+
+        CrossLink.Apply(codeModel, sqlModel, codeArgs, "../sql");
+
+        var api = File.ReadAllText(Path.Combine(_outDir, "api.html"));
+        Assert.Contains("../sql/object.html?id=dbo.orders", api);
+    }
+
+    [Fact]
+    public void Unmatched_object_name_renders_as_plain_text_not_a_broken_link()
+    {
+        var dataAccess = new DataAccessRef
+        {
+            Slug = "orders-repo", TypeName = "OrderRepository", MethodName = "CountOrders",
+            ObjectName = "dbo.Ghost", Ops = "R", Source = "literal",
+        };
+        var codeModel = MinimalCodeModelWithDataAccess(dataAccess);
+        var sqlModel = MinimalSqlModel("sql-prod-01", "ShopDb", objectCount: 1);
+        var codeArgs = new[] { FixturesRoot, "--out", _outDir };
+
+        CrossLink.Apply(codeModel, sqlModel, codeArgs, "../sql");
+
+        var api = File.ReadAllText(Path.Combine(_outDir, "api.html"));
+        Assert.DoesNotContain("../sql/object.html?id=", api);
+        Assert.Contains("dbo.Ghost", api);
     }
 
     [Fact]
