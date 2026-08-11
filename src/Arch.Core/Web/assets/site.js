@@ -1294,6 +1294,7 @@
   var fromList = document.getElementById("trace-from-list");
   var toList = document.getElementById("trace-to-list");
   var results = document.getElementById("trace-results");
+  var diagramCard = document.getElementById("trace-diagram");
   var countEl = document.getElementById("trace-count");
   var examplesEl = document.getElementById("trace-examples");
   var cbImports = document.getElementById("trace-imports");
@@ -1453,6 +1454,90 @@
     return ' <span class="hop-meta">' + esc(n.path) + '</span>';
   }
 
+  // ---- Path diagram: render the found from->to spine as a small Mermaid flowchart in
+  // #trace-diagram (see TracePage.cs — the card ships empty/hidden at build time since the
+  // chain itself is only known once a query runs). Only for the point-to-point case: the
+  // open-ended "everything downstream" closure can run into the hundreds of nodes, which is
+  // exactly what the 3D graph's own flow-trace mode exists for (see the "View in 3D graph"
+  // link below) rather than a mermaid flowchart. ----
+
+  // Mirrors MermaidRenderer.ClassDefs (Arch.Code/Rendering/MermaidRenderer.cs) so a traced
+  // path uses the same file/service/database colour language as every other diagram on the
+  // site. Duplicated rather than shared: the path is only known at runtime in the browser,
+  // and MermaidRenderer only ever runs at build time.
+  var TRACE_CLASSDEFS =
+    "classDef service fill:#dcecf9,stroke:#2f6fab,color:#173a5e;\n" +
+    "classDef database fill:#e8e3f5,stroke:#6b46c1,color:#3c2a6e;\n" +
+    "classDef file fill:#e3f2e6,stroke:#2e7d32,color:#1b4d1e;";
+
+  // Same escaping as MermaidRenderer.Escape — a label inside a quoted mermaid node/edge label.
+  function mmdEscape(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/"/g, "#quot;").replace(/</g, "#lt;").replace(/>/g, "#gt;")
+      .replace(/\{/g, "#123;").replace(/\}/g, "#125;").replace(/\|/g, "#124;")
+      .replace(/`/g, "'").replace(/\r/g, " ").replace(/\n/g, " ");
+  }
+
+  function traceNodeShape(n) {
+    if (n.layer === "table") { return { open: '[("', close: '")]', css: "database" }; }
+    if (n.layer === "route") { return { open: '["', close: '"]', css: "service" }; }
+    return { open: '["', close: '"]', css: "file" };
+  }
+
+  // Same evidence a hop's badge shows in the text view (renderHop), condensed to a short
+  // edge label — dashed for the same "not fully certain" hops the text view flags as a warning.
+  function traceEdgeStyle(via) {
+    if (!via) { return { label: "", dashed: false }; }
+    if (via.kind === "call") {
+      var cand = via.candidates || 1;
+      return cand > 1 ? { label: cand + " candidates", dashed: true } : { label: "call", dashed: false };
+    }
+    if (via.kind === "import") { return { label: "import", dashed: false }; }
+    if (via.kind === "route") { return { label: "route", dashed: false }; }
+    if (via.kind === "data-access") {
+      return via.confidence === 0 ? { label: "blind spot", dashed: true } : { label: via.ops || "data access", dashed: false };
+    }
+    return { label: "", dashed: false };
+  }
+
+  function hideTraceDiagram() {
+    if (diagramCard) { diagramCard.hidden = true; }
+  }
+
+  function updateTraceDiagram(spine) {
+    if (!diagramCard) { return; }
+    var lines = ["flowchart LR", TRACE_CLASSDEFS];
+    var tooltips = {}, hrefs = {}, adjacency = {};
+    spine.forEach(function (entry, i) {
+      var n = entry.node || {}, alias = "t" + i, shape = traceNodeShape(n);
+      lines.push(alias + shape.open + mmdEscape(n.label || n.path || n.id || "?") + shape.close + ":::" + shape.css);
+      if (n.path) { tooltips[alias] = n.path; }
+      if (n.href) { hrefs[alias] = n.href; }
+    });
+    for (var i = 1; i < spine.length; i++) {
+      var from = "t" + (i - 1), to = "t" + i, style = traceEdgeStyle(spine[i].via);
+      var arrow = style.dashed ? "-.->" : "-->";
+      lines.push(style.label
+        ? from + ' ' + arrow + '|"' + mmdEscape(style.label) + '"| ' + to
+        : from + ' ' + arrow + ' ' + to);
+      (adjacency[from] = adjacency[from] || []).push(to);
+      (adjacency[to] = adjacency[to] || []).push(from);
+    }
+
+    var srcEl = diagramCard.querySelector(".mermaid-src");
+    var tipEl = diagramCard.querySelector("script.tooltips");
+    var hrefEl = diagramCard.querySelector("script.hrefs");
+    var adjEl = diagramCard.querySelector("script.adjacency");
+    if (srcEl) { srcEl.textContent = lines.join("\n"); }
+    if (tipEl) { tipEl.textContent = JSON.stringify(tooltips); }
+    if (hrefEl) { hrefEl.textContent = JSON.stringify(hrefs); }
+    if (adjEl) { adjEl.textContent = JSON.stringify(adjacency); }
+    diagramCard.hidden = false;
+    // ArchViewer.rerenderCard (site.js's own diagram viewer, above) re-runs mermaid.render on
+    // the updated source and rebinds tooltips/hrefs/hover-highlight from the maps just written.
+    if (window.ArchViewer) { window.ArchViewer.rerenderCard(diagramCard); }
+  }
+
   function renderHop(entry, isFirst) {
     var n = entry.node;
     var label = nodeHref(n) ? '<a href="' + nodeHref(n) + '">' + nodeLabel(n) + '</a>' : nodeLabel(n);
@@ -1486,6 +1571,7 @@
     var fromNode = matchNode(fromInput ? fromInput.value : "");
     if (!fromNode) {
       setCount("");
+      hideTraceDiagram();
       results.innerHTML = '<div class="panel empty-state"><div class="big">🧭</div>'
         + "<p>Type a class, method, route, or file name above to trace from it.</p></div>";
       return;
@@ -1496,14 +1582,24 @@
 
     if (toTerm.trim() && !toNode) {
       setCount("");
+      hideTraceDiagram();
       results.innerHTML = '<p class="note">No file, route, or table matches “' + esc(toTerm) + '”.</p>';
       return;
     }
 
     if (!toNode) {
+      hideTraceDiagram();
       var reachable = closure(fromNode.id, filter);
       setCount(reachable.length + " reachable");
-      var html = '<p class="lede">Everything reachable downstream of ' + nodeLabel(fromNode) + ".</p><ul class=\"member-list\">";
+      // The 3D graph's own file+call node ids match this page's "file" layer 1:1 (see
+      // TraceDataWriter — Trace reuses GraphDataWriter's file nodes verbatim), so a plain
+      // #flow= deep link works with no lookup; the synthetic route:/table: nodes Trace adds
+      // don't exist over there, so the link only appears for a file-layer starting point.
+      var flowLink = fromNode.layer === "file"
+        ? ' <a class="btn" href="graph.html#flow=' + encodeURIComponent(fromNode.id) + '" ' +
+          'title="Open the 3D graph, coloured by hops from this file">↯ View in 3D graph →</a>'
+        : "";
+      var html = '<p class="lede">Everything reachable downstream of ' + nodeLabel(fromNode) + "." + flowLink + "</p><ul class=\"member-list\">";
       reachable.slice(0, 200).forEach(function (n) {
         var href = nodeHref(n);
         html += "<li>" + (href ? '<a href="' + href + '">' + nodeLabel(n) + "</a>" : nodeLabel(n)) + hopMeta(n) + "</li>";
@@ -1517,6 +1613,7 @@
     var result = traceFiltered(fromNode.id, toNode.id, filter);
     if (!result.spine) {
       setCount("");
+      hideTraceDiagram();
       results.innerHTML = '<p class="note">No path from <strong>' + nodeLabel(fromNode) + "</strong> to <strong>"
         + nodeLabel(toNode) + "</strong> within " + MAX_HOPS + " hops. This is a heuristic graph — a real path "
         + "may exist through code this scan can't see (reflection, dynamic dispatch, configuration-driven wiring). "
@@ -1525,6 +1622,7 @@
     }
     var hops = result.spine.length - 1;
     setCount(hops + " hop" + (hops === 1 ? "" : "s"));
+    updateTraceDiagram(result.spine);
     var header = result.degraded
       ? '<p class="lede"><span class="badge warn">ambiguous path</span> No fully-certain path exists — at least '
         + "one hop below matched more than one declared method. Each ambiguous hop names how many candidates it "

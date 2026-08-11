@@ -115,7 +115,7 @@ public static class PageTemplate
 
     /// <summary>One interactive diagram card: toolbar (zoom/reset/PNG), pan/zoom stage,
     /// the mermaid source, and the alias->tooltip map site.js turns into hover cards.</summary>
-    public static string DiagramBlock(string id, Diagram diagram, string pngName, bool hidden = false, string group = "", bool deferred = false)
+    public static string DiagramBlock(string id, Diagram diagram, string pngName, bool hidden = false, string group = "", bool deferred = false, bool forceSmall = false)
     {
         var tooltipJson = JsonSerializer.Serialize(diagram.Tooltips);
         var hrefJson = JsonSerializer.Serialize(diagram.Hrefs);
@@ -134,8 +134,10 @@ public static class PageTemplate
         // floats a tiny diagram in a lot of empty chrome. .stage.small (a fixed, compact height)
         // used to be a FilePage-only special case, applied by string-replacing this exact class
         // attribute after the fact; deciding it here from the diagram's own size covers every
-        // caller instead of just the one that happened to ask for it.
-        var stageClass = diagram.ShownNodes > 0 && diagram.ShownNodes <= 6 ? "stage small" : "stage";
+        // caller instead of just the one that happened to ask for it. forceSmall covers callers
+        // (Trace) whose diagram starts empty at build time and is filled in by client JS, so
+        // ShownNodes can't predict the real (small, path-shaped) size yet.
+        var stageClass = forceSmall || (diagram.ShownNodes > 0 && diagram.ShownNodes <= 6) ? "stage small" : "stage";
         return $"""
 <div class="diagram-card" id="{Html.Encode(id)}" data-png-name="{Html.Encode(pngName)}"{groupAttr}{hiddenAttr}{deferredAttr}>
   {trimBanner}<div class="toolbar">

@@ -506,17 +506,19 @@
   }
 
   // Deep link: graph.html#path=<relpath> (or #focus=<slug>) auto-focuses on load, so
-  // file pages and search results can link straight into the graph.
+  // file pages and search results can link straight into the graph. #flow=<slug> instead
+  // auto-starts the data-flow trace from that node (Trace's "everything reachable downstream"
+  // view links here rather than duplicating this highlight in a second place).
   function applyDeepLink() {
     var h = (location.hash || "").replace(/^#/, "");
-    var m = /(?:^|&)(?:path|focus)=([^&]+)/.exec(h);
+    var m = /(?:^|&)(path|focus|flow)=([^&]+)/.exec(h);
     if (!m) { return; }
-    var val = decodeURIComponent(m[1]);
+    var key = m[1], val = decodeURIComponent(m[2]);
     var node = DATA.nodes.find(function (n) { return n.path === val || n.id === val; });
     if (!node) { return; }
     if (node.test && hideTestsEl && hideTestsEl.checked) { hideTestsEl.checked = false; applyGraphData(); }
     // Defer until the layout has assigned coordinates so the camera fly-to works.
-    setTimeout(function () { setFocus(node.id); }, 700);
+    setTimeout(function () { key === "flow" ? startFlow(node.id) : setFocus(node.id); }, 700);
   }
 
   function init(data) {
