@@ -1,0 +1,12 @@
+{
+  "out": "sites-example-groups",
+  "overallLandscape": true,
+  "groups": [
+    {
+      "name": "service-integration-example",
+      "projects": [
+        { "url": "https://github.com/jakoreilly/Arch.git", "ref": "master", "sourceLinkType": "github" }
+      ]
+    }
+  ]
+}
