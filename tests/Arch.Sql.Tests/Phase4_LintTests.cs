@@ -80,6 +80,24 @@ public class Phase4_LintTests
     }
 
     [Fact]
+    public void CiGate_TripsOnComplexityWhenAverageExceedsFailThreshold()
+    {
+        // SqlScorecard.BuildComplexityRow fails when the average cyclomatic complexity across
+        // procedures/functions/triggers exceeds 10.
+        var complex = new Model.SqlModel
+        {
+            RootName = "complex", SourcePath = "x",
+            Objects =
+            [
+                new Model.DbObject { Id = "dbo.p1", Schema = "dbo", Name = "P1", Kind = "procedure", Dialect = "tsql", Cyclomatic = 20 },
+            ],
+        };
+        var card = SqlScorecard.Build(complex);
+        var reasons = SqlCiGate.Evaluate(["complexity"], card);
+        Assert.NotEmpty(reasons);
+    }
+
+    [Fact]
     public void SarifWriter_ProducesValidJsonWithNoSecretValue()
     {
         var model = BuildModelFromFixtureDir();

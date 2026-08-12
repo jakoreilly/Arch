@@ -10,7 +10,7 @@ public static class SqlCiGate
         ["secrets"] = "Credentials in DDL",
         ["injection"] = "Injection-risk dynamic SQL",
         ["no-pk"] = "Tables without a primary key",
-        ["complexity"] = "Procedure complexity",
+        ["complexity"] = "Average procedure complexity",
         ["scorecard"] = "",
     };
 
