@@ -101,7 +101,7 @@ public static class ApiSurfacePage
         var paths = Analysis.CriticalPaths.AllToKeyFiles(model, 8)
             .ToDictionary(p => p.TargetSlug, p => p.Nodes, StringComparer.Ordinal);
         var entryPoints = new HashSet<string>(Analysis.CriticalPaths.EntryPoints(model), StringComparer.Ordinal);
-        sb.Append("<h2>Critical paths <span class=\"badge accent\">to key files</span></h2>");
+        sb.Append($"<h2>Critical paths {Glossary.Info("critical-path")} <span class=\"badge accent\">to key files</span></h2>");
         if (key.Count == 0)
         {
             sb.Append("<div class=\"panel empty-state\"><div class=\"big\">↝</div>"

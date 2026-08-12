@@ -58,7 +58,7 @@ public static class ScorecardPage
                 + "<span class=\"legend-item\"><strong>Propagation cost</strong> — ≤30% pass, ≤60% watch, else fail.</span>"
                 + "<span class=\"legend-item\"><strong>Worst distance (D)</strong> — ≤0.30 pass, ≤0.60 watch, else fail (benign leaves excluded).</span>"
                 + "<span class=\"legend-item\"><strong>Layering violations</strong> — 0 = pass; needs a declared contract, else n/a.</span>"
-                + "<span class=\"legend-item\"><strong>Test-code ratio</strong> — ≥25% pass, ≥10% watch, else fail (proxy, not execution coverage).</span>"
+                + $"<span class=\"legend-item\"><strong>Test-code ratio</strong>{Glossary.Info("test-code-ratio")} — ≥25% pass, ≥10% watch, else fail (proxy, not execution coverage).</span>"
                 + "<span class=\"legend-item\"><strong>Package version drift</strong> — 0 = pass, else watch.</span>"
                 + "<span class=\"legend-item\"><strong>Credentials in source</strong> — 0 = pass; any = fail.</span>"
                 + "<span class=\"legend-item\"><strong>TODO / FIXME</strong> — ≤10 pass, ≤50 watch, else fail.</span>"

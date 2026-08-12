@@ -13,7 +13,7 @@ public static class LayeringPage
     public static string Body(ProjectModel model)
     {
         var sb = new StringBuilder();
-        sb.Append("<h1>Dependency Direction</h1>");
+        sb.Append($"<h1>Dependency Direction {Glossary.Info("layering")}</h1>");
 
         var r = LayeringAnalyzer.Analyze(model);
 

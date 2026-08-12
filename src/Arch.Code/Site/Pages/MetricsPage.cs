@@ -78,8 +78,8 @@ public static class MetricsPage
         sb.Append("<h2>Main sequence <span class=\"badge\">Instability vs. Abstractness</span></h2>");
         sb.Append("<p class=\"lede\">Each dot is a module at (Instability, Abstractness). The diagonal is the "
                 + "<strong>main sequence</strong> (A + I = 1) — the healthy balance. Bottom-left is the "
-                + "<strong>zone of pain</strong> (concrete &amp; heavily depended-on — rigid); top-right is the "
-                + "<strong>zone of uselessness</strong> (abstract &amp; unused). Dot size = files; colour = distance.</p>");
+                + $"<strong>zone of pain</strong>{Glossary.Info("zone-of-pain")} (concrete &amp; heavily depended-on — rigid); top-right is the "
+                + $"<strong>zone of uselessness</strong>{Glossary.Info("zone-of-uselessness")} (abstract &amp; unused). Dot size = files; colour = distance.</p>");
         sb.Append($"<div class=\"metrics-scatter\">{BuildScatter(r.Modules, prefix)}</div>");
 
         AppendCalculator(sb);
@@ -112,7 +112,7 @@ public static class MetricsPage
 
     private static void AppendCycles(StringBuilder sb, ArchitectureMetrics.Result r, string prefix)
     {
-        sb.Append($"<h2>Dependency cycles <span class=\"badge {(r.Cycles.Count > 0 ? "warn" : "ok")}\">{r.Cycles.Count}</span></h2>");
+        sb.Append($"<h2>Dependency cycles {Glossary.Info("cycles")} <span class=\"badge {(r.Cycles.Count > 0 ? "warn" : "ok")}\">{r.Cycles.Count}</span></h2>");
         if (r.ClosureSkipped)
         {
             sb.Append("<p class=\"note\">Too many modules to compute cycles and propagation cost efficiently — skipped.</p>");
@@ -151,7 +151,7 @@ public static class MetricsPage
   <span class="legend-item"><strong>Instability I = Ce/(Ca+Ce)</strong> — 0 = stable (depended-on, depends on little); 1 = unstable.</span>
   <span class="legend-item"><strong>Abstractness A</strong> — share of interface/abstract types. Stable modules should be abstract.</span>
   <span class="legend-item"><strong>Distance D = |A + I − 1|</strong> — distance from the main sequence; lower is healthier.</span>
-  <span class="legend-item"><strong>Propagation cost</strong> — density of the transitive dependency matrix: how far a change can reach.</span>
+  <span class="legend-item"><strong>Propagation cost</strong>{Glossary.Info("propagation-cost")} — density of the transitive dependency matrix: how far a change can reach.</span>
 </div>
 """);
         sb.Append("<p class=\"note\" style=\"margin:.4rem 0 0\">New to these terms? Click the "

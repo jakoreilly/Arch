@@ -24,7 +24,7 @@ public static class ObjectsPage
         {
             var pkBadge = o.Kind != "table" ? "" : o.PrimaryKey.Count > 0 ? """<span class="badge ok">Yes</span>""" : """<span class="badge warn">No</span>""";
             var file = ctx.BySlug.GetValueOrDefault(o.DefinedInSlug);
-            var shallow = file is { ParsedCleanly: false } ? """ <span class="badge" title="Shallow parse">shallow</span>""" : "";
+            var shallow = file is { ParsedCleanly: false } ? $""" <span class="badge" title="Shallow parse">shallow</span>{Glossary.Info("shallow-parse")}""" : "";
             var search = $"{o.Schema}.{o.Name} {o.Kind}".ToLowerInvariant();
             sb.Append($"""
 <tr class="filterable" data-search="{Html.Encode(search)}">

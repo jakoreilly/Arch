@@ -20,7 +20,7 @@ public static class MetricsPage
         if (procs.Count > 0)
         {
             sb.Append("<h2>Most complex procedures / functions / triggers</h2>");
-            sb.Append("""<table class="grid"><tr><th>Object</th><th>Cyclomatic</th></tr>""");
+            sb.Append($"""<table class="grid"><tr><th>Object</th><th>Cyclomatic {Glossary.Info("cyclomatic-sql")}</th></tr>""");
             foreach (var o in procs)
             {
                 sb.Append($"""<tr><td><a href="object.html?id={Uri.EscapeDataString(o.Id)}">{Html.Encode(o.Schema)}.{Html.Encode(o.Name)}</a></td><td>{o.Cyclomatic}</td></tr>""");

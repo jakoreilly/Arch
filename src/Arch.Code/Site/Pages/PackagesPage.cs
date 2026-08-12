@@ -55,7 +55,7 @@ public static class PackagesPage
         sb.Append("</div>");
 
         // Version drift first — the actionable finding.
-        sb.Append($"<h2>Version drift <span class=\"badge {(drifted.Count > 0 ? "warn" : "ok")}\">{drifted.Count}</span></h2>");
+        sb.Append($"<h2>Version drift {Glossary.Info("version-drift")} <span class=\"badge {(drifted.Count > 0 ? "warn" : "ok")}\">{drifted.Count}</span></h2>");
         if (drifted.Count == 0)
         {
             sb.Append("<div class=\"panel empty-state\"><div class=\"big\">✓</div>"
