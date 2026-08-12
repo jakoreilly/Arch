@@ -14,6 +14,7 @@ public class GroupConfigTests : IDisposable
         _dir = Path.Combine(Path.GetTempPath(), "arch-group-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_dir);
         Directory.CreateDirectory(Path.Combine(_dir, "proj"));
+        File.WriteAllText(Path.Combine(_dir, "db.json"), "Server=.;Database=Test;Trusted_Connection=True;");
     }
 
     public void Dispose() => Directory.Delete(_dir, recursive: true);
@@ -39,6 +40,18 @@ public class GroupConfigTests : IDisposable
         Assert.Equal(Path.Combine(_dir, "proj"), GroupConfig.Resolve("proj", _dir));
     }
 
+    [Fact]
+    public void Load_accepts_a_database_project_naming_itself_via_connFile()
+    {
+        var cfg = GroupConfig.Load(Write("""
+            { "groups": [ { "name": "A", "projects": [ { "connFile": "db.json", "name": "Warehouse DB" } ] } ] }
+            """), out var error);
+
+        Assert.Null(error);
+        Assert.NotNull(cfg);
+        Assert.Equal("site-Warehouse-DB", GroupConfig.SiteId(cfg.Groups[0].Projects[0]));
+    }
+
     [Theory]
     // No groups at all
     [InlineData("""{ "groups": [] }""", "declares no groups")]
@@ -50,6 +63,14 @@ public class GroupConfigTests : IDisposable
     [InlineData("""{ "groups": [ { "name": "A", "projects": [ { "path": "proj", "url": "https://x/y.git" } ] } ] }""", "exactly one")]
     // A path that is not there: caught up front, not three minutes in
     [InlineData("""{ "groups": [ { "name": "A", "projects": [ { "path": "nope" } ] } ] }""", "not a directory")]
+    // A database project with no name — nothing to derive one from
+    [InlineData("""{ "groups": [ { "name": "A", "projects": [ { "connFile": "db.json" } ] } ] }""", "explicit")]
+    // env alone also needs a name
+    [InlineData("""{ "groups": [ { "name": "A", "projects": [ { "env": true } ] } ] }""", "explicit")]
+    // connFile and env both set on the same project — two sources at once
+    [InlineData("""{ "groups": [ { "name": "A", "projects": [ { "connFile": "db.json", "env": true, "name": "X" } ] } ] }""", "exactly one")]
+    // connFile pointing at a file that is not there
+    [InlineData("""{ "groups": [ { "name": "A", "projects": [ { "connFile": "nope.json", "name": "X" } ] } ] }""", "not a file")]
     public void Load_rejects_a_bad_config_with_a_useful_message(string json, string expectedFragment)
     {
         var cfg = GroupConfig.Load(Write(json), out var error);
@@ -66,6 +87,8 @@ public class GroupConfigTests : IDisposable
     [InlineData("", "git@github.com:org/repo.git", "", "site-repo")]
     // An explicit name wins, and is slugified so it survives being an --only token
     [InlineData("C:/src/my-api", "", "Billing Service", "site-Billing-Service")]
+    // A database project has no path/url leaf to fall back to — name is everything
+    [InlineData("", "", "Warehouse DB", "site-Warehouse-DB")]
     public void SiteId_names_the_site_folder(string path, string url, string name, string expected)
         => Assert.Equal(expected, GroupConfig.SiteId(new GroupConfig.Project { Path = path, Url = url, Name = name }));
 

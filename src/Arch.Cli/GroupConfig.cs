@@ -6,6 +6,8 @@ namespace Arch.Cli;
 
 /// <summary>The `arch group` config file: named sets of projects, each scanned into its own
 /// site, then federated into one landscape per group (and optionally one across all of them).
+/// Each project is a local Path already on disk, a Url to clone, or a live database via
+/// connFile/env.
 ///
 /// <para>This is the shape ArchDiagram's <c>Launch-ArchDiagram.ps1</c> carried in PowerShell and
 /// that never came across in the migration — see continue.md. It is deliberately declarative and
@@ -28,15 +30,17 @@ public sealed record GroupConfig
         public List<Project> Projects { get; init; } = [];
     }
 
-    /// <summary>One project: either a local <see cref="Path"/> already on disk, or a
-    /// <see cref="Url"/> to clone. Exactly one of the two.</summary>
+    /// <summary>One project: a local <see cref="Path"/> already on disk, a <see cref="Url"/>
+    /// to clone, or a live database via <see cref="ConnFile"/>/<see cref="Env"/>. Exactly one
+    /// of the four.</summary>
     public sealed record Project
     {
         public string Path { get; init; } = "";
         public string Url { get; init; } = "";
         /// <summary>Branch/tag to check out after cloning. Ignored for a local path.</summary>
         public string Ref { get; init; } = "";
-        /// <summary>Site folder name; defaults to the repo/folder leaf, slugified.</summary>
+        /// <summary>Site folder name; defaults to the repo/folder leaf, slugified. Required
+        /// (not defaulted) for a database project — see <see cref="ConnFile"/>.</summary>
         public string Name { get; init; } = "";
         /// <summary>"github" | "gitlab", same meaning as <c>--source-link-type</c>. A cloned
         /// project's own <c>origin</c> remote is auto-detected already (see
@@ -45,6 +49,19 @@ public sealed record GroupConfig
         /// domain (e.g. <c>dev.internal</c>) needs this told explicitly, exactly as the
         /// standalone CLI does. Empty leaves auto-detection in charge.</summary>
         public string SourceLinkType { get; init; } = "";
+        /// <summary>A live database instead of a folder: the connection string is read from
+        /// this file at run time, resolved against the config file's own folder — never
+        /// inlined in the config itself, the same secrecy rule
+        /// <c>Arch.Sql.Cli.ConnectOptions</c> enforces for the standalone `connect` verb.
+        /// <see cref="GroupConfig.Load"/> only checks that this file exists; it never reads
+        /// it, so a connection string is never held in memory until the actual run needs it.</summary>
+        public string ConnFile { get; init; } = "";
+        /// <summary>Read the connection string from the ARCHSQL_CONNECTION environment
+        /// variable instead of a file — same as <c>arch connect --env</c>. The env var is a
+        /// single process-wide value, so setting this on more than one project in a config
+        /// connects them all to the same database; that is a config mistake for the author to
+        /// avoid, not something this tool detects.</summary>
+        public bool Env { get; init; }
     }
 
     /// <summary>Reads and validates a config. Returns null with <paramref name="error"/> set on
@@ -77,14 +94,27 @@ public sealed record GroupConfig
             {
                 var hasPath = !string.IsNullOrWhiteSpace(p.Path);
                 var hasUrl = !string.IsNullOrWhiteSpace(p.Url);
-                if (hasPath == hasUrl)
+                var hasConnFile = !string.IsNullOrWhiteSpace(p.ConnFile);
+                var hasEnv = p.Env;
+                var sourceCount = (hasPath ? 1 : 0) + (hasUrl ? 1 : 0) + (hasConnFile ? 1 : 0) + (hasEnv ? 1 : 0);
+                if (sourceCount != 1)
                 {
-                    error = $"group '{g.Name}': each project needs exactly one of \"path\" or \"url\".";
+                    error = $"group '{g.Name}': each project needs exactly one of \"path\", \"url\", \"connFile\", or \"env\": true.";
+                    return null;
+                }
+                if ((hasConnFile || hasEnv) && string.IsNullOrWhiteSpace(p.Name))
+                {
+                    error = $"group '{g.Name}': a database project (connFile/env) needs an explicit \"name\" — there is no path or url to derive one from.";
                     return null;
                 }
                 if (hasPath && !Directory.Exists(Resolve(p.Path, configDir)))
                 {
                     error = $"group '{g.Name}': project path '{p.Path}' is not a directory.";
+                    return null;
+                }
+                if (hasConnFile && !File.Exists(Resolve(p.ConnFile, configDir)))
+                {
+                    error = $"group '{g.Name}': project connFile '{p.ConnFile}' is not a file.";
                     return null;
                 }
             }
