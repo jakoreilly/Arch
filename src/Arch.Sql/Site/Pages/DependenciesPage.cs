@@ -16,12 +16,14 @@ reference tables or other objects will show up here once the scan can resolve th
 """;
         }
 
+        var deps = MermaidRenderer.BuildDependencies(ctx.Model, maxNodes);
+        var trimNotice = deps.Trimmed ? $"Showing {deps.Shown} of {deps.Total} objects — the diagram is capped at --max-nodes." : null;
         return $"""
 <h1>Dependencies</h1>
 <p class="lede">Which objects reference which — procedures calling other procedures, views
 selecting from tables, foreign keys between tables. High fan-in objects are risky to change;
 high fan-out objects know too much.</p>
-{PageTemplate.DiagramBlock("deps-diagram", MermaidRenderer.BuildDependencies(ctx.Model, maxNodes))}
+{PageTemplate.DiagramBlock("deps-diagram", deps.Mermaid, trimNotice)}
 {PageTemplate.Legend()}
 """;
     }

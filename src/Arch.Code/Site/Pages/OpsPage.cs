@@ -171,7 +171,7 @@ public static class OpsPage
             .ToList();
 
         // Wide content scrolls inside its own container, never the page (design system rule).
-        sb.Append("<div style=\"overflow-x:auto\">");
+        sb.Append("<div class=\"matrix-wrap\">");
         sb.Append("<table class=\"grid\"><thead><tr><th>Setting</th>");
         foreach (var e in envs)
         {

@@ -7,7 +7,12 @@ namespace Arch.Sql.Site;
 /// capped at maxNodes (by fan-in+fan-out, most-connected first) for readability.</summary>
 public static class MermaidRenderer
 {
-    public static string BuildEr(SqlModel model, int maxNodes)
+    /// <summary>A build result plus whether the diagram was capped, and by how much — callers use
+    /// this to show a visible trim notice (PageTemplate.DiagramBlock's trimNotice) instead of the
+    /// invisible Mermaid comment this used to bury the same fact in.</summary>
+    public readonly record struct Result(string Mermaid, bool Trimmed, int Shown, int Total);
+
+    public static Result BuildEr(SqlModel model, int maxNodes)
     {
         var tables = model.Objects.Where(o => o.Kind == "table").ToList();
         var fks = model.ForeignKeys.Where(fk => fk.ToObjectId.Length > 0).ToList();
@@ -31,14 +36,14 @@ public static class MermaidRenderer
         {
             sb.Append($"  {SafeId(fk.ToObjectId)} ||--o{{ {SafeId(fk.FromObjectId)} : \"{Escape(fk.Name)}\"\n");
         }
-        return trimmed ? sb.ToString() + $"\n%% showing {shown.Count} of {tables.Count} tables (most-connected first)\n" : sb.ToString();
+        return new Result(sb.ToString(), trimmed, shown.Count, tables.Count);
     }
 
     /// <summary>Logical ER built from InferredRelationships rather than declared foreign keys —
     /// for a database where referential integrity is not declared, this is often the only view of
     /// how tables actually relate. Inferred edges are drawn dashed (non-identifying) to distinguish
     /// them from a real, declared foreign key.</summary>
-    public static string BuildInferredEr(SqlModel model, List<Analysis.InferredRelationships.Relationship> relationships, int maxNodes)
+    public static Result BuildInferredEr(SqlModel model, List<Analysis.InferredRelationships.Relationship> relationships, int maxNodes)
     {
         var tables = model.Objects.Where(o => o.Kind == "table").ToList();
         var touched = relationships.SelectMany(r => new[] { r.FromObjectId, r.ToObjectId }).ToHashSet(StringComparer.Ordinal);
@@ -56,14 +61,14 @@ public static class MermaidRenderer
         {
             sb.Append($"  {SafeId(r.ToObjectId)} |o..o{{ {SafeId(r.FromObjectId)} : \"{Escape(r.FromColumn)} ({r.Confidence})\"\n");
         }
-        return trimmed ? sb.ToString() + $"\n%% showing {shown.Count} of {candidates.Count} related tables (most-connected first)\n" : sb.ToString();
+        return new Result(sb.ToString(), trimmed, shown.Count, candidates.Count);
     }
 
-    public static string BuildDependencies(SqlModel model, int maxNodes)
+    public static Result BuildDependencies(SqlModel model, int maxNodes)
     {
         var objects = model.Objects;
         var deps = model.Dependencies.Where(d => d.ToObjectId.Length > 0 && d.Kind is "read" or "insert" or "update" or "delete" or "exec" or "fk").ToList();
-        var (shown, _) = Cap(objects, deps, maxNodes);
+        var (shown, trimmed) = Cap(objects, deps, maxNodes);
         var shownIds = shown.Select(o => o.Id).ToHashSet(StringComparer.Ordinal);
 
         var sb = new StringBuilder();
@@ -82,7 +87,7 @@ public static class MermaidRenderer
         {
             sb.Append($"  {SafeId(d.FromObjectId)} --> {SafeId(d.ToObjectId)}\n");
         }
-        return sb.ToString();
+        return new Result(sb.ToString(), trimmed, shown.Count, objects.Count);
     }
 
     private static (List<DbObject> Shown, bool Trimmed) Cap<TEdge>(List<DbObject> objects, List<TEdge> edges, int maxNodes)

@@ -54,12 +54,14 @@ public static class PageTemplate
 
     /// <summary>One interactive diagram card: toolbar (zoom/reset/PNG), pan/zoom stage, the
     /// mermaid source. Adjacency/tooltips are omitted — there is no 3D graph or hover-trace data
-    /// to feed them.</summary>
-    public static string DiagramBlock(string id, string mermaidSource)
+    /// to feed them. <paramref name="trimNotice"/> renders a visible .diagram-trim banner (the
+    /// Arch.Code precedent) when the diagram was capped for readability; null for an uncapped one.</summary>
+    public static string DiagramBlock(string id, string mermaidSource, string? trimNotice = null)
     {
+        var trimBanner = trimNotice is null ? "" : $"<p class=\"note diagram-trim\">{Html.Encode(trimNotice)}</p>";
         return $"""
 <div class="diagram-card" id="{Html.Encode(id)}" data-png-name="{Html.Encode(id)}">
-  <div class="toolbar">
+  {trimBanner}<div class="toolbar">
     <button class="btn" data-act="zoom-in" type="button" title="Zoom in">+</button>
     <button class="btn" data-act="zoom-out" type="button" title="Zoom out">&minus;</button>
     <button class="btn" data-act="zoom-reset" type="button" title="Reset view">Reset</button>

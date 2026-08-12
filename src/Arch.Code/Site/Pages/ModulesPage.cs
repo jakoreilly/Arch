@@ -111,7 +111,7 @@ public static class ModulesPage
         }
         sb.Append("</tbody></table>");
 
-        sb.Append("<div style=\"overflow-x:auto\"><table class=\"grid matrix\"><thead><tr><th title=\"from ↓ / to →\">↓ / →</th>");
+        sb.Append("<div class=\"matrix-wrap\"><table class=\"grid matrix\"><thead><tr><th title=\"from ↓ / to →\">↓ / →</th>");
         foreach (var m in shown) { sb.Append($"<th title=\"{Html.Encode(m.Key)}\">{index[m.Key]}</th>"); }
         sb.Append("</tr></thead><tbody>");
         foreach (var row in shown)

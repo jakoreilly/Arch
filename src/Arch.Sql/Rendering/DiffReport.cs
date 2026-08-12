@@ -59,7 +59,7 @@ Safe = additive. Baselined changes are shown struck-through and don't fail the g
                 var badge = c.Risk switch
                 {
                     ChangeRisk.Breaking => "badge warn",
-                    ChangeRisk.Degrading => "badge",
+                    ChangeRisk.Degrading => "badge accent",
                     _ => "badge ok",
                 };
                 var rowStyle = isSuppressed ? "text-decoration:line-through;color:var(--text-soft)" : "";

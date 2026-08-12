@@ -16,10 +16,12 @@ CREATE TABLE … FOREIGN KEY statements, or check the Diagnostics on the Overvie
 """;
         }
 
+        var er = MermaidRenderer.BuildEr(ctx.Model, maxNodes);
+        var trimNotice = er.Trimmed ? $"Showing {er.Shown} of {er.Total} tables — the diagram is capped at --max-nodes." : null;
         return $"""
 <h1>ER Diagram</h1>
 <p class="lede">Every table and its foreign-key relationships to other tables in this scan.</p>
-{PageTemplate.DiagramBlock("er-diagram", MermaidRenderer.BuildEr(ctx.Model, maxNodes))}
+{PageTemplate.DiagramBlock("er-diagram", er.Mermaid, trimNotice)}
 {PageTemplate.Legend()}
 """;
     }

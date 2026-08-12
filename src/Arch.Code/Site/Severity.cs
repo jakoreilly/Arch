@@ -18,7 +18,7 @@ internal static class Severity
         <= 5 => ("Low", "ok"),
         <= 10 => ("Moderate", ""),
         <= 20 => ("High", "warn"),
-        _ => ("Very High", "warn"),
+        _ => ("Very High", "danger"),
     };
 
     /// <summary>A "{score} · Level" badge using the existing .badge classes.</summary>

@@ -26,7 +26,7 @@ public static class ObjectFilePage
 
         foreach (var o in objects)
         {
-            sb.Append($"""<div class="panel type-card"><div class="type-head"><span class="type-name">{Html.Encode(o.Schema)}.{Html.Encode(o.Name)}</span> <span class="badge">{Html.Encode(o.Kind)}</span></div>""");
+            sb.Append($"""<div class="panel type-card"><div class="type-head"><a class="type-name" href="object.html?id={Uri.EscapeDataString(o.Id)}">{Html.Encode(o.Schema)}.{Html.Encode(o.Name)}</a> <span class="badge">{Html.Encode(o.Kind)}</span></div>""");
             if (o.Columns.Count > 0)
             {
                 sb.Append("""<table class="grid"><tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th></tr>""");

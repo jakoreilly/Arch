@@ -41,7 +41,7 @@ public static class RefactorPage
         {
             var (badge, cls) = i.Severity switch
             {
-                RefactoringBacklog.Sev.Critical => ("critical", "warn"),
+                RefactoringBacklog.Sev.Critical => ("critical", "danger"),
                 RefactoringBacklog.Sev.High => ("high", "warn"),
                 RefactoringBacklog.Sev.Medium => ("medium", ""),
                 _ => ("low", ""),

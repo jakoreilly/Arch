@@ -84,7 +84,9 @@ shows what writes each table; <a href="impact.html">Impact</a> shows what breaks
         else
         {
             sb.Append("<h2>Foreign-key ER diagram</h2>");
-            sb.Append(PageTemplate.DiagramBlock("er-preview", MermaidRenderer.BuildEr(model, 60)));
+            var er = MermaidRenderer.BuildEr(model, 60);
+            var trimNotice = er.Trimmed ? $"Showing {er.Shown} of {er.Total} tables — the diagram is capped at --max-nodes." : null;
+            sb.Append(PageTemplate.DiagramBlock("er-preview", er.Mermaid, trimNotice));
             sb.Append(PageTemplate.Legend());
             sb.Append("<p class=\"note\">See the <a href=\"er.html\">full ER Diagram</a> page for the complete view.</p>");
         }

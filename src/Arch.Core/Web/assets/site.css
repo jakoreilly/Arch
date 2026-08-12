@@ -468,6 +468,7 @@ table.grid tr:last-child td { border-bottom: none; }
 .treemap a:hover rect { opacity: .82; }
 
 /* ---- Module coupling matrix ---- */
+.matrix-wrap { overflow-x: auto; }
 table.matrix { border-collapse: separate; border-spacing: 0; }
 table.matrix th, table.matrix td { text-align: center; min-width: 2.4rem; font-variant-numeric: tabular-nums; }
 table.matrix td.zero { color: var(--text-soft); }

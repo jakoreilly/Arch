@@ -49,7 +49,13 @@ write tables, their operations appear here.</p>
                 var actor = byId.GetValueOrDefault(e.Actor);
                 var opsDisplay = Normalize(e.Ops);
                 var search = $"{target?.Schema}.{target?.Name} {actor?.Schema}.{actor?.Name}".ToLowerInvariant();
-                var actorFile = actor is null ? "" : $"""<a href="object.html?id={Uri.EscapeDataString(actor.Id)}">{Html.Encode(actor.DefinedInSlug)}</a>""";
+                var actorFile = "";
+                if (actor is not null)
+                {
+                    var file = ctx.BySlug.GetValueOrDefault(actor.DefinedInSlug);
+                    var linkText = file is not null ? Html.Encode(file.RelPath) : Html.Encode(actor.DefinedInSlug);
+                    actorFile = $"""<a href="files/{actor.DefinedInSlug}.html">{linkText}</a>""";
+                }
                 sb.Append($"""
 <tr class="filterable" data-search="{Html.Encode(search)}">
 <td>{(target is null ? Html.Encode(e.Target) : $"""<a href="object.html?id={Uri.EscapeDataString(target.Id)}">{Html.Encode(target.Schema)}.{Html.Encode(target.Name)}</a>""")}</td>

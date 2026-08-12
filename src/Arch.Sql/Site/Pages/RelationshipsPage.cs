@@ -33,7 +33,9 @@ integrity is already declared as foreign keys, or when column names don't follow
             return sb.ToString();
         }
 
-        sb.Append(PageTemplate.DiagramBlock("inferred-er", MermaidRenderer.BuildInferredEr(model, relationships, maxNodes)));
+        var inferredEr = MermaidRenderer.BuildInferredEr(model, relationships, maxNodes);
+        var trimNotice = inferredEr.Trimmed ? $"Showing {inferredEr.Shown} of {inferredEr.Total} related tables — the diagram is capped at --max-nodes." : null;
+        sb.Append(PageTemplate.DiagramBlock("inferred-er", inferredEr.Mermaid, trimNotice));
         sb.Append("""<p class="note">Dashed lines are inferred, not declared — see the ER Diagram page for real foreign keys.</p>""");
 
         sb.Append("""<input class="filter-input" type="search" data-filter-target="#rel-rows" placeholder="Filter by table or column…" autocomplete="off" spellcheck="false"> <span class="filter-count"></span>""");
