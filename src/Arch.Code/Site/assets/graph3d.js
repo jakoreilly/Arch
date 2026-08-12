@@ -781,11 +781,35 @@
   // ---- Load graph data (offline; no network) ----
   // Prefer the inline payload (works from file://); fall back to fetch for callers
   // that serve the folder over http and strip the inline copy.
-  if (window.ARCH_GRAPH) {
-    init(window.ARCH_GRAPH);
-  } else {
-    fetch("graph.json").then(function (r) { return r.json(); }).then(init).catch(function () {
-      fail("Could not load the graph data.");
+  function loadAndInit() {
+    if (window.ARCH_GRAPH) {
+      init(window.ARCH_GRAPH);
+    } else {
+      fetch("graph.json").then(function (r) { return r.json(); }).then(init).catch(function () {
+        fail("Could not load the graph data.");
+      });
+    }
+  }
+
+  // init() runs ForceGraph3D's warmup ticks SYNCHRONOUSLY (see the comment above it) —
+  // real, potentially-slow main-thread work. On the Overview page this widget is embedded
+  // (compact) partway through a much longer document; mounting it eagerly, at script-parse
+  // time, blocks the HTML parser from ever reaching anything further down the page —
+  // including the page's own Mermaid diagram-card setup, which only runs once site.js
+  // loads at the very end of <body>. Deferring the mount until #graph3d-root actually
+  // scrolls into view removes that block without changing anything about how the graph
+  // itself looks or behaves once shown (on graph.html, where this widget IS the page, it
+  // is already in view at load and mounts immediately either way).
+  if (typeof IntersectionObserver === "function") {
+    var mounted = false;
+    var observer = new IntersectionObserver(function (entries) {
+      if (mounted || !entries.some(function (e) { return e.isIntersecting; })) { return; }
+      mounted = true;
+      observer.disconnect();
+      loadAndInit();
     });
+    observer.observe(root);
+  } else {
+    loadAndInit();
   }
 })();
