@@ -58,15 +58,23 @@ internal static class GroupRunner
             foreach (var project in group.Projects)
             {
                 var id = GroupConfig.SiteId(project);
-                var source = ResolveSource(project, configDir, outDir, failures);
-                if (source is null) { continue; }
+                int code;
+                if (project.ConnFile.Length > 0 || project.Env)
+                {
+                    code = RunConnectProject(project, configDir, Path.Combine(outDir, id));
+                }
+                else
+                {
+                    var source = ResolveSource(project, configDir, outDir, failures);
+                    if (source is null) { continue; }
 
-                // Every project's site is generated with --no-open regardless of the run's own
-                // --no-open: a ten-project group must not open ten browser tabs. Only the final
-                // landscape is offered to the browser.
-                var runArgs = new List<string> { source, "--out", Path.Combine(outDir, id), "--no-open" };
-                AddSourceLinkArgs(runArgs, project);
-                var code = Runner.Run([.. runArgs]);
+                    // Every project's site is generated with --no-open regardless of the run's own
+                    // --no-open: a ten-project group must not open ten browser tabs. Only the final
+                    // landscape is offered to the browser.
+                    var runArgs = new List<string> { source, "--out", Path.Combine(outDir, id), "--no-open" };
+                    AddSourceLinkArgs(runArgs, project);
+                    code = Runner.Run([.. runArgs]);
+                }
                 if (code is 0 or 3) { ids.Add(id); }   // 3 = a --fail-on gate tripped; the site still exists
                 else { failures.Add($"{group.Name}/{id}: arch exited {code}"); }
             }
@@ -123,6 +131,30 @@ internal static class GroupRunner
 
         if (!ok) { failures.Add($"{leaf}: git clone/update failed (see the git output above)"); return null; }
         return dest;
+    }
+
+    /// <summary>Runs a database (connFile/env) project through the same `connect` verb
+    /// `arch connect` itself dispatches to (<see cref="Entry.Run"/>), so a group's database
+    /// site is byte-for-byte what running `arch connect` standalone against the same
+    /// connection would produce. `Verbs.RunConnect` is internal to Arch.Sql but visible here
+    /// via that assembly's InternalsVisibleTo("arch") (Arch.Sql.csproj) — the same visibility
+    /// Entry.cs already relies on for the top-level `connect` verb.</summary>
+    private static int RunConnectProject(GroupConfig.Project project, string configDir, string projectOutDir)
+    {
+        var args = new List<string> { "connect" };
+        if (project.ConnFile.Length > 0)
+        {
+            args.Add("--conn-file");
+            args.Add(GroupConfig.Resolve(project.ConnFile, configDir));
+        }
+        else
+        {
+            args.Add("--env");
+        }
+        args.Add("--out");
+        args.Add(projectOutDir);
+        args.Add("--no-open");
+        return Arch.Sql.Cli.Verbs.RunConnect([.. args]);
     }
 
     /// <summary>A cloned repo's <c>origin</c> already feeds Arch.Code's own auto-detection
@@ -228,12 +260,16 @@ internal static class GroupRunner
         Console.Error.WriteLine("      { \"name\": \"Backend\", \"projects\": [");
         Console.Error.WriteLine("          { \"path\": \"C:/src/api\" },");
         Console.Error.WriteLine("          { \"url\": \"git@gitlab.company.local:org/worker.git\", \"ref\": \"main\", \"sourceLinkType\": \"gitlab\" } ] }");
+        Console.Error.WriteLine("      { \"name\": \"Warehouse\", \"projects\": [");
+        Console.Error.WriteLine("          { \"connFile\": \"warehouse-conn.json\", \"name\": \"Warehouse DB\" } ] }");
         Console.Error.WriteLine("    ]");
         Console.Error.WriteLine("  }");
         Console.Error.WriteLine();
         Console.Error.WriteLine("  Paths in the config resolve against the config file's folder. A \"url\" project is");
         Console.Error.WriteLine("  cloned into <out>/_repos/ and the clone is analysed — nothing is ever written to a");
         Console.Error.WriteLine("  repository you pointed at. Exit 3 means some projects failed and the rest succeeded.");
+        Console.Error.WriteLine("  A \"connFile\" project connects to a live database instead of scanning a folder — same");
+        Console.Error.WriteLine("  as \"arch connect --conn-file\"; set \"env\": true instead to read ARCHSQL_CONNECTION.");
         Console.Error.WriteLine();
         Console.Error.WriteLine("  Source links (jump-to-repo from a file page) are auto-detected from a github.com/gitlab.com");
         Console.Error.WriteLine("  clone URL. A self-hosted GitLab/GitHub on a company domain needs \"sourceLinkType\": \"gitlab\"");

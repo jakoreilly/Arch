@@ -5,6 +5,7 @@ namespace Arch.Cli.Tests;
 /// <summary>Covers the validation and naming half of `arch group`. The orchestration itself is
 /// exercised end-to-end elsewhere; what matters here is that a bad config is rejected BEFORE a run
 /// that can take minutes per project, with a message naming the group at fault.</summary>
+[Collection(ConsoleCaptureCollection.Name)]
 public class GroupConfigTests : IDisposable
 {
     private readonly string _dir;
@@ -102,5 +103,25 @@ public class GroupConfigTests : IDisposable
         var redacted = GroupRunner.Redact(text);
         Assert.DoesNotContain("SECRET", redacted, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("<redacted>", redacted, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Run_records_a_failure_when_a_database_projects_connection_string_is_malformed()
+    {
+        File.WriteAllText(Path.Combine(_dir, "bad-db.json"), "not a connection string at all");
+        var configPath = Write("""
+            { "out": "sites", "overallLandscape": false,
+               "groups": [ { "name": "A", "projects": [ { "connFile": "bad-db.json", "name": "Bad DB" } ] } ] }
+            """);
+
+        var originalError = Console.Error;
+        var writer = new StringWriter();
+        Console.SetError(writer);
+        int exitCode;
+        try { exitCode = GroupRunner.Run([configPath, "--no-open"]); }
+        finally { Console.SetError(originalError); }
+
+        Assert.Equal(3, exitCode);
+        Assert.Contains("FAILED", writer.ToString());
     }
 }
