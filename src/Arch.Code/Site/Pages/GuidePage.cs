@@ -12,14 +12,25 @@ public static class GuidePage
     private static readonly (string Href, string Title, string What)[] PageGuide =
     [
         ("index.html", "Overview", "Size, language mix, the top-level architecture diagram, and any scan diagnostics."),
+        ("brief.html", "System Brief", "A one-page, printable executive brief — size, stack, health grade, integration points and the top things to fix, assembled from the same analyses as the rest of the site."),
+        ("guide.html", "Guide", "This page — an orientation tour of what each page shows, how to read the diagrams, and the analysis's limits."),
         ("structure.html", "Structure", "The full folder/file tree — expand and filter it, then click a file for its detail page."),
         ("dependencies.html", "Dependencies", "Which files and folders import each other, and which external packages are used."),
         ("modules.html", "Modules", "Files grouped into modules (namespace or folder) and the dependencies between whole modules — the mid-level view, with a coupling matrix."),
-        ("metrics.html", "Metrics", "Architecture health per module: coupling (Ca/Ce), Instability, Abstractness, Distance from the main sequence, propagation cost and dependency cycles (heuristic, module level)."),
+        ("layers.html", "Dependency Direction", "Whether cross-module dependencies point the way your declared layers expect — or, with no layers declared, the shape inferred from the longest dependency path."),
         ("graph.html", "Graph (3D)", "An interactive WebGL force-directed dependency graph. Click a node to focus it and unfold its neighbours; colour = folder, size = coupling, dashed edges = heuristic calls."),
-        ("types.html", "Types & Members", "Every C# type and method found by syntax-only parsing, grouped by namespace."),
-        ("calls.html", "Call Graph", "Method-to-method calls per type (heuristic — matched by name + parameter count)."),
+        ("explore.html", "Explore", "Ask the dependency graph questions with a small query language, running entirely client-side against the model embedded in the page."),
+        ("trace.html", "Trace", "Pick a start and, optionally, an end point; see the shortest chain of hops between them, each labelled with its evidence."),
+        ("scorecard.html", "Scorecard", "A quick, honest architecture health check: headline signals each graded ok / watch / fail against fixed thresholds, with an overall grade."),
+        ("refactor.html", "Refactoring", "Everything the analyses flagged, in one prioritised backlog — what to fix, why it matters, and a concrete first step."),
+        ("metrics.html", "Metrics", "Architecture health per module: coupling (Ca/Ce), Instability, Abstractness, Distance from the main sequence, propagation cost and dependency cycles (heuristic, module level)."),
         ("hotspots.html", "Hotspots", "Coupling (fan-in / fan-out), largest files, most-used packages, all TODO/FIXME markers, and the most complex methods with cyclomatic/cognitive scores (hidden by --no-complexity)."),
+        ("evolution.html", "Evolution", "How the codebase has changed over its git history — a churn-vs-complexity hotspot quadrant and a bus-factor ownership table."),
+        ("types.html", "Types & Members", "Every C# type and method found by syntax-only parsing, grouped by namespace."),
+        ("api.html", "API Surface", "The public contract of the codebase: public types and members grouped by namespace — the surface other modules and consumers can depend on."),
+        ("calls.html", "Call Graph", "Method-to-method calls per type (heuristic — matched by name + parameter count)."),
+        ("packages.html", "Dependencies & Stack", "Every external package referenced by the codebase, which projects use it, and version drift — the same package pulled at different versions — across the solution."),
+        ("config.html", "Config & Secrets", "Connection strings and config discovered by the scan, and any connection string that embeds a credential committed to source — reported by shape, never by value."),
         ("ops.html", "Ops & Network", "The deployment view: hosts this system calls out to, ports it listens on, how its config differs per environment, and the container images it runs in — read from config and infrastructure files, reported by shape and never by value."),
     ];
 

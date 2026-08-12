@@ -2,12 +2,41 @@ namespace Arch.Sql.Site.Pages;
 
 public static class GuidePage
 {
+    private static readonly (string Href, string Title, string What)[] PageGuide =
+    [
+        ("index.html", "Overview", "Stat tiles, dialect mix, overall grade, and the ER diagram."),
+        ("guide.html", "Guide", "This page — an orientation tour of what each page shows and how this site was built."),
+        ("explore.html", "Explore", "A query console over the dependency graph — referencedby:, affects:, orphans, numeric filters."),
+        ("objects.html", "Objects", "Every table, view, procedure, function and trigger found. Each links to its detail + neighborhood diagram."),
+        ("domains.html", "Domains", "Likely bounded contexts, grouped by object name prefix, and how much each one reaches into the others."),
+        ("er.html", "ER Diagram", "Tables and their foreign-key relationships."),
+        ("relationships.html", "Relationships", "Likely relationships between tables inferred from column-naming patterns rather than declared foreign keys — a lead to confirm, not a fact."),
+        ("dependencies.html", "Dependencies", "Which objects reference which — procedures calling procedures, views selecting from tables, and so on."),
+        ("graph.html", "3D Graph", "The whole schema as an interactive force-directed 3D graph; click a node to focus its neighbourhood."),
+        ("crud.html", "CRUD Matrix", "Which procedures/triggers/views Create, Read, Update or Delete each table."),
+        ("lint.html", "Lint", "SonarQube-style findings: security, correctness, performance and maintainability issues."),
+        ("scorecard.html", "Scorecard", "A worst-wins health grade across the same signals as Lint, at a glance."),
+        ("metrics.html", "Metrics", "Fan-in/fan-out coupling and procedure complexity."),
+        ("impact.html", "Impact", "What breaks if you change an object — its transitive dependents (blast radius)."),
+        ("activity.html", "Activity", "Runtime hotspots, index issues and issue concentration — populated only from a live connection with DMV permission."),
+        ("indexes.html", "Indexes", "Index health from the connected server's catalog: heaps, duplicate/overlapping indexes, and indexes never read according to runtime counters."),
+        ("drift.html", "Schema Diff", "Schema drift since a baseline scan, when one was supplied via --baseline."),
+        ("config.html", "Config & Secrets", "Files that embed a credential — the fact only, never the value."),
+    ];
+
     public static string Body(SiteContext ctx)
     {
         var live = ctx.Model.Runtime.Source == "live-mssql";
         var sourceLine = live
             ? "This site was built from a read-only connection to a live SQL Server: schema is read from catalog views and runtime figures from DMVs. It only issues SELECT queries and never writes."
             : "Arch read the .sql files you pointed it at; no database was connected. It can also build this site from a read-only live connection (the `connect` verb).";
+
+        var rows = new System.Text.StringBuilder();
+        foreach (var (href, title, what) in PageGuide)
+        {
+            rows.Append($"<tr><td><a href=\"{href}\">{Html.Encode(title)}</a></td><td>{Html.Encode(what)}</td></tr>");
+        }
+
         return $$"""
 <h1>Guide</h1>
 <p class="lede">Arch turns a folder of SQL scripts (or a live SQL Server) into this site. It
@@ -23,19 +52,7 @@ schema in the <a href="graph.html">3D Graph</a>.</p>
 <h2>What each page shows</h2>
 <table class="grid">
 <tr><th>Page</th><th>What it shows</th></tr>
-<tr><td>Overview</td><td>Stat tiles, dialect mix, overall grade, and the ER diagram.</td></tr>
-<tr><td>Explore</td><td>A query console over the dependency graph — <code>referencedby:</code>, <code>affects:</code>, <code>orphans</code>, numeric filters.</td></tr>
-<tr><td>Objects</td><td>Every table, view, procedure, function and trigger found. Each links to its detail + neighborhood diagram.</td></tr>
-<tr><td>ER Diagram</td><td>Tables and their foreign-key relationships.</td></tr>
-<tr><td>Dependencies</td><td>Which objects reference which — procedures calling procedures, views selecting from tables, and so on.</td></tr>
-<tr><td>3D Graph</td><td>The whole schema as an interactive force-directed 3D graph; click a node to focus its neighbourhood.</td></tr>
-<tr><td>CRUD Matrix</td><td>Which procedures/triggers/views Create, Read, Update or Delete each table.</td></tr>
-<tr><td>Impact</td><td>What breaks if you change an object — its transitive dependents (blast radius).</td></tr>
-<tr><td>Lint</td><td>SonarQube-style findings: security, correctness, performance and maintainability issues.</td></tr>
-<tr><td>Scorecard</td><td>A worst-wins health grade across the same signals as Lint, at a glance.</td></tr>
-<tr><td>Metrics</td><td>Fan-in/fan-out coupling and procedure complexity.</td></tr>
-<tr><td>Activity</td><td>Runtime hotspots, index issues and issue concentration — populated only from a live connection with DMV permission.</td></tr>
-<tr><td>Config &amp; Secrets</td><td>Files that embed a credential — the fact only, never the value.</td></tr>
+{{rows}}
 </table>
 
 <h2>How this site was built</h2>
