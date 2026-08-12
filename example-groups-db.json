@@ -1,0 +1,13 @@
+{
+  "_note": "Template, not runnable as-is: copy this file, then create local-sql.json next to your copy holding your own connection string (plain text, e.g. Server=...;Database=...;Trusted_Connection=True; — see run-connect.cmd). Never commit that conn-file.",
+  "out": "site-example-groups-db",
+  "overallLandscape": true,
+  "groups": [
+    {
+      "name": "warehouse-example",
+      "projects": [
+        { "connFile": "local-sql.json", "name": "Warehouse DB" }
+      ]
+    }
+  ]
+}
