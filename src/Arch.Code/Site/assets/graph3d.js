@@ -356,7 +356,7 @@
     Object.keys(FLOW.depth).forEach(function (k) { var d = FLOW.depth[k]; perHop[d] = (perHop[d] || 0) + 1; });
     var levels = Object.keys(perHop).map(Number).sort(function (a, b) { return a - b; });
     var rows = levels.map(function (d) {
-      return '<li>' + (d === 0 ? '<span class="badge" style="background:var(--danger);color:#fff">ingress</span>'
+      return '<li>' + (d === 0 ? '<span class="badge" style="background:var(--danger);color:var(--danger-on)">ingress</span>'
         : '<span class="badge">hop ' + d + '</span>') + ' ' + perHop[d] + ' file(s)</li>';
     }).join("");
     var capped = FLOW.reached > 1 && levels[levels.length - 1] >= FLOW_MAX_DEPTH;

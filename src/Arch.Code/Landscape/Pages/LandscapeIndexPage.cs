@@ -96,8 +96,8 @@ Generated on {Html.Encode(generatedOn)}.</p>
     private static string LandscapeLegend() => """
 <details class="legend"><summary>What the shapes and colours mean</summary>
 <div class="legend-grid">
-  <span class="legend-item"><span class="legend-swatch" style="background:#dcecf9;border-color:#2f6fab"></span>Site (click to open its report)</span>
-  <span class="legend-item"><span class="legend-swatch hex" style="background:#f0f0f0;border-color:#8a8a8a"></span>Shared external package</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--accent-soft);border-color:var(--accent)"></span>Site (click to open its report)</span>
+  <span class="legend-item"><span class="legend-swatch hex" style="background:var(--bg-sunken);border-color:var(--text-soft)"></span>Shared external package</span>
   <span class="legend-item"><span class="legend-line"></span>Package one site produces for another (solid)</span>
   <span class="legend-item"><span class="legend-line dashed"></span>Cross-service call / shared package (dashed)</span>
 </div>

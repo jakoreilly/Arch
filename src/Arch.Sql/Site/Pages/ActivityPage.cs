@@ -134,7 +134,7 @@ page, reconnect with a login that has <code>VIEW DATABASE STATE</code>.</p>
             var bucket = Bucket(s.ExecutionCount, max);
             // Bucket 0..4 -> alpha 0.15..0.85 over a fixed hue that reads on both themes.
             var alpha = (0.15 + bucket * 0.175).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
-            var style = $"background:rgba(220,80,40,{alpha})";
+            var style = $"background:rgb(var(--heat) / {alpha})";
             var href = obj is null ? "#" : $"object.html?id={Uri.EscapeDataString(obj.Id)}";
             sb.Append($"""<a class="heat-tile" href="{href}" style="{style}" title="{Html.Encode(label)}: {s.ExecutionCount:N0} executions"><span class="heat-name">{Html.Encode(label)}</span><span class="heat-count">{s.ExecutionCount:N0}</span></a>""");
         }

@@ -11,6 +11,11 @@
   --ok: #2e7d32;
   --warn: #b7791f;
   --danger: #c0392b;
+  /* Pale tints for fills (diagram node classDefs, legend swatches) that need the same
+     "vivid hue as a light tint" treatment --accent-soft already gets. Fills only, paired
+     with the existing -ink token for any text drawn on top. */
+  --ok-soft: #e3f2e6;
+  --warn-soft: #fdf1dc;
   /* "Ink" = the same semantic meaning, darkened enough to stay readable as TEXT on its
      own tinted badge. The base hues above stay put because they are used as fills, chart
      marks and borders, where the vivid value is what carries the signal; only text-on-tint
@@ -21,11 +26,24 @@
   --ok-ink: #236526;
   --warn-ink: #7f5300;
   --danger-ink: #a52c1f;
+  /* A one-off violet for the "database" diagram-node kind — distinct from every other node
+     kind's colour and from --cat-3 (categorical fills carry no contrast guarantee for
+     text), so it gets its own fill/ink pair rather than reusing either. */
+  --diagram-db: #6b46c1;
+  --diagram-db-soft: #e8e3f5;
+  --diagram-db-ink: #3c2a6e;
+  /* Heat-map tile background (Activity page): one fixed hue whose alpha carries the
+     signal, deliberately identical across both themes — see ActivityPage.cs. */
+  --heat: 220 80 40;
   /* Ink for text sitting on a SOLID --accent fill (the primary button), as opposed to
      --accent-ink which is for text on the accent's pale tint. Separate token because the
      two grounds are opposites: light theme's accent is dark (wants white on it), dark
      theme's accent is light (wants near-black). 5.27:1 and 7.16:1 respectively. */
   --accent-on: #ffffff;
+  /* Same "text on a SOLID fill, not a tint" job as --accent-on, for the --danger badge
+     variant (graph3d.js's ingress badge). Light theme's danger is dark, so white reads;
+     see the dark block for why this one flips too. */
+  --danger-on: #ffffff;
   --shadow: 0 1px 3px rgba(16, 30, 54, .08), 0 4px 14px rgba(16, 30, 54, .06);
   --shadow-modal: 0 10px 40px rgba(16, 30, 54, .35);
   /* The dimming wash behind a modal (search palette, mobile nav drawer). A token, not a
@@ -82,6 +100,8 @@
   --ok: #6fbf73;
   --warn: #d9a441;
   --danger: #e07362;
+  --ok-soft: #1d3324;
+  --warn-soft: #3a2c12;
   /* On the dark ground the tints are dark, so "ink" lightens instead of darkens. Only
      --danger-ink actually had to move (4.1:1 → 5.2:1); the other three already cleared AA
      and are aliased unchanged so every component can name the ink token unconditionally. */
@@ -89,9 +109,16 @@
   --ok-ink: #6fbf73;
   --warn-ink: #d9a441;
   --danger-ink: #ef9484;
+  --diagram-db: #a986c4;
+  --diagram-db-soft: #2a2140;
+  --diagram-db-ink: #a986c4;
+  --heat: 220 80 40;
   /* Near-black, because THIS theme's --accent (#6aa9dd) is a light blue: white on it is
      2.52:1 and fails AA outright. This value measures 7.16:1. */
   --accent-on: #0f1720;
+  /* THIS theme's --danger (#e07362) is a light coral: white on it fails AA, same reasoning
+     as --accent-on above. */
+  --danger-on: #0f1720;
   --shadow: 0 1px 3px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .3);
   --shadow-modal: 0 10px 40px rgba(0, 0, 0, .55);
   --scrim: rgba(0, 0, 0, .6);
@@ -364,9 +391,12 @@ table.grid tr:last-child td { border-bottom: none; }
     --accent-soft: #dcecf9;
     --accent-ink: #1f5c8f;
     --accent-on: #ffffff;
-    --ok: #2e7d32; --ok-ink: #1f5a22;
-    --warn: #b7791f; --warn-ink: #6f4900;
+    --danger-on: #ffffff;
+    --ok: #2e7d32; --ok-ink: #1f5a22; --ok-soft: #e3f2e6;
+    --warn: #b7791f; --warn-ink: #6f4900; --warn-soft: #fdf1dc;
     --danger: #c0392b; --danger-ink: #94271b;
+    --diagram-db: #6b46c1; --diagram-db-soft: #e8e3f5; --diagram-db-ink: #3c2a6e;
+    --heat: 220 80 40;
     /* Paper has no elevation, and the dark theme's shadow is a heavy black bloom. */
     --shadow: none;
     --shadow-modal: none;

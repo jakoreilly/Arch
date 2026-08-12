@@ -77,9 +77,9 @@ public static class PageTemplate
     public static string Legend() => """
 <details class="legend"><summary>What the shapes and colours mean</summary>
 <div class="legend-grid">
-  <span class="legend-item"><span class="legend-swatch" style="background:#dcecf9;border-color:#2f6fab"></span>Table</span>
-  <span class="legend-item"><span class="legend-swatch round" style="background:#fdf1dc;border-color:#b7791f"></span>View</span>
-  <span class="legend-item"><span class="legend-swatch hex" style="background:#f0f0f0;border-color:#8a8a8a"></span>Procedure / function</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--accent-soft);border-color:var(--accent)"></span>Table</span>
+  <span class="legend-item"><span class="legend-swatch round" style="background:var(--warn-soft);border-color:var(--warn)"></span>View</span>
+  <span class="legend-item"><span class="legend-swatch hex" style="background:var(--bg-sunken);border-color:var(--text-soft)"></span>Procedure / function</span>
   <span class="legend-item"><span class="legend-line"></span>Foreign key / reference</span>
   <span class="legend-item"><span class="legend-line dashed"></span>Unresolved / external reference</span>
 </div>

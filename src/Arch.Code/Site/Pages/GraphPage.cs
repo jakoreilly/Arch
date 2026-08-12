@@ -147,8 +147,8 @@ the blast radius of a change or the paths a request can take — coloured by hop
   <span class="legend-item"><strong>Size</strong> = coupling (fan-in + fan-out)</span>
   <span class="legend-item"><strong>Isolate focus</strong> = hide everything outside the focused file's neighbourhood</span>
   <span class="legend-item"><strong>Greyed node</strong> = automated-test file (toggle "Hide test files" to drop them)</span>
-  <span class="legend-item"><span class="legend-swatch" style="background:#2f6fab;border-color:#2f6fab"></span> Blue edge = import / reference</span>
-  <span class="legend-item"><span class="legend-swatch" style="background:#b7791f;border-color:#b7791f"></span> Amber edge = heuristic call (name + arity)</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--accent);border-color:var(--accent)"></span> Blue edge = import / reference</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--warn);border-color:var(--warn)"></span> Amber edge = heuristic call (name + arity)</span>
   <span class="legend-item"><strong>Highlight</strong> = keep nodes with ≥/≤ N connections lit; dim the rest</span>
   <span class="legend-item"><strong>Click a node</strong> = focus + unfold its neighbours</span>
   <span class="legend-item"><strong>↯ Trace data flow</strong> = highlight everything reachable downstream (calls + imports), coloured by hop-distance</span>

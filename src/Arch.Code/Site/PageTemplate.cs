@@ -202,11 +202,11 @@ public static class PageTemplate
         return $$"""
 <details class="legend"{{openAttr}}><summary>What the shapes and colours mean</summary>
 <div class="legend-grid">
-  <span class="legend-item"><span class="legend-swatch" style="background:#dcecf9;border-color:#2f6fab"></span>Project / type</span>
-  <span class="legend-item"><span class="legend-swatch db" style="background:#e8e3f5;border-color:#6b46c1"></span>Database</span>
-  <span class="legend-item"><span class="legend-swatch" style="background:#e3f2e6;border-color:#2e7d32"></span>File in this codebase</span>
-  <span class="legend-item"><span class="legend-swatch hex" style="background:#f0f0f0;border-color:#8a8a8a"></span>External package / namespace</span>
-  <span class="legend-item"><span class="legend-swatch round" style="background:#fdf1dc;border-color:#b7791f"></span>Folder</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--accent-soft);border-color:var(--accent)"></span>Project / type</span>
+  <span class="legend-item"><span class="legend-swatch db" style="background:var(--diagram-db-soft);border-color:var(--diagram-db)"></span>Database</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--ok-soft);border-color:var(--ok)"></span>File in this codebase</span>
+  <span class="legend-item"><span class="legend-swatch hex" style="background:var(--bg-sunken);border-color:var(--text-soft)"></span>External package / namespace</span>
+  <span class="legend-item"><span class="legend-swatch round" style="background:var(--warn-soft);border-color:var(--warn)"></span>Folder</span>
   <span class="legend-item"><span class="legend-line"></span>Import / reference (solid)</span>
   <span class="legend-item"><span class="legend-line dashed"></span>Heuristic / ambiguous link (dashed)</span>
 </div>

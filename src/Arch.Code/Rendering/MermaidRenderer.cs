@@ -13,13 +13,13 @@ namespace Arch.Code.Rendering;
 public static class MermaidRenderer
 {
     public const string ClassDefs =
-        "classDef service fill:#dcecf9,stroke:#2f6fab,color:#173a5e;\n" +
-        "classDef database fill:#e8e3f5,stroke:#6b46c1,color:#3c2a6e;\n" +
-        "classDef file fill:#e3f2e6,stroke:#2e7d32,color:#1b4d1e;\n" +
-        "classDef external fill:#f0f0f0,stroke:#8a8a8a,color:#4a4a4a,stroke-dasharray: 4 3;\n" +
-        "classDef folder fill:#fdf1dc,stroke:#b7791f,color:#5f3f0d;\n" +
-        "classDef typenode fill:#dcecf9,stroke:#2f6fab,color:#173a5e;\n" +
-        "classDef aggregate fill:#f0f0f0,stroke:#8a8a8a,color:#4a4a4a,stroke-dasharray: 2 2;";
+        "classDef service fill:var(--accent-soft),stroke:var(--accent),color:var(--text);\n" +
+        "classDef database fill:var(--diagram-db-soft),stroke:var(--diagram-db),color:var(--diagram-db-ink);\n" +
+        "classDef file fill:var(--ok-soft),stroke:var(--ok),color:var(--ok-ink);\n" +
+        "classDef external fill:var(--bg-sunken),stroke:var(--text-soft),color:var(--text-soft),stroke-dasharray: 4 3;\n" +
+        "classDef folder fill:var(--warn-soft),stroke:var(--warn),color:var(--warn-ink);\n" +
+        "classDef typenode fill:var(--accent-soft),stroke:var(--accent),color:var(--text);\n" +
+        "classDef aggregate fill:var(--bg-sunken),stroke:var(--text-soft),color:var(--text-soft),stroke-dasharray: 2 2;";
 
     /// <param name="totalNodes">Pre-trim count of real nodes (0 = unknown/not trimmed).
     /// When greater than the rendered real-node count, the diagram carries a trim banner.</param>

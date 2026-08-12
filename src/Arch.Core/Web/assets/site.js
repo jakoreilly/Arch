@@ -9,6 +9,22 @@
     return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
   }
 
+  // Mermaid's own classDef/linkStyle grammar does not accept a CSS var() call as a colour
+  // value (it parses the diagram source itself, before anything reaches the DOM) — so a
+  // classDef built with var(--accent) fails to parse rather than rendering a wrong colour.
+  // Diagram source text (both server-baked and client-built) is written with var(--token)
+  // anyway, for the same "one token, both themes" reason every other colour in this sheet
+  // is; this resolves each one to the currently active theme's literal value right before
+  // mermaid ever sees the text. Called on every render, including theme-toggle re-renders,
+  // so it always reflects the theme active at that moment.
+  function resolveThemeVars(text) {
+    var style = getComputedStyle(document.documentElement);
+    return text.replace(/var\(--([a-z0-9-]+)\)/gi, function (m, name) {
+      var val = style.getPropertyValue("--" + name).trim();
+      return val || m;
+    });
+  }
+
   // Pages with no diagram at all don't load mermaid.min.js (a 3.3 MB bundle otherwise parsed
   // on every navigation for nothing) — see PageTemplate.Render's needsMermaid sniff. Every
   // mermaid touchpoint below must tolerate that absence instead of throwing, since a thrown
@@ -62,7 +78,7 @@
     var target = card.querySelector(".render-target");
     if (!src || !target) { return; }
 
-    mermaid.render("mmd-" + (++seq), src.textContent).then(function (out) {
+    mermaid.render("mmd-" + (++seq), resolveThemeVars(src.textContent)).then(function (out) {
       target.innerHTML = out.svg;
       growViewBoxToContent(target.querySelector("svg"));
       setupCard(card);
@@ -1529,9 +1545,9 @@
   // site. Duplicated rather than shared: the path is only known at runtime in the browser,
   // and MermaidRenderer only ever runs at build time.
   var TRACE_CLASSDEFS =
-    "classDef service fill:#dcecf9,stroke:#2f6fab,color:#173a5e;\n" +
-    "classDef database fill:#e8e3f5,stroke:#6b46c1,color:#3c2a6e;\n" +
-    "classDef file fill:#e3f2e6,stroke:#2e7d32,color:#1b4d1e;";
+    "classDef service fill:var(--accent-soft),stroke:var(--accent),color:var(--text);\n" +
+    "classDef database fill:var(--diagram-db-soft),stroke:var(--diagram-db),color:var(--diagram-db-ink);\n" +
+    "classDef file fill:var(--ok-soft),stroke:var(--ok),color:var(--ok-ink);";
 
   // Same escaping as MermaidRenderer.Escape — a label inside a quoted mermaid node/edge label.
   function mmdEscape(s) {
@@ -1889,7 +1905,7 @@
       if (e.kind === "fk-cascade") { cascadeIdx.push(i); }
     });
     lines.push("  classDef center stroke-width:3px;");
-    cascadeIdx.forEach(function (i) { lines.push("  linkStyle " + i + " stroke:#e5484d,stroke-width:2px;"); });
+    cascadeIdx.forEach(function (i) { lines.push("  linkStyle " + i + " stroke:var(--danger),stroke-width:2px;"); });
     return { source: lines.join("\n"), token: token };
   }
 
