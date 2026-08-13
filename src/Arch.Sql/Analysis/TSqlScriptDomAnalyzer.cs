@@ -28,7 +28,7 @@ public sealed class TSqlScriptDomAnalyzer : ISqlDialectAnalyzer
         return visitor.ToFacts(parsedCleanly, diagnostics);
     }
 
-    public string Format(string content) => TSqlFormatter.Format(content);
+    public string Format(string content) => Arch.Sql.Format.TSqlFormatter.Format(content);
 }
 
 /// <summary>Walks a parsed T-SQL fragment collecting objects, foreign keys, and intra-file

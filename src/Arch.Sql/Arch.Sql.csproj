@@ -28,6 +28,9 @@
     <ProjectReference Include="..\Arch.Core\Arch.Core.csproj" />
     <!-- See the matching comment in Arch.Code.csproj. -->
     <Using Include="Arch.Core.Web" />
+    <!-- The T-SQL formatter itself lives in Arch.Sql.Format, which stays dependency-free so it
+         can also be packaged standalone as the sqlfmt-tsql dotnet tool. -->
+    <ProjectReference Include="..\Arch.Sql.Format\Arch.Sql.Format.csproj" />
   </ItemGroup>
 
   <ItemGroup>

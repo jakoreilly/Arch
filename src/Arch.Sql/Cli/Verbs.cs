@@ -142,67 +142,11 @@ internal static class Verbs
 
     public static int RunFormat(string[] args)
     {
-        if (args.Length < 2)
-        {
-            Console.Error.WriteLine("Usage: archsql --format <path-to-file-or-folder> [--check] [--dialect <tsql|mysql|postgres>]");
-            return 2;
-        }
-
-        var path = args[1];
-        var check = args.Contains("--check");
-        var dialect = "tsql";
-        for (var i = 2; i < args.Length - 1; i++)
-        {
-            if (args[i] == "--dialect") { dialect = args[i + 1]; }
-        }
-
-        var files = Directory.Exists(path)
-            ? Directory.EnumerateFiles(path, "*.sql", SearchOption.AllDirectories).ToList()
-            : [path];
-
-        var analyzer = new TSqlScriptDomAnalyzer();
-        var changed = 0;
-        var unchanged = 0;
-        var skipped = 0;
-
-        foreach (var file in files)
-        {
-            var content = File.ReadAllText(file);
-            if (dialect != "tsql")
-            {
-                Console.Error.WriteLine($"formatting not available for {dialect} yet: {file}");
-                skipped++;
-                continue;
-            }
-
-            var formatted = analyzer.Format(content);
-            if (formatted.Length == 0)
-            {
-                Console.Error.WriteLine($"skipped (could not parse): {file}");
-                skipped++;
-                continue;
-            }
-            if (TSqlFormatter.HasInlineComments(content))
-            {
-                Console.Error.WriteLine($"note: {file} has comment(s) inside a statement; those cannot be preserved by the formatter and were dropped. Statement-level comments are kept.");
-            }
-
-            if (formatted == content) { unchanged++; continue; }
-
-            if (check)
-            {
-                Console.Error.WriteLine($"would reformat: {file}");
-                changed++;
-            }
-            else
-            {
-                File.WriteAllText(file, formatted);
-                changed++;
-            }
-        }
-
-        Console.Error.WriteLine($"formatted: {changed} file(s), {unchanged} unchanged, {skipped} skipped (unparseable)");
-        return check && changed > 0 ? 3 : 0;
+        // args[0] is the "--format" verb itself; the shared runner (also used by the standalone
+        // sqlfmt-tsql tool) expects args[0] to be the path.
+        return Arch.Sql.Format.FormatRunner.Run(
+            args[1..],
+            "Usage: archsql --format <path-to-file-or-folder> [--check] [--dialect <tsql|mysql|postgres>]");
     }
 
     public static int RunImpact(string[] args)

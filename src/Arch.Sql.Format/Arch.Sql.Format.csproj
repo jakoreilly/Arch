@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Arch.Sql.Format</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Deliberately the only dependency: this project must stay usable outside the Arch
+         repo (packaged as the sqlfmt-tsql dotnet tool), so it may not reference Arch.Sql or
+         Arch.Core. -->
+    <PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" Version="161.9142.1" />
+  </ItemGroup>
+
+</Project>
