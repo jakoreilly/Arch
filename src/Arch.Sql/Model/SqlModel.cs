@@ -7,7 +7,7 @@ public static class SchemaVersions
     public const int Current = 6;
 }
 
-/// <summary>Root of everything ArchSql learned about a folder of SQL. Serialized verbatim to
+/// <summary>Root of everything Arch.Sql learned about a folder of SQL. Serialized verbatim to
 /// model.json (round-trippable, drives --from-model).</summary>
 public sealed record SqlModel
 {
@@ -33,7 +33,7 @@ public sealed record SqlModel
     public RuntimeStats Runtime { get; init; } = new();
     /// <summary>Data Source of the live connection this model was built from ("" for a file
     /// scan). Never a credential — only `connect` populates it, from the same connection string
-    /// ArchSql already treats as a secret elsewhere; this field carries none of it. Additive,
+    /// Arch.Sql already treats as a secret elsewhere; this field carries none of it. Additive,
     /// Phase 6: lets Arch.Cli's cross-layer join match a live SQL model to a code-side
     /// connection-string reference by Server+Catalog, not catalog name alone.</summary>
     public string Server { get; init; } = "";

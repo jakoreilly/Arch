@@ -55,8 +55,16 @@ tools/golden.sh   the byte-identical-output regression net
 
 ## License
 
-Not yet licensed for reuse — see [LICENSE](LICENSE) once added, or open an issue if
-you'd like to use this and no license is present yet.
+Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Copyright 2026 John O'Reilly.
+
+Apache-2.0 rather than MIT for the express patent grant (§3) and the explicit
+statement that the licence conveys no trademark rights (§6). If you redistribute Arch or
+a derivative, keep the `NOTICE` file with it.
+
+The sites Arch generates are yours; Arch claims nothing over its output. Each generated
+site does carry two vendored MIT-licensed JavaScript libraries, whose notices travel with
+it in `assets/lib/LICENSES.txt` — leave that file in place when you publish a site.
 
 ## Third-party code
 

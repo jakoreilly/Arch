@@ -8,7 +8,7 @@ rem    (drag a .json onto run-group.cmd)  same thing
 rem
 rem  Press Enter with no config picked to fall back to run.cmd (single-folder
 rem  analysis) instead. Anything after the config is passed straight to arch,
-rem  e.g. run-group.cmd payzone-groups.json --no-open
+rem  e.g. run-group.cmd example-groups.json --no-open
 rem ---------------------------------------------------------------------------
 setlocal enabledelayedexpansion
 cd /d "%~dp0"

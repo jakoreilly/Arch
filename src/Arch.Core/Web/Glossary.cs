@@ -48,7 +48,7 @@ public static class Glossary
             "The shortest sequence of imports from an entry point (a file nothing else imports) to a key file. Reading it left-to-right shows how the code reaches that file."),
         ["layering"] = new("Whether dependencies flow one way, top layer down to foundation.",
             "In a layered architecture the top (UI/API) may depend on lower layers (domain/core) but never the reverse. An 'upward' dependency breaks the contract and couples the foundation to detail above it."),
-        // ArchSql-only terms, folded in when the core was extracted (see plan.md Phase 4). Its
+        // Arch.Sql-only terms, folded in when the core was extracted (see plan.md Phase 4). Its
         // "fan-in"/"fan-out" duplicated the two above with schema wording instead of code wording;
         // the code wording wins since it is the version 9 live call sites already render.
         ["cyclomatic-sql"] = new(
