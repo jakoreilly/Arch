@@ -46,8 +46,8 @@ public static class PageTemplate
         ("Deployment", [("ops.html", "Ops & Network", "🌐")]),
     ];
 
-    // ArchDiagram's pre-paint script also flips hide-tests from the "archdiagram-show-tests"
-    // key (ArchSql has no equivalent), so it cannot live in PageShell's shared body — see
+    // Arch.Code's pre-paint script also flips hide-tests from the "archdiagram-show-tests"
+    // key (Arch.Sql has no equivalent), so it cannot live in PageShell's shared body — see
     // plan.md's hide-tests-pre-paint GOTCHA. It rides in ShellOptions.ExtraHead instead.
     private const string PrePaintScript = """
 <script>

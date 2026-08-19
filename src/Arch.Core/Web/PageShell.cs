@@ -6,7 +6,7 @@ namespace Arch.Core.Web;
 /// Every field has a default, so a caller specifies only what it changes.</summary>
 public sealed record ShellOptions
 {
-    /// <summary>Product name in the sidebar brand block ("ArchDiagram", "ArchSql", "Arch").</summary>
+    /// <summary>Product name in the sidebar brand block ("Arch Code", "Arch SQL", "Arch").</summary>
     public required string Brand { get; init; }
 
     /// <summary>Sidebar navigation, grouped into labelled sections (order = display order).
@@ -35,7 +35,7 @@ public sealed record ShellOptions
     /// Trusted, product-authored markup only; never user data.</summary>
     public string ExtraScripts { get; init; } = "";
 
-    /// <summary>Extra buttons in the sidebar footer beside the theme toggle (ArchDiagram's
+    /// <summary>Extra buttons in the sidebar footer beside the theme toggle (Arch.Code's
     /// 🧪 tests toggle). Must include its own leading "\n" plus indentation when non-empty,
     /// so an empty "" leaves no blank line — see the footer-button line in <see cref="Render"/>.</summary>
     public string ExtraFooterButtons { get; init; } = "";

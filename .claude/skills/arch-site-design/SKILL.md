@@ -68,8 +68,8 @@ changing any of these values.
 Set by a **pre-paint inline script** so there is no flash — it reads `localStorage`
 key `archdiagram-theme`, falls back to `prefers-color-scheme`, and stamps `data-theme` on
 the root element. That script is duplicated verbatim in **three** places (both
-`PageTemplate.cs` files and `HubPage.cs`) — deliberately, because ArchDiagram's copy also
-carries the `hide-tests` tail and a leading comment that ArchSql's lacks, and unifying
+`PageTemplate.cs` files and `HubPage.cs`) — deliberately, because Arch.Code's copy also
+carries the `hide-tests` tail and a leading comment that Arch.Sql's lacks, and unifying
 them would change the other product's bytes. If you change the theming logic, change all
 three.
 

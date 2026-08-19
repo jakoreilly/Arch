@@ -4,7 +4,7 @@ A standalone, loss-safe T-SQL formatter. It parses each file with
 [ScriptDom](https://www.nuget.org/packages/Microsoft.SqlServer.TransactSql.ScriptDom) and
 re-emits it with consistent keyword casing and clause layout.
 
-It was extracted from [Arch](../../README.md)'s `archsql --format` verb so it can be used
+It was extracted from Arch.Sql's `--format` verb (see [Arch](../../README.md)) so it can be used
 in any repo, independent of Arch, as a pre-commit or CI formatting check for `.sql` files.
 
 ## Guarantees

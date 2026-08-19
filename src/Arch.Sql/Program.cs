@@ -1,4 +1,4 @@
-// ArchSql — point it at a folder of .sql files (or, with `connect`, a live SQL Server), get a
+// Arch.Sql — point it at a folder of .sql files (or, with `connect`, a live SQL Server), get a
 // fully-offline static HTML documentation site: schema inventory, foreign-key ER diagram, object
 // dependency graph, CRUD matrix, impact analysis, a SonarQube-style lint report, and a health
 // scorecard. The `connect` verb additionally reads runtime facts (execution stats, index usage,

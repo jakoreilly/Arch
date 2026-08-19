@@ -1,4 +1,4 @@
-/* ArchSql 3D dependency graph controller.
+/* Arch.Sql 3D dependency graph controller.
    Renders the object/dependency graph (window.ARCH_QUERY — the same payload the Explore console and
    neighborhood diagrams use) with the vendored ForceGraph3D WebGL bundle. Colour by coupling /
    schema / kind; size by fan-in+fan-out; click a node to focus its ego set and fly the camera;
