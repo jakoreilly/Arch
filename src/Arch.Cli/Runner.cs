@@ -49,6 +49,20 @@ public static class Runner
             return 2;
         }
 
+        // Validated against the union of every provider's own gate vocabulary — not just the
+        // ones currently applying — before any provider ever sees --fail-on. Without this, an
+        // unknown-to-everyone gate name would only be caught deep inside a provider's own
+        // CliOptions.Parse, which Generate wraps in an InvalidOperationException that Runner's
+        // per-provider try/catch turns into a crash (exit 1), not the usage error (exit 2) a
+        // genuine typo actually is.
+        var unknownGate = FindUnknownGate(args);
+        if (unknownGate is not null)
+        {
+            var known = Providers.SelectMany(p => p.GateNames).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(g => g, StringComparer.Ordinal);
+            Console.Error.WriteLine($"arch: unknown --fail-on gate '{unknownGate}'. Valid gates: {string.Join(", ", known)}.");
+            return 2;
+        }
+
         foreach (var (provider, detection) in detections)
         {
             Console.Error.WriteLine(detection.Applies
@@ -66,6 +80,10 @@ public static class Runner
         object? codeResult = null;
         object? sqlResult = null;
         string[]? codeArgs = null;
+        // Every provider that generated successfully, with the exact argv it ran with — used
+        // after the loop to evaluate --fail-on gates against the model that argv actually
+        // produced. A provider that crashed contributes nothing here; anyFailed already covers it.
+        var ran = new List<(IAnalysisProvider Provider, object? Model, string[] Args)>();
         foreach (var (provider, detection) in applying)
         {
             var providerOutDir = combined ? Path.Combine(outDir, provider.Id) : outDir;
@@ -75,6 +93,7 @@ public static class Runner
                 var model = provider.Generate(sourceFull, providerOutDir, providerArgs);
                 if (provider.Id == "code") { codeResult = model; codeArgs = providerArgs; }
                 if (provider.Id == "sql") { sqlResult = model; }
+                ran.Add((provider, model, providerArgs));
                 var (title, icon) = DisplayInfo(provider.Id);
                 var (grade, gradeClass, gradeDetail) = Grade(model);
                 links.Add(new HubPage.Link(provider.Id, title, icon, detection.Summary, HeadlineStats(model),
@@ -113,7 +132,7 @@ public static class Runner
         else
         {
             var siteName = Path.GetFileName(sourceFull.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-            var generatedOn = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var generatedOn = DateTime.UtcNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             var owner = codeResult is ProjectModel om ? om.Owner : "";
             var capabilities = codeResult is ProjectModel cm
                 ? cm.Capabilities.Select(c => c.Name).ToList()
@@ -142,7 +161,25 @@ public static class Runner
             catch (Exception ex) { Console.Error.WriteLine($"arch: could not auto-open the site: {ex.Message}"); }
         }
 
-        return anyFailed ? 1 : 0;
+        // CI gate: the site is written either way; a tripped gate only affects the exit code
+        // (3, distinct from usage-error 2 and crash 1 — see HOW-TO-USE.md's exit-code table).
+        // Evaluated per provider against the model and argv it actually ran with, rather than in
+        // each provider's own BuildAndGenerate — that method is shared with the standalone verbs,
+        // which already gate in RunDefault/BuildAndEmit, and Arch.Cli must not duplicate either
+        // product's scorecard.
+        var gateFailures = new List<string>();
+        foreach (var (provider, model, providerArgs) in ran)
+        {
+            foreach (var reason in provider.EvaluateGates(model, providerArgs)) { gateFailures.Add($"{provider.Id}: {reason}"); }
+        }
+        foreach (var f in gateFailures) { Console.Error.WriteLine($"arch: gate failed — {f}"); }
+        if (gateFailures.Count == 0 && args.Contains("--fail-on")) { Console.Error.WriteLine("arch: all gate(s) passed."); }
+
+        // A crashed provider outranks a tripped gate: exit 1 means "the tool broke", exit 3
+        // means "the rules were broken" — a pipeline needs to tell those apart, and reporting 3
+        // when a provider also crashed would hide that the crash happened at all.
+        if (anyFailed) { return 1; }
+        return gateFailures.Count > 0 ? 3 : 0;
     }
 
     /// <summary>The handful of figures the hub card shows for a provider, chosen to agree with
@@ -391,6 +428,25 @@ public static class Runner
     /// CliOptions.Parse, which would otherwise hard-fail on it as an unknown argument
     /// (continue.md's disclosed Phase 5 limitation). A flag neither provider declares is left
     /// alone either way, so Parse still reports a genuinely bad flag itself.</summary>
+    /// <summary>Scans argv for every --fail-on value and returns the first gate name that no
+    /// provider declares in its <see cref="IAnalysisProvider.GateNames"/>, or null if every
+    /// requested name belongs to at least one provider. Runner.Run calls this before any
+    /// provider ever parses argv, so a typo is a usage error (exit 2) rather than a crash
+    /// discovered deep inside a provider's own CliOptions.Parse.</summary>
+    private static string? FindUnknownGate(string[] args)
+    {
+        var known = Providers.SelectMany(p => p.GateNames).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i < args.Length - 1; i++)
+        {
+            if (args[i] != "--fail-on") { continue; }
+            foreach (var gate in args[i + 1].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (!known.Contains(gate)) { return gate; }
+            }
+        }
+        return null;
+    }
+
     private static string[] BuildProviderArgs(string[] args, string providerOutDir, IAnalysisProvider provider, bool combined)
     {
         var list = new List<string> { args[0] };
@@ -398,6 +454,22 @@ public static class Runner
         {
             var arg = args[i];
             if (arg == "--out") { i++; continue; }
+            if (combined && arg == "--fail-on" && i + 1 < args.Length)
+            {
+                // Both providers declare --fail-on, so the generic KnownFlags filter below
+                // would pass it (and its value) through to both — but the two gate vocabularies
+                // are disjoint apart from secrets/scorecard, so the OTHER provider's parser
+                // hard-fails on a perfectly valid gate name belonging to this one. Give each
+                // provider only the gates it knows. Run.Run has already rejected any name
+                // unknown to EVERY provider as a usage error before this method ever runs, so
+                // there is nothing left to forward here for a genuine typo — only "belongs to
+                // the other provider" is left to filter.
+                var requested = args[i + 1].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                var forward = requested.Where(g => provider.GateNames.Contains(g)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                if (forward.Count > 0) { list.Add(arg); list.Add(string.Join(',', forward)); }
+                i++;
+                continue;
+            }
             if (!combined || provider.KnownFlags.ContainsKey(arg) || !AllKnownFlags.TryGetValue(arg, out var takesValue))
             {
                 list.Add(arg);
@@ -425,6 +497,16 @@ public static class Runner
     /// exe's own output directory.</summary>
     private static void DedupeVendorAssets(string outDir)
     {
+        // Hardlink dedup is a Windows-only optimisation (CreateHardLink is a kernel32 export).
+        // Everywhere else the per-subsite copies SiteAssets.CopyTo already wrote are correct
+        // and complete on their own — this method only ever removes redundancy, so skipping it
+        // changes total site size, never correctness. Without this guard, DllImport resolution
+        // throws DllNotFoundException on a non-Windows host, which the catch filter below does
+        // not match (it only catches IOException/UnauthorizedAccessException) — so the file
+        // this method just deleted is never restored by the fallback copy, and the process dies
+        // with an unhandled exception outside the per-provider try/catch.
+        if (!OperatingSystem.IsWindows()) { return; }
+
         var relPaths = new[] { "assets/lib/mermaid.min.js", "assets/lib/3d-force-graph.min.js" };
         foreach (var rel in relPaths)
         {
@@ -446,12 +528,15 @@ public static class Runner
                         throw new IOException($"CreateHardLink failed (Win32 error {System.Runtime.InteropServices.Marshal.GetLastWin32Error()})");
                     }
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+                                                or EntryPointNotFoundException or DllNotFoundException)
                 {
-                    // Cross-volume outDir, or a filesystem without hardlink support (e.g. a
-                    // network share). Not fatal: the copy either still exists (delete failed,
-                    // caught before the link attempt) or is gone with the link failed too, in
-                    // which case restore it exactly as SiteAssets.CopyTo originally would.
+                    // Cross-volume outDir, a filesystem without hardlink support (e.g. a network
+                    // share), or — belt-and-braces alongside the IsWindows guard above — a
+                    // Windows SKU whose kernel32 does not export CreateHardLink. Not fatal: the
+                    // copy either still exists (delete failed, caught before the link attempt) or
+                    // is gone with the link failed too, in which case restore it exactly as
+                    // SiteAssets.CopyTo originally would.
                     if (!File.Exists(copy)) { File.Copy(canonical, copy, overwrite: true); }
                 }
             }

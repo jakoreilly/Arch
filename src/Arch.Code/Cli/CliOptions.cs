@@ -33,6 +33,13 @@ public sealed record CliOptions
     /// <summary>Optional path to write a SARIF 2.1.0 log of the refactoring backlog + any
     /// failed scorecard signal (for code-scanning dashboards); null = don't write one.</summary>
     public string? SarifPath { get; init; }
+    /// <summary>Write only the source root's folder name into model.json's SourcePath instead
+    /// of the full absolute path. Off by default (the absolute path is genuinely useful in a
+    /// local run — it says which checkout you're looking at — and ContentHash already excludes
+    /// it, so this cannot change a published hash). A CI job publishing to a shared/public
+    /// destination should pass --redact-source-path so the build agent's working-directory
+    /// layout (and, locally, the developer's username) never reaches the published site.</summary>
+    public bool RedactSourcePath { get; init; }
 
     /// <summary>Every flag <see cref="Parse"/> recognizes, mapped to whether it consumes a
     /// following value — kept in sync with the <c>boolFlags</c>/<c>valueFlags</c> dictionaries
@@ -57,6 +64,7 @@ public sealed record CliOptions
         ["--sarif"] = true,
         ["--max-nodes"] = true,
         ["--fail-on"] = true,
+        ["--redact-source-path"] = false,
     };
 
     public static CliOptions? Parse(string[] args, out int exitCode)
@@ -64,7 +72,7 @@ public sealed record CliOptions
         exitCode = 0;
         if (args.Length == 0 || args[0] is "-h" or "--help")
         {
-            Console.Error.WriteLine("Usage: archdiagram <path-to-project> [--out <dir>] [--no-open] [--max-nodes <n>] [--exclude <dirname>]... [--no-complexity] [--no-snippets] [--no-wiki] [--source-link-type <github|gitlab|vscode|local>] [--source-link-base <url>] [--source-link-ref <branch>] [--no-source-link] [--descriptions <path>] [--fail-on <gate>[,<gate>...]] [--sarif <path>]");
+            Console.Error.WriteLine("Usage: archdiagram <path-to-project> [--out <dir>] [--no-open] [--max-nodes <n>] [--exclude <dirname>]... [--no-complexity] [--no-snippets] [--no-wiki] [--source-link-type <github|gitlab|vscode|local>] [--source-link-base <url>] [--source-link-ref <branch>] [--no-source-link] [--descriptions <path>] [--fail-on <gate>[,<gate>...]] [--sarif <path>] [--redact-source-path]");
             Console.Error.WriteLine("  Source links are derived from the git 'origin' remote when it is a GitHub/GitLab URL and no --source-link-type is given (credentials in the remote are never written to the output). --no-source-link turns that off.");
             Console.Error.WriteLine($"  --fail-on gates: {string.Join(", ", Analysis.CiGate.KnownGates.Keys.OrderBy(k => k, StringComparer.Ordinal))}. On a tripped gate the site is still written and the process exits 3 (2 = usage error, 1 = crash).");
             exitCode = args.Length == 0 ? 2 : 0;
@@ -93,6 +101,7 @@ public sealed record CliOptions
         string? descriptionsPath = null;
         string? sarifPath = null;
         var failOn = new List<string>();
+        var redactSourcePath = false;
 
         // Flags grouped by shape (no-value boolean vs. single-value) so the loop below has
         // one branch per SHAPE, not one per flag — a long if/else-if chain (one branch per
@@ -110,6 +119,7 @@ public sealed record CliOptions
             ["--no-snippets"] = () => showSnippets = false,
             ["--no-wiki"] = () => wiki = false,
             ["--no-source-link"] = () => noSourceLink = true,
+            ["--redact-source-path"] = () => redactSourcePath = true,
         };
         var valueFlags = new Dictionary<string, Action<string>>(StringComparer.Ordinal)
         {
@@ -160,6 +170,7 @@ public sealed record CliOptions
             DescriptionsPath = descriptionsPath,
             FailOn = failOn,
             SarifPath = sarifPath,
+            RedactSourcePath = redactSourcePath,
         };
     }
 

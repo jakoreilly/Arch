@@ -36,4 +36,19 @@ public interface IAnalysisProvider
     /// other's parser — Runner uses this to filter argv down to what fits before calling
     /// <see cref="Generate"/>.</summary>
     IReadOnlyDictionary<string, bool> KnownFlags { get; }
+
+    /// <summary>The --fail-on gate names this provider's own CliOptions/CiGate vocabulary
+    /// recognizes. Used by Arch.Cli to split a combined-mode --fail-on value per provider,
+    /// since both providers declare the flag but their gate vocabularies are disjoint apart
+    /// from secrets/scorecard — forwarding the raw value to both makes the other provider's
+    /// parser hard-fail on a perfectly valid gate name belonging to this one.</summary>
+    IReadOnlySet<string> GateNames { get; }
+
+    /// <summary>Every --fail-on gate that tripped for this run, as a human-readable reason
+    /// (empty = all requested gates passed, including when none were requested). Called only
+    /// after a successful <see cref="Generate"/>, with that call's own model and argv — a
+    /// second, free re-parse of the same argv rather than widening Generate's return type.
+    /// Per-provider for the same reason <see cref="KnownFlags"/> is: each product owns its own
+    /// gate vocabulary and its own scorecard, and Arch.Cli must not learn either.</summary>
+    IReadOnlyList<string> EvaluateGates(object? model, string[] args);
 }

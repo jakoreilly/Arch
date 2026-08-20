@@ -33,7 +33,13 @@ public static class ConnectOptions
                 case "--no-open": open = false; break;
                 case "--max-nodes" when i + 1 < args.Length && int.TryParse(args[i + 1], out var n): maxNodes = Math.Max(10, n); i++; break;
                 case "--timeout" when i + 1 < args.Length && int.TryParse(args[i + 1], out var t): timeout = Math.Clamp(t, 1, 600); i++; break;
-                case "--fail-on" when i + 1 < args.Length: failOn.AddRange(args[++i].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)); break;
+                // Reuses CliOptions.TryParseFailOn (the file-scan path's own validator) rather
+                // than a bare AddRange: an unknown gate name must be a usage error here too —
+                // SqlCiGate.Evaluate itself `continue`s past a name it doesn't recognise, so an
+                // unvalidated typo silently disables the gate instead of failing the parse.
+                case "--fail-on" when i + 1 < args.Length:
+                    if (!CliOptions.TryParseFailOn(args[++i], failOn, out exitCode)) { return null; }
+                    break;
                 case "--exclude-pattern" when i + 1 < args.Length: excludePatterns.Add(args[++i]); break;
                 case "--config" when i + 1 < args.Length: configPath = args[++i]; break;
                 case "--baseline" when i + 1 < args.Length: baselinePath = args[++i]; break;

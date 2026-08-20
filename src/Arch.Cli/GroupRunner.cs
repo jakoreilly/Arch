@@ -206,9 +206,15 @@ internal static class GroupRunner
             };
             using var proc = Process.Start(psi);
             if (proc is null) { return false; }
-            proc.StandardOutput.ReadToEnd();
-            var err = proc.StandardError.ReadToEnd();
+            // Both pipes must be drained concurrently, not stdout-then-stderr in sequence: if
+            // stderr fills its buffer before stdout closes, git blocks writing to it while this
+            // thread is still stuck in the first ReadToEnd, and neither side ever reaches
+            // WaitForExit — the same class of hang GitHistory.RunGit's own fix addresses.
+            var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+            var stderrTask = proc.StandardError.ReadToEndAsync();
             proc.WaitForExit();
+            var err = stderrTask.GetAwaiter().GetResult();
+            _ = stdoutTask.GetAwaiter().GetResult();
             if (proc.ExitCode != 0)
             {
                 Console.Error.WriteLine($"arch: git {args.Split(' ')[0]} failed — {Redact(err).Trim()}");
