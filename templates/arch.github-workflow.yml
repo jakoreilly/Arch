@@ -1,0 +1,152 @@
+# Arch documentation job for GitHub Actions.
+#
+# Two ways to use it:
+#   1. Copy this file to .github/workflows/arch.yml in your repo, together with
+#      templates/arch-ci.sh, and edit the defaults below.
+#   2. Host both files once in a shared repo and call it from anywhere:
+#
+#        jobs:
+#          arch:
+#            uses: your-org/arch-ci/.github/workflows/arch.yml@v1
+#            with:
+#              fail_on: "secrets,cycles"
+#              templates_repo: your-org/arch-ci   # so the job can fetch arch-ci.sh
+#
+# The GitLab template beside this file takes the same inputs and produces the same artifacts.
+# Both are thin wrappers over templates/arch-ci.sh, which owns the actual contract — the only
+# forge-specific lines in either file are the three source-link coordinates. Nothing here
+# blocks a merge until you pass block_merge: true.
+
+name: Arch
+
+on:
+  workflow_call:
+    inputs:
+      path:
+        description: "Folder to analyse"
+        type: string
+        default: "."
+      fail_on:
+        description: "--fail-on gate list; empty string disables gating entirely"
+        type: string
+        default: "secrets,cycles"
+      block_merge:
+        description: "Fail the job when a gate trips or Arch errors. Off by default: the site is produced and uploaded either way."
+        type: boolean
+        default: false
+      extra_args:
+        description: "Extra arch flags, word-split"
+        type: string
+        default: ""
+      arch_version:
+        description: "Version of the Arch.Cli dotnet tool to install; empty = latest"
+        type: string
+        default: ""
+      templates_repo:
+        description: "owner/repo holding templates/arch-ci.sh. Empty = it is vendored in this repo."
+        type: string
+        default: ""
+      templates_ref:
+        description: "Ref to take templates_repo from"
+        type: string
+        default: "main"
+  # Same knobs for a manual run. Repeated rather than shared because GitHub has no way to
+  # alias one input block across two triggers, and a dispatch that silently ran with
+  # different defaults than the automatic path would be worse than the duplication.
+  workflow_dispatch:
+    inputs:
+      path:
+        type: string
+        default: "."
+      fail_on:
+        type: string
+        default: "secrets,cycles"
+      block_merge:
+        description: "Fail the job on a gate trip (this run only)"
+        type: boolean
+        default: false
+      extra_args:
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+  security-events: write # SARIF upload; harmless when code scanning is not enabled
+
+jobs:
+  arch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # GitHistory.cs shells out to `git log` for the Evolution and Hotspots pages. A
+          # shallow clone does not fail — it silently produces wrong churn counts, which is
+          # worse — so take the whole history for a job that runs once per push.
+          fetch-depth: 0
+
+      # Only when the shared core is not vendored alongside this workflow. Checked out to a
+      # side path so it can never collide with anything in the repo being analysed, and
+      # excluded from the analysis for the same reason.
+      - name: Fetch the shared CI core
+        if: inputs.templates_repo != ''
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.templates_repo }}
+          ref: ${{ inputs.templates_ref }}
+          path: .arch-ci
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.300"
+
+      - name: Install Arch
+        run: |
+          if [ -n "${{ inputs.arch_version }}" ]; then
+            dotnet tool install --global Arch.Cli --version "${{ inputs.arch_version }}"
+          else
+            dotnet tool install --global Arch.Cli
+          fi
+
+      - name: Run Arch
+        env:
+          ARCH_PATH: ${{ inputs.path }}
+          ARCH_OUT: artifacts/arch
+          ARCH_FAIL_ON: ${{ inputs.fail_on }}
+          ARCH_BLOCK_MERGE: ${{ inputs.block_merge && 'true' || 'false' }}
+          ARCH_EXTRA_ARGS: ${{ inputs.extra_args }}
+          ARCH_SARIF: artifacts/arch.sarif
+          # GitHub's own coordinates — the only forge-specific values in this file. The
+          # equivalent three in the GitLab template are CI_PROJECT_URL / CI_COMMIT_SHA.
+          # github.server_url rather than a literal https://github.com, so this works
+          # unchanged on GitHub Enterprise Server.
+          ARCH_SOURCE_LINK_TYPE: github
+          ARCH_SOURCE_LINK_BASE: ${{ github.server_url }}/${{ github.repository }}
+          ARCH_SOURCE_LINK_REF: ${{ github.sha }}
+        run: |
+          if [ -n "${{ inputs.templates_repo }}" ]; then
+            sh .arch-ci/templates/arch-ci.sh
+          else
+            sh templates/arch-ci.sh
+          fi
+
+      - name: Upload the site
+        if: always() # exit 3 means the site explaining the failure exists — that is when it matters most
+        uses: actions/upload-artifact@v4
+        with:
+          name: arch-site
+          path: |
+            artifacts/arch
+            artifacts/arch.hash
+          retention-days: 30
+
+      # SARIF is where GitHub does better than the GitLab side: code scanning ingests Arch's
+      # --sarif output directly, with no converter, and annotates the PR diff. Guarded by
+      # continue-on-error because the upload 403s on a private repo without GitHub Advanced
+      # Security, and a missing dashboard must not fail a documentation job.
+      - name: Upload SARIF
+        if: always() && hashFiles('artifacts/arch.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: artifacts/arch.sarif
+          category: arch
