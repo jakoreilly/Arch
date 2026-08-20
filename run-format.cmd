@@ -51,7 +51,7 @@ if "%TARGET%"=="" (
 
 rem A pasted or dragged path often arrives wrapped in quotes and padded with spaces.
 rem (This SET is deliberately unquoted - that is the idiom that removes the quotes.)
-set TARGET=%TARGET:"=%
+if defined TARGET set TARGET=%TARGET:"=%
 :trim_lead
 if not defined TARGET goto trim_done
 if "%TARGET:~0,1%"==" " (

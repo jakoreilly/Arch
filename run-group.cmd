@@ -67,7 +67,7 @@ if "%PICKED%"=="" (
 set "CONFIG=%~dp0%PICKED%"
 
 :have_config
-set CONFIG=%CONFIG:"=%
+if defined CONFIG set CONFIG=%CONFIG:"=%
 
 if not exist "%CONFIG%" ( 
     echo.

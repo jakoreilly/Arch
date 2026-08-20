@@ -50,7 +50,7 @@ set /p "MODE=Conn-file: "
 
 :have_conn_file
 rem A pasted or dragged path often arrives wrapped in quotes and padded with spaces.
-set MODE=%MODE:"=%
+if defined MODE set MODE=%MODE:"=%
 :trim_lead
 if not defined MODE goto trim_done
 if "%MODE:~0,1%"==" " (
