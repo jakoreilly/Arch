@@ -1,4 +1,5 @@
 using Arch.Code.Graph;
+using Arch.Code.Scanning;
 
 namespace Arch.Code.Landscape;
 
@@ -6,20 +7,24 @@ namespace Arch.Code.Landscape;
 /// links. No filesystem access — fully unit-testable.</summary>
 public static class LandscapeModelBuilder
 {
-    public static LandscapeModel Build(IReadOnlyList<SiteRef> sites)
+    /// <summary>sqlSites defaults to none, so every existing single-argument call site (tests,
+    /// mainly) keeps behaving exactly as before Phase 8 added the SQL-only join.</summary>
+    public static LandscapeModel Build(IReadOnlyList<SiteRef> sites, IReadOnlyList<SqlSiteRef>? sqlSites = null)
     {
         var ordered = sites.OrderBy(s => s.Id, StringComparer.Ordinal).ToList();
+        var orderedSql = (sqlSites ?? []).OrderBy(s => s.Id, StringComparer.Ordinal).ToList();
         return new LandscapeModel
         {
             Sites = ordered,
-            Databases = BuildDatabases(ordered),
+            SqlSites = orderedSql,
+            Databases = BuildDatabases(ordered, orderedSql),
             PackageEdges = BuildPackageEdges(ordered),
             SharedPackages = BuildSharedPackages(ordered),
             ServiceCalls = BuildServiceCalls(ordered),
         };
     }
 
-    private static List<SharedDb> BuildDatabases(List<SiteRef> sites)
+    private static List<SharedDb> BuildDatabases(List<SiteRef> sites, List<SqlSiteRef> sqlSites)
     {
         var byHash = new Dictionary<string, SharedDb>(StringComparer.Ordinal);
         foreach (var s in sites)
@@ -35,7 +40,29 @@ public static class LandscapeModelBuilder
             }
         }
         foreach (var d in byHash.Values) { d.SiteIds.Sort(StringComparer.Ordinal); }
-        return byHash.Values.OrderBy(d => d.Label, StringComparer.Ordinal).ThenBy(d => d.Hash, StringComparer.Ordinal).ToList();
+
+        // Phase 8: verify a database found by connection-string name alone against a SQL-only
+        // site's OWN Server+Catalog — the authoritative inventory of what that database actually
+        // contains, exactly as CrossLink.Join already does within one repo. Same canonicalization
+        // (CanonicalizeHost), so the two joins can never disagree about what "the same server"
+        // means for the same estate.
+        var withVerification = byHash.Values.Select(agg =>
+        {
+            var matches = sqlSites
+                // sql.Server.Length > 0 excludes a file-scanned SQL site (no live connection, so
+                // no server identity at all) — without this guard, two databases with equally
+                // empty Server would spuriously "verify" each other on Catalog alone, exactly
+                // the false-positive CrossLink.Join's own identical guard exists to prevent.
+                .Where(sql => sql.Server.Length > 0 && agg.Server.Length > 0 && sql.Catalog.Length > 0
+                    && string.Equals(sql.Catalog.Trim(), agg.Catalog.Trim(), StringComparison.OrdinalIgnoreCase)
+                    && ConnectionStringNormalizer.CanonicalizeHost(sql.Server) == ConnectionStringNormalizer.CanonicalizeHost(agg.Server))
+                .Select(sql => sql.Id)
+                .OrderBy(id => id, StringComparer.Ordinal)
+                .ToList();
+            return matches.Count == 0 ? agg : agg with { Verified = true, SqlSiteIds = matches };
+        });
+
+        return withVerification.OrderBy(d => d.Label, StringComparer.Ordinal).ThenBy(d => d.Hash, StringComparer.Ordinal).ToList();
     }
 
     private static List<PackageEdge> BuildPackageEdges(List<SiteRef> sites)

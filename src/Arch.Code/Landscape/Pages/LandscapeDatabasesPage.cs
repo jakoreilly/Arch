@@ -30,7 +30,14 @@ schema affects every site marked below.</p>
         foreach (var db in model.Databases)
         {
             var shared = db.SiteIds.Count >= 2 ? " <span class=\"badge\">shared</span>" : "";
-            sb.Append($"<tr><td>{Html.Encode(db.Label)}{shared}</td><td>{Html.Encode(db.Server)}</td><td>{Html.Encode(db.Catalog)}</td>");
+            // Phase 8: a code-side database is normally only "matched by name" — the catalog it
+            // names, not proof the two point at the same physical instance. Verified means a
+            // SQL-only site's OWN Server+Catalog (arch sql / archsql / arch connect, the
+            // authoritative inventory of what that database contains) confirmed it.
+            var verified = db.Verified
+                ? $" <span class=\"badge ok\" title=\"Confirmed against {Html.Encode(string.Join(", ", db.SqlSiteIds))}\">verified match</span>"
+                : "";
+            sb.Append($"<tr><td>{Html.Encode(db.Label)}{shared}{verified}</td><td>{Html.Encode(db.Server)}</td><td>{Html.Encode(db.Catalog)}</td>");
             foreach (var s in model.Sites)
             {
                 sb.Append(db.SiteIds.Contains(s.Id) ? "<td style=\"text-align:center\">✓</td>" : "<td></td>");
