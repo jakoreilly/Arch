@@ -2,13 +2,29 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <AssemblyName>arch</AssemblyName>
     <RootNamespace>Arch.Cli</RootNamespace>
     <!-- Reaches Arch.Sql (Microsoft.Data.SqlClient) via SqlAnalysisProvider/connect — Hard constraint 5. -->
     <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!-- Distributed as a dotnet global tool (plan.md Phase 3b) alongside the container image
+         (Dockerfile at the repo root) — a consumer with the .NET 10 SDK already warm needs no
+         image pull. ToolCommandName is "arch", matching AssemblyName above; that is a
+         coincidence of naming, not a requirement — InternalsVisibleTo Include="arch" below
+         matches on ASSEMBLY identity (AssemblyName), never on ToolCommandName or PackageId, so
+         renaming either of those two would not break it. -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>arch</ToolCommandName>
+    <PackageId>Arch.Cli</PackageId>
+    <Description>Arch: reads a folder and explains what's in it. Detects source code vs SQL
+      scripts, analyses whichever applies, and writes a fully offline static site — dependency
+      graphs, schema inventory, hotspots, CI quality gates. Install as a dotnet global tool:
+      dotnet tool install --global Arch.Cli</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/jakoreilly/Arch</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jakoreilly/Arch</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>architecture;documentation;static-site;csharp;sql;dependency-graph;dotnet-tool</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +42,12 @@
          AssemblyName override, so its assembly identity is its project name — no
          InternalsVisibleTo-matches-assembly-not-project-name trap here (see Phase 5 findings). -->
     <InternalsVisibleTo Include="Arch.Cli.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="..\..\NOTICE" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
 
 </Project>

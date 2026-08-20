@@ -2,22 +2,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <AssemblyName>sqlfmt-tsql</AssemblyName>
     <RootNamespace>Arch.Sql.Format.Cli</RootNamespace>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>sqlfmt-tsql</ToolCommandName>
     <PackageId>Arch.SqlFmt.Tsql</PackageId>
-    <Version>1.0.0</Version>
     <Description>Standalone T-SQL formatter (ScriptDom-based, loss-safe, byte-identical-on-unparseable), extracted from Arch.Sql. Install as a dotnet global tool: dotnet tool install --global Arch.SqlFmt.Tsql</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <!-- Without these, `dotnet pack` warns (NU5125/NU5128 family) and publishes a package
-         with no license metadata, which nuget.org shows as "License not specified". -->
-    <Authors>John O'Reilly</Authors>
-    <Copyright>Copyright 2026 John O'Reilly</Copyright>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/jakoreilly/Arch</PackageProjectUrl>
     <RepositoryUrl>https://github.com/jakoreilly/Arch</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
