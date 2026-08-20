@@ -44,6 +44,18 @@ public static class SiteDiscovery
                                   + "federate. Its own site is still complete and linked from wherever you generated it.");
                     continue;
                 }
+                // Checked before deserializing, same property-peek shape as IsSqlModel above:
+                // a model.json from a NEWER Arch than this one may have added a required
+                // property, and deserializing it here would fail deep inside with a missing-
+                // property error that reads like corruption rather than the ordinary version-
+                // skew situation it is.
+                if (TryGetSchemaVersion(json) is int found && found > ProjectModel.CurrentSchemaVersion)
+                {
+                    diagnostics.Add($"Skipped {id}: its model.json is schema v{found}, and this Arch "
+                                  + $"understands up to v{ProjectModel.CurrentSchemaVersion}. Regenerate "
+                                  + "the estate with a matching Arch version, or upgrade this one.");
+                    continue;
+                }
                 var model = JsonSerializer.Deserialize<ProjectModel>(json, ModelJson.Options);
                 if (model is null) { diagnostics.Add($"Skipped {jsonPath}: deserialized to null."); continue; }
                 // The folder root, not the model's own folder: that is the site's front door in
@@ -76,6 +88,66 @@ public static class SiteDiscovery
         catch (JsonException)
         {
             return false; // let the real deserialization report it
+        }
+    }
+
+    /// <summary>Discovers every immediate subfolder that is a SQL-ONLY site (see
+    /// <see cref="IsSqlModel"/>) — the ones <see cref="Discover"/> itself skips with a
+    /// diagnostic, since they hold a SqlModel and Arch.Code cannot deserialize one (and should
+    /// not learn to). A separate method rather than folding into Discover: every existing caller
+    /// of Discover keeps its exact List&lt;SiteRef&gt; return shape, and a landscape federating
+    /// nothing but code sites (the common case today) pays nothing extra. Phase 8.</summary>
+    public static List<SqlSiteRef> DiscoverSqlSites(string parentDir, string landscapeOutDir, ISet<string>? onlyFolderNames = null)
+    {
+        var sqlSites = new List<SqlSiteRef>();
+        var outFull = Path.GetFullPath(landscapeOutDir);
+        foreach (var dir in Directory.EnumerateDirectories(parentDir).OrderBy(d => d, StringComparer.Ordinal))
+        {
+            if (Path.GetFullPath(dir).Equals(outFull, StringComparison.OrdinalIgnoreCase)) { continue; }
+            var id = Path.GetFileName(dir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            if (onlyFolderNames is not null && !onlyFolderNames.Contains(id)) { continue; }
+            var jsonPath = Path.Combine(dir, "model.json");
+            if (!File.Exists(jsonPath)) { continue; }
+            try
+            {
+                var json = File.ReadAllText(jsonPath);
+                if (!IsSqlModel(json)) { continue; }
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+                var server = root.TryGetProperty("server", out var s) && s.ValueKind == JsonValueKind.String ? s.GetString() ?? "" : "";
+                var catalog = root.TryGetProperty("catalog", out var c) && c.ValueKind == JsonValueKind.String ? c.GetString() ?? "" : "";
+                var rootName = root.TryGetProperty("rootName", out var rn) && rn.ValueKind == JsonValueKind.String ? rn.GetString() ?? "" : "";
+                var objectCount = root.TryGetProperty("objects", out var objs) && objs.ValueKind == JsonValueKind.Array ? objs.GetArrayLength() : 0;
+                var href = Path.GetRelativePath(landscapeOutDir, Path.Combine(dir, "index.html")).Replace('\\', '/');
+                sqlSites.Add(new SqlSiteRef(id, server, catalog, objectCount, rootName, href));
+            }
+            catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
+            {
+                // Discover's own pass over the same folder already reports read/parse failures
+                // for anything that isn't cleanly one shape or the other; staying silent here
+                // avoids a duplicate diagnostic for the same file.
+            }
+        }
+        return sqlSites;
+    }
+
+    /// <summary>The raw "schemaVersion" number if present, or null — never throws. Absent means
+    /// a model.json written before the field existed (schema v1, per ProjectModel.SchemaVersion's
+    /// own doc comment); that is always <c>&lt;= CurrentSchemaVersion</c>, so absent never trips
+    /// the too-new check above regardless of how many versions have shipped since.</summary>
+    private static int? TryGetSchemaVersion(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.ValueKind == JsonValueKind.Object
+                && doc.RootElement.TryGetProperty("schemaVersion", out var v)
+                && v.ValueKind == JsonValueKind.Number
+                ? v.GetInt32() : null;
+        }
+        catch (JsonException)
+        {
+            return null; // let the real deserialization report it
         }
     }
 }

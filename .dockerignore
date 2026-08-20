@@ -1,0 +1,27 @@
+# The build context is everything `docker build .` uploads and everything the `build` stage's
+# `COPY . .` bakes into a layer. Without this file that includes the local golden/ tree (which
+# carries absolute developer paths), the gitignored prompts/ session notes (machine paths, and
+# CLAUDE.md's own warning that a local connection string may be scratched there), site-Arch/,
+# and the whole .git history. The final image only keeps /app, but the build-stage layers and
+# the context transfer keep all of it — so exclude it here rather than trusting multi-stage.
+.git
+.github
+.gitignore
+.gitattributes
+
+# Gitignored local working state — see tools/golden.sh's header. Never wanted in an image.
+golden/
+work/
+site-Arch/
+prompts/
+
+# Session-continuity notes and the plan documents; local-only by design (.gitignore's *.md).
+*.md
+!README.md
+
+# Build output: rebuilt inside the image anyway, and a host-built bin/ can carry a different
+# RID than the container's.
+**/bin/
+**/obj/
+artifacts/
+artifacts-test/

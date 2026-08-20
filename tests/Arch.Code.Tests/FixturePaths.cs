@@ -17,4 +17,11 @@ public static class FixturePaths
     /// tools/golden.sh baselines byte-for-byte.</summary>
     public static string RouteSample =>
         Path.Combine(AppContext.BaseDirectory, "Fixtures", "RouteSample");
+
+    /// <summary>A high-complexity method carrying a hardcoded password and an API-key-shaped
+    /// literal, for SecretScrub's end-to-end check (FilePage.AppendSnippet is the one place raw
+    /// source reaches the site). Deliberately separate from SampleRepo, which tools/golden.sh
+    /// baselines byte-for-byte.</summary>
+    public static string SecretSample =>
+        Path.Combine(AppContext.BaseDirectory, "Fixtures", "SecretSample");
 }

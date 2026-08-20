@@ -24,6 +24,11 @@ public sealed record CliOptions
     public List<string> ExcludePatterns { get; init; } = [];
     /// <summary>Path to an earlier scan's model.json to diff against; null = no drift page.</summary>
     public string? BaselineModelPath { get; init; }
+    /// <summary>Write only the source root's folder name into model.json's SourcePath instead
+    /// of the full absolute path — see the matching field/comment on Arch.Code's CliOptions.
+    /// Off by default; a CI job publishing to a shared/public destination should pass
+    /// --redact-source-path.</summary>
+    public bool RedactSourcePath { get; init; }
 
     /// <summary>Every flag <see cref="Parse"/> recognizes, mapped to whether it consumes a
     /// following value — kept in sync with the <c>boolFlags</c>/<c>valueFlags</c> dictionaries
@@ -44,6 +49,7 @@ public sealed record CliOptions
         ["--baseline"] = true,
         ["--max-nodes"] = true,
         ["--fail-on"] = true,
+        ["--redact-source-path"] = false,
     };
 
     public static CliOptions? Parse(string[] args, out int exitCode)
@@ -51,7 +57,7 @@ public sealed record CliOptions
         exitCode = 0;
         if (args.Length == 0 || args[0] is "-h" or "--help")
         {
-            Console.Error.WriteLine("Usage: archsql <path-to-folder> [--out <dir>] [--no-open] [--max-nodes <n>] [--exclude <dirname>]... [--exclude-pattern <glob>]... [--config <path>] [--dialect <tsql|mysql|postgres|auto>] [--fail-on <gate>[,<gate>...]] [--sarif <path>] [--baseline <model.json>]");
+            Console.Error.WriteLine("Usage: archsql <path-to-folder> [--out <dir>] [--no-open] [--max-nodes <n>] [--exclude <dirname>]... [--exclude-pattern <glob>]... [--config <path>] [--dialect <tsql|mysql|postgres|auto>] [--fail-on <gate>[,<gate>...]] [--sarif <path>] [--baseline <model.json>] [--redact-source-path]");
             Console.Error.WriteLine($"  --fail-on gates: {string.Join(", ", Analysis.SqlCiGate.KnownGates.Keys.OrderBy(k => k, StringComparer.Ordinal))}. On a tripped gate the site is still written and the process exits 3 (2 = usage error, 1 = crash).");
             Console.Error.WriteLine("  --exclude-pattern: a glob ('*' and '?') matched against each object's name and id; matches are dropped from the model before analysis. Repeatable; also read from archsql.config.json's excludePatterns.");
             exitCode = args.Length == 0 ? 2 : 0;
@@ -76,6 +82,7 @@ public sealed record CliOptions
         var excludePatterns = new List<string>();
         string? configPath = null;
         string? baselinePath = null;
+        var redactSourcePath = false;
 
         // Flags grouped by shape (no-value boolean vs. single-value), one branch per SHAPE
         // rather than one per flag (keeps cognitive complexity low). --max-nodes and --fail-on
@@ -84,6 +91,7 @@ public sealed record CliOptions
         var boolFlags = new Dictionary<string, Action>(StringComparer.Ordinal)
         {
             ["--no-open"] = () => open = false,
+            ["--redact-source-path"] = () => redactSourcePath = true,
         };
         var valueFlags = new Dictionary<string, Action<string>>(StringComparer.Ordinal)
         {
@@ -143,10 +151,14 @@ public sealed record CliOptions
             FailOn = failOn,
             SarifPath = sarifPath,
             BaselineModelPath = baselinePath,
+            RedactSourcePath = redactSourcePath,
         };
     }
 
-    private static bool TryParseFailOn(string arg, List<string> failOn, out int exitCode)
+    /// <summary>internal, not private: ConnectOptions.Parse (the `connect` verb) reuses this
+    /// so an unknown --fail-on gate is a usage error there too, instead of being silently
+    /// ignored by SqlCiGate.Evaluate's own lenient `continue`.</summary>
+    internal static bool TryParseFailOn(string arg, List<string> failOn, out int exitCode)
     {
         exitCode = 0;
         var requested = arg.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

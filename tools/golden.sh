@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
-# Regenerates both sites from the in-repo fixtures and compares them to the golden
-# trees under golden/. This is the regression net for the whole migration: phases 3
-# and 4 must leave generated output byte-identical, and this is what proves it.
+# Regenerates code/sql/cli/landscape output from the in-repo fixtures and compares it to a
+# golden baseline. This is the regression net for the whole migration and for the ongoing
+# CI/CD rollout (plan.md): determinism must hold byte-for-byte, and this is what proves it.
 #
-#   tools/golden.sh accept   -- regenerate and store as the new golden
-#   tools/golden.sh          -- regenerate and diff against the stored golden
+#   tools/golden.sh accept          -- regenerate and store as the new golden/ tree (local)
+#   tools/golden.sh                 -- regenerate and diff against golden/ (local)
+#   tools/golden.sh manifest        -- regenerate and write tools/golden.manifest (CI-portable)
+#   tools/golden.sh manifest-check  -- regenerate and diff against tools/golden.manifest
 #
-# golden/ and work/ are gitignored: the tree is a local net for this migration, not a
-# committed artifact. Regenerate it with `accept` on a known-good commit.
+# golden/ and work/ are gitignored: golden/ is a local net (thousands of files, including a
+# 3.3MB vendored bundle) and is not meant to be committed. tools/golden.manifest — one
+# "<sha256>  <path>" line per file — IS meant to be committed and is what the two-OS CI job
+# checks against, since it is small and portable in a way the tree itself is not.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
@@ -53,6 +57,11 @@ normalise() {
   esc_win="$(printf '%s' "$WIN_ROOT" | tr '/' '\\' | sed 's#[\\/&]#\\&#g')"    # C:\Users\...
   # .xhtml is the wiki export's extension and is NOT matched by '*.html' — it was the
   # one file still carrying an absolute path after the first pass.
+  # The sourcePath clause normalises the VALUE rather than matching the root path: model.json
+  # JSON-escapes every backslash, so the root appears there with every separator DOUBLED, which none of
+  # the three $esc_* patterns above match. Left alone, the developer's home directory survives
+  # normalisation and gets hashed into tools/golden.manifest — which then only ever matches on
+  # the one machine that generated it. Same shape as the "ref" and "toolVersion" clauses.
   find "$dir" -type f \( -name '*.html' -o -name '*.xhtml' -o -name '*.json' \
                       -o -name '*.md' -o -name '*.js' \) -print0 |
     while IFS= read -r -d '' f; do
@@ -60,28 +69,96 @@ normalise() {
         -e "s#$esc_win#<ROOT>#g" \
         -e "s#$esc_win_fwd#<ROOT>#g" \
         -e "s#$esc_root#<ROOT>#g" \
+        -e 's#"sourcePath": "[^"]*"#"sourcePath": "<ROOT>"#g' \
         -e 's#[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}[ T][0-9]\{2\}:[0-9]\{2\}\(:[0-9]\{2\}\)\?#<TIMESTAMP>#g' \
         -e 's#[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}#<DATE>#g' \
         -e 's#"totalCommits": [0-9]\{1,\}#"totalCommits": <COMMITS>#g' \
         -e 's#"ref": "[^"]*"#"ref": "<REF>"#g' \
         -e 's#"ref":"[^"]*"#"ref":"<REF>"#g' \
+        -e 's#"toolVersion": "[^"]*"#"toolVersion": "<TOOL>"#g' \
+        -e 's#"toolVersion":"[^"]*"#"toolVersion":"<TOOL>"#g' \
         -e 's#<div class="num">[0-9]\{1,\}</div><div class="lbl">Commits in history</div>#<div class="num">\&lt;COMMITS\&gt;</div><div class="lbl">Commits in history</div>#g' \
         "$f"
     done
 }
 
+# Generates only. normalise() is NOT called here on purpose: it rewrites "totalCommits": 123
+# to "totalCommits": <COMMITS>, which is no longer valid JSON, and the landscape run below
+# READS these model.json files back. Normalising before it ran left SiteDiscovery unable to
+# parse a single site — it caught the JsonException, recorded a diagnostic nothing surfaced,
+# reported "found 0 site(s)", and baselined an empty estate that proved nothing. Every tree is
+# normalised together after the landscape instead.
 run() { # run <name> <exe-project> <fixture> [extra args...]
   local name="$1" proj="$2" fixture="$3"; shift 3
   dotnet run --project "$proj" --no-build -- "$fixture" --out "$WORK/$name" --no-open "$@" >/dev/null
-  normalise "$WORK/$name"
 }
 
 run code src/Arch.Code/Arch.Code.csproj tests/Arch.Code.Tests/Fixtures/SampleRepo
 run sql  src/Arch.Sql/Arch.Sql.csproj   tests/Arch.Sql.Tests/Fixtures --dialect tsql
 
+# Arch.Cli (plan.md Phase 4): the two runs above exercise Arch.Code and Arch.Sql directly and
+# structurally cannot see Runner.cs, HubPage, CrossLink, DedupeVendorAssets, or the landscape —
+# exactly the surface a company-wide pipeline actually runs. CrossLink/ShopTest has both a
+# .csproj and a .sql file, so this is combined mode: a hub page plus code/ and sql/ subsites.
+run cli src/Arch.Cli/Arch.Cli.csproj tests/Arch.Cli.Tests/Fixtures/CrossLink/ShopTest
+
+# Landscape reads no source — only the model.json files the runs above already wrote — so it
+# federates $WORK itself: "code" is a single-provider site (model.json at its root), "cli" is
+# combined mode (model.json under cli/code/), and "sql" is skipped as SQL-only, all exactly the
+# shapes SiteDiscovery.Discover probes for. Must run after every `run` call above, and its own
+# --out must stay a location `run` never populated (SiteDiscovery enumerates $WORK's
+# subdirectories AT THIS POINT, so a pre-existing "landscape" folder would be scanned as a
+# fourth "site" and fail to parse as either model shape).
+dotnet run --project src/Arch.Cli/Arch.Cli.csproj --no-build -- landscape "$WORK" \
+  --out "$WORK/landscape" --no-open >/dev/null
+
+# Now that nothing reads them back, flatten the values that legitimately vary per run. Order
+# matters: see the comment on run() above.
+normalise "$WORK/code"
+normalise "$WORK/sql"
+normalise "$WORK/cli"
+normalise "$WORK/landscape"
+
+# manifest mode: a committed <sha256>  <relative-path> list instead of a committed golden/
+# tree — golden/ itself is gitignored (thousands of files, including a 3.3MB vendored bundle)
+# and only ever exists locally, which is exactly why the two-OS CI job in plan.md's Phase 4
+# needs something smaller and portable to check against. LF-normalised before hashing: CRLF
+# vs LF is already handled for the `diff` path by --strip-trailing-cr below, but a hash of two
+# byte-different-but-content-identical files never matches without this.
+if [ "$MODE" = "manifest" ]; then
+  : > tools/golden.manifest
+  find "$WORK/code" "$WORK/sql" "$WORK/cli" "$WORK/landscape" -type f -print0 |
+    while IFS= read -r -d '' f; do
+      rel="${f#"$WORK"/}"
+      printf '%s  %s\n' "$(tr -d '\r' < "$f" | sha256sum | cut -d' ' -f1)" "$rel"
+    done | LC_ALL=C sort -k2 > tools/golden.manifest
+  echo "manifest written: $(wc -l < tools/golden.manifest) files"
+  exit 0
+fi
+
+if [ "$MODE" = "manifest-check" ]; then
+  if [ ! -f tools/golden.manifest ]; then
+    echo "no golden manifest yet — run: tools/golden.sh manifest"
+    exit 1
+  fi
+  ACTUAL="$WORK/golden.manifest.actual"
+  find "$WORK/code" "$WORK/sql" "$WORK/cli" "$WORK/landscape" -type f -print0 |
+    while IFS= read -r -d '' f; do
+      rel="${f#"$WORK"/}"
+      printf '%s  %s\n' "$(tr -d '\r' < "$f" | sha256sum | cut -d' ' -f1)" "$rel"
+    done | LC_ALL=C sort -k2 > "$ACTUAL"
+  if diff tools/golden.manifest "$ACTUAL"; then
+    echo "GOLDEN OK (manifest)"
+    exit 0
+  else
+    echo "GOLDEN CHANGED — review the diff above. If intended, run: tools/golden.sh manifest"
+    exit 1
+  fi
+fi
+
 if [ "$MODE" = "accept" ]; then
   rm -rf golden; mkdir -p golden
-  cp -r "$WORK/code" "$WORK/sql" golden/
+  cp -r "$WORK/code" "$WORK/sql" "$WORK/cli" "$WORK/landscape" golden/
   echo "golden accepted: $(find golden -type f | wc -l) files"
   exit 0
 fi
@@ -93,8 +170,10 @@ fi
 
 # --strip-trailing-cr: .gitattributes normalises checked-out files to CRLF on Windows
 # while generated output is LF, and without this every line reads as changed.
-if diff -r --strip-trailing-cr golden/code "$WORK/code" &&
-   diff -r --strip-trailing-cr golden/sql  "$WORK/sql"; then
+if diff -r --strip-trailing-cr golden/code      "$WORK/code" &&
+   diff -r --strip-trailing-cr golden/sql       "$WORK/sql" &&
+   diff -r --strip-trailing-cr golden/cli       "$WORK/cli" &&
+   diff -r --strip-trailing-cr golden/landscape "$WORK/landscape"; then
   echo "GOLDEN OK"
 else
   echo "GOLDEN CHANGED — review the diff above. If intended, run: tools/golden.sh accept"

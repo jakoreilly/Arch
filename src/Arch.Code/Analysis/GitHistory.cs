@@ -131,9 +131,15 @@ public static class GitHistory
             };
             using var proc = Process.Start(psi);
             if (proc is null) { return null; }
-            var stdout = proc.StandardOutput.ReadToEnd();
+            // Both pipes must be drained concurrently. stderr is redirected, so leaving it
+            // unread lets git block writing to a full pipe buffer while this thread blocks in
+            // ReadToEnd on stdout — and the WaitForExit timeout below, which exists to bound
+            // exactly this kind of hang, is never reached because the deadlock is above it.
+            var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+            var stderrTask = proc.StandardError.ReadToEndAsync();
             if (!proc.WaitForExit(GitTimeoutMs)) { try { proc.Kill(true); } catch { /* best effort */ } return null; }
-            return proc.ExitCode == 0 ? stdout : null;
+            _ = stderrTask.GetAwaiter().GetResult();   // drained on purpose; git's chatter here is not ours to report
+            return proc.ExitCode == 0 ? stdoutTask.GetAwaiter().GetResult() : null;
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
         {

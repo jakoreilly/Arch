@@ -1,0 +1,25 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <!-- The build is already at 0 warnings (CLAUDE.md, Commands). Making that a gate costs
+         nothing today and stops the first warning from becoming the hundredth. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+
+    <!-- Determinism is the product (CLAUDE.md). These make the BINARIES honour the same claim
+         the generated output already does: no absolute paths embedded, reproducible PDBs. -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+
+    <!-- One version for every artifact in the repo (Arch.Cli's dotnet-tool package, the
+         Arch.SqlFmt.Tsql package), overridden by a release pipeline via -p:VersionPrefix=. -->
+    <VersionPrefix>1.1.0</VersionPrefix>
+    <Authors>John O'Reilly</Authors>
+    <Copyright>Copyright 2026 John O'Reilly</Copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>

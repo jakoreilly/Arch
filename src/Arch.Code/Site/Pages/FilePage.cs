@@ -1,4 +1,5 @@
 using System.Text;
+using Arch.Code.Analysis;
 using Arch.Code.Graph;
 using Arch.Code.Rendering;
 
@@ -118,7 +119,7 @@ public static class FilePage
         // silently if the file moved or is unreadable (snippets just won't show).
         var wantsSnippets = showSnippets && file.Types.Any(t => t.Methods.Any(m =>
             m.Cognitive >= Severity.HighThreshold && m.StartLine > 0 && m.EndLine >= m.StartLine));
-        var sourceLines = wantsSnippets ? TryReadLines(model.SourcePath, file.RelPath) : null;
+        var sourceLines = wantsSnippets ? TryReadLines(model.SourceReadRoot, file.RelPath) : null;
 
         sb.Append("<h2>Types &amp; methods</h2>");
         foreach (var type in file.Types)
@@ -196,7 +197,12 @@ public static class FilePage
         var truncated = end - start > MaxSnippetLines;
         if (truncated) { end = start + MaxSnippetLines; }
 
-        var code = string.Join("\n", sourceLines[start..end]);
+        // The one place raw source reaches the published site — scrub secret-shaped literals
+        // (a hardcoded password, an API key) before it is encoded and written. Fail closed: if
+        // the scrub itself times out, publish nothing for this method rather than raw source.
+        var code = SecretScrub.Text(string.Join("\n", sourceLines[start..end]));
+        if (code is null) { return; }
+
         sb.Append($"<details class=\"code-snippet\"><summary>Show source · lines {m.StartLine}–{m.EndLine}</summary>");
         sb.Append($"<pre><code>{Html.Encode(code)}</code></pre>");
         if (truncated) { sb.Append("<p class=\"note\">… truncated; open the file for the rest.</p>"); }

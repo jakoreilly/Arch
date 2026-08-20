@@ -1,0 +1,87 @@
+# Arch documentation job for GitLab CI.
+#
+# Consumers add two lines to .gitlab-ci.yml:
+#
+#   include:
+#     - project: your-group/arch-ci
+#       ref: v1
+#       file: /templates/arch.gitlab-ci.yml
+#
+# and optionally override fail_on / block_merge / extra_args. Everything else is defaulted,
+# and nothing here blocks a merge until a repo opts in with block_merge: "true".
+#
+# The GitHub Actions template beside this file takes the same inputs and produces the same
+# artifacts. Both are thin wrappers over templates/arch-ci.sh, which owns the actual
+# contract — the only forge-specific lines in either file are the three source-link
+# coordinates below.
+
+spec:
+  inputs:
+    stage:
+      default: docs
+    image:
+      # Whatever registry you publish the Dockerfile at the Arch repo root to. There is no
+      # default public registry for it on purpose: pinning one here would bake somebody
+      # else's infrastructure into every consumer pipeline.
+      default: arch:latest
+    path:
+      default: "."
+    fail_on:
+      default: "secrets,cycles"
+    block_merge:
+      # Merge blocking is OPT-IN. "false" keeps a tripped gate fully visible — the job log
+      # says so, the site explaining it is in artifacts, the Code Quality report still
+      # reaches the MR widget — while leaving the job green, so a repo can adopt this
+      # template without it becoming a merge gate on day one. Flip to "true" per repo, once
+      # that team has read a few real reports and agrees with them.
+      default: "false"
+      options: ["false", "true"]
+    extra_args:
+      default: ""
+---
+
+arch:
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.image ]]
+  variables:
+    # GitHistory.cs shells out to `git log` for the Evolution and Hotspots pages; a shallow
+    # clone does not fail, it silently produces wrong churn counts. Full history is worth it
+    # for a docs job that runs on the default branch only.
+    GIT_DEPTH: 0
+    ARCH_PATH: $[[ inputs.path ]]
+    ARCH_OUT: artifacts/arch
+    ARCH_FAIL_ON: $[[ inputs.fail_on ]]
+    ARCH_BLOCK_MERGE: $[[ inputs.block_merge ]]
+    ARCH_EXTRA_ARGS: $[[ inputs.extra_args ]]
+    ARCH_SARIF: artifacts/arch.sarif
+    # GitLab's own coordinates — the only forge-specific values in this file. The equivalent
+    # three in the GitHub template are github.server_url / github.repository / github.sha.
+    ARCH_SOURCE_LINK_TYPE: gitlab
+    ARCH_SOURCE_LINK_BASE: $CI_PROJECT_URL
+    ARCH_SOURCE_LINK_REF: $CI_COMMIT_SHA
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  before_script:
+    # The container runs as uid 10001 while the checkout is owned by the runner's user, so
+    # git refuses with "detected dubious ownership", RunGit returns null, and the Evolution
+    # and Hotspots pages degrade silently — no error, just missing data.
+    - git config --global --add safe.directory "$CI_PROJECT_DIR"
+  script:
+    # arch-ci.sh is baked into the image by the Dockerfile at the Arch repo root, so an
+    # `include:`d consumer needs nothing on its own runner and the script can never drift
+    # out of step with the arch binary beside it.
+    - sh /opt/arch/arch-ci.sh
+  artifacts:
+    when: always # exit 3 means the site explaining the failure exists — that is when it matters most
+    expire_in: 30 days
+    paths:
+      - artifacts/arch
+      - artifacts/arch.hash
+    reports:
+      # GitLab wants its own Code Quality shape and will not read SARIF. Arch writes SARIF
+      # (ARCH_SARIF above), which GitHub code scanning ingests directly; on GitLab that file
+      # is an artifact for a converter to pick up, not a report GitLab understands. Leaving
+      # the SARIF out entirely would make the two templates produce different artifacts for
+      # no reason, so it is written on both and only consumed where it is understood.
+      codequality: artifacts/gl-code-quality-report.json

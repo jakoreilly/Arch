@@ -118,4 +118,75 @@ public class SiteDiscoveryTests : IDisposable
 
         Assert.Equal("root-wins", sites.Single().Model.RootName);
     }
+
+    /// <summary>Phase 6 of plan.md: a model.json from a NEWER Arch than this one may have added a
+    /// required property — deserializing it directly would fail deep inside with a missing-
+    /// property exception that reads like file corruption, not the ordinary version-skew
+    /// situation it is. The check must happen BEFORE JsonSerializer.Deserialize ever runs.</summary>
+    [Fact]
+    public void Discover_skips_a_too_new_schema_version_with_an_explanatory_diagnostic()
+    {
+        WriteSite("site-a", "a");
+        Directory.CreateDirectory(Path.Combine(_root, "site-future"));
+        File.WriteAllText(Path.Combine(_root, "site-future", "model.json"),
+            $$"""{"rootName":"future","sourcePath":"x","schemaVersion":{{ProjectModel.CurrentSchemaVersion + 1}}}""");
+
+        var diagnostics = new List<string>();
+        var sites = SiteDiscovery.Discover(_root, Path.Combine(_root, "site-landscape"), diagnostics);
+
+        Assert.Equal(new[] { "site-a" }, sites.Select(s => s.Id));
+        var note = Assert.Single(diagnostics);
+        Assert.Contains("site-future", note, StringComparison.Ordinal);
+        Assert.Contains("schema v", note, StringComparison.Ordinal);
+    }
+
+    /// <summary>A model.json with no "schemaVersion" key at all (every file written before the
+    /// field existed) must be treated as v1 — never rejected, and never silently upgraded to
+    /// claim the current version either.</summary>
+    [Fact]
+    public void Discover_accepts_a_model_with_no_schema_version_field()
+    {
+        WriteSite("site-a", "a"); // WriteModel serializes a real ProjectModel — schemaVersion IS present
+        Directory.CreateDirectory(Path.Combine(_root, "site-old"));
+        File.WriteAllText(Path.Combine(_root, "site-old", "model.json"), """{"rootName":"old","sourcePath":"x"}""");
+
+        var diagnostics = new List<string>();
+        var sites = SiteDiscovery.Discover(_root, Path.Combine(_root, "site-landscape"), diagnostics);
+
+        Assert.Equal(new[] { "site-a", "site-old" }, sites.Select(s => s.Id).OrderBy(x => x));
+        Assert.Empty(diagnostics);
+    }
+
+    /// <summary>Phase 8 of plan.md: DiscoverSqlSites finds exactly the sites Discover itself
+    /// skips (SQL-only, no ProjectModel) and extracts Server/Catalog/ObjectCount/RootName from
+    /// the model.json fields Arch.Sql already writes — no new sidecar file, no Arch.Code
+    /// reference to Arch.Sql.</summary>
+    [Fact]
+    public void DiscoverSqlSites_finds_only_the_sql_only_sites_and_reads_their_facts()
+    {
+        WriteSite("site-a", "a");
+        Directory.CreateDirectory(Path.Combine(_root, "site-db"));
+        File.WriteAllText(Path.Combine(_root, "site-db", "model.json"), """
+            { "rootName": "Orders", "server": "sql-prod-01", "catalog": "Orders",
+              "objects": [ {}, {}, {} ], "foreignKeys": [] }
+            """);
+
+        var sqlSites = SiteDiscovery.DiscoverSqlSites(_root, Path.Combine(_root, "site-landscape"));
+
+        var found = Assert.Single(sqlSites);
+        Assert.Equal("site-db", found.Id);
+        Assert.Equal("sql-prod-01", found.Server);
+        Assert.Equal("Orders", found.Catalog);
+        Assert.Equal(3, found.ObjectCount);
+    }
+
+    [Fact]
+    public void DiscoverSqlSites_ignores_ordinary_code_sites()
+    {
+        WriteSite("site-a", "a");
+
+        var sqlSites = SiteDiscovery.DiscoverSqlSites(_root, Path.Combine(_root, "site-landscape"));
+
+        Assert.Empty(sqlSites);
+    }
 }

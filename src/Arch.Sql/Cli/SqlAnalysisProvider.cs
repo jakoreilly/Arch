@@ -14,6 +14,7 @@ public sealed class SqlAnalysisProvider : IAnalysisProvider
     public string Id => "sql";
     public string Describes => "SQL scripts (*.sql)";
     public IReadOnlyDictionary<string, bool> KnownFlags => CliOptions.KnownFlags;
+    public IReadOnlySet<string> GateNames { get; } = Analysis.SqlCiGate.KnownGates.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     public Detection Detect(string sourcePath)
     {
@@ -29,5 +30,12 @@ public sealed class SqlAnalysisProvider : IAnalysisProvider
         var options = CliOptions.Parse(args, out _)
             ?? throw new InvalidOperationException("Arch.Cli passed unparseable args to SqlAnalysisProvider.Generate.");
         return Verbs.BuildAndGenerate(options).Model;
+    }
+
+    public IReadOnlyList<string> EvaluateGates(object? model, string[] args)
+    {
+        var options = CliOptions.Parse(args, out _);
+        if (options is null || options.FailOn.Count == 0 || model is not Model.SqlModel s) { return []; }
+        return Analysis.SqlCiGate.Evaluate(options.FailOn, Analysis.SqlScorecard.Build(s));
     }
 }

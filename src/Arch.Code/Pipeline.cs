@@ -88,7 +88,13 @@ public static class Pipeline
         var model = new ProjectModel
         {
             RootName = rootName,
-            SourcePath = options.SourcePath,
+            // --redact-source-path: publish only the root folder name, not the full absolute
+            // path, so a CI agent's working-directory layout (and a developer's username in a
+            // local run) never reaches a shared/published site. ContentHash already excludes
+            // SourcePath, so this cannot move a stored hash either way.
+            SourcePath = options.RedactSourcePath ? rootName : options.SourcePath,
+            // Never redacted: this is what the generator READS from, not what it publishes.
+            ScanRoot = options.SourcePath,
             Files = files,
             Projects = projects,
             Databases = databases,
@@ -107,6 +113,8 @@ public static class Pipeline
             UnattributedFileCount = CapabilityRollup.Unattributed(files, authored.Capabilities).Count,
             Endpoints = endpoints,
             DataAccess = dataAccess,
+            SchemaVersion = ProjectModel.CurrentSchemaVersion,
+            ToolVersion = typeof(ProjectModel).Assembly.GetName().Version?.ToString() ?? "",
         };
 
         // Last, over the finished model: the hash summarises everything above it, so it cannot be

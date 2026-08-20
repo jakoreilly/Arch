@@ -13,6 +13,7 @@ public sealed class CodeAnalysisProvider : IAnalysisProvider
     public string Id => "code";
     public string Describes => "source files (C#, TypeScript, Python, Go, Java, Rust, …)";
     public IReadOnlyDictionary<string, bool> KnownFlags => CliOptions.KnownFlags;
+    public IReadOnlySet<string> GateNames { get; } = CiGate.KnownGates.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     public Detection Detect(string sourcePath)
     {
@@ -38,5 +39,12 @@ public sealed class CodeAnalysisProvider : IAnalysisProvider
         var options = CliOptions.Parse(args, out _)
             ?? throw new InvalidOperationException("Arch.Cli passed unparseable args to CodeAnalysisProvider.Generate.");
         return Verbs.BuildAndGenerate(options).Model;
+    }
+
+    public IReadOnlyList<string> EvaluateGates(object? model, string[] args)
+    {
+        var options = CliOptions.Parse(args, out _);
+        if (options is null || options.FailOn.Count == 0 || model is not Graph.ProjectModel p) { return []; }
+        return CiGate.Evaluate(options.FailOn, ScorecardBuilder.Build(p));
     }
 }

@@ -1,6 +1,6 @@
 ---
 name: arch-verify
-description: Verify a change to the Arch repo — build, the 407-test suite, and the tools/golden.sh byte-identical-output net, including the stash/accept/pop protocol that keeps the golden baseline honest and the Arch.Cli end-to-end run that golden.sh structurally cannot see. Use before committing anything in this repo, and whenever generated site output might have changed (site.css, site.js, PageShell, any Site/Pages/*.cs, model.json fields).
+description: Verify a change to the Arch repo — build, the 623-test suite, and the tools/golden.sh byte-identical-output net (which now also runs a combined-mode Arch.Cli fixture and arch landscape, not just Arch.Code/Arch.Sql directly), including the stash/accept/pop protocol that keeps the golden baseline honest. Use before committing anything in this repo, and whenever generated site output might have changed (site.css, site.js, PageShell, any Site/Pages/*.cs, model.json fields).
 allowed-tools: Bash, PowerShell, Read, Edit, Grep, Glob
 ---
 
@@ -12,22 +12,28 @@ cannot**. Run all three.
 
 ```bash
 dotnet build Arch.slnx --nologo        # expect 0 warnings, 0 errors
-dotnet test  Arch.slnx --nologo        # expect 407 passed, 0 failed  (~90s, not a hang)
+dotnet test  Arch.slnx --nologo        # expect 623 passed, 0 failed  (~90s, not a hang)
 bash tools/golden.sh                   # expect GOLDEN OK
 ```
 
-`dotnet test` takes ~90 seconds — 209 of those tests are the code analyzer's. That is
+`dotnet test` takes ~90 seconds — most of those tests are the code analyzer's. That is
 normal, not a hang. A "file is locked" build failure is environmental (a running exe or
 IDE holds the output); close it and rebuild.
 
 ## golden/ does not survive a clone
 
-It is deliberately gitignored — 81 generated HTML files would make every future diff
-unreadable. After a fresh clone there is no baseline at all:
+It is deliberately gitignored — 173 generated HTML/JSON files (code + sql + a combined-
+mode Arch.Cli run + a landscape run) would make every future diff unreadable. After a
+fresh clone there is no baseline at all:
 
 ```bash
-bash tools/golden.sh accept   # expect "golden accepted: 81 files"
+bash tools/golden.sh accept   # expect "golden accepted: 173 files"
 ```
+
+`tools/golden.sh` also has a CI-portable `manifest` / `manifest-check` mode — a committed
+`tools/golden.manifest` (one `<sha256> <path>` line per file, LF-normalised before
+hashing) instead of the whole `golden/` tree — used by the two-OS CI matrix
+(`.github/workflows/ci.yml`), since `golden/` itself only ever exists locally.
 
 Accept it **on a clean commit, before changing anything**, or the baseline is worthless.
 
@@ -74,26 +80,23 @@ happy, and the failure would have surfaced months later on someone else's clone.
 grep -rl "Documents.Code.Arch" golden    # MUST print nothing
 ```
 
-## The layer golden.sh cannot see
+## Arch.Cli is no longer a blind spot — but read this before assuming it's fully covered
 
-`tools/golden.sh` runs `Arch.Code` and `Arch.Sql` **directly**. It never runs `Arch.Cli`.
-Those are different binaries with different settings — notably `Arch.Cli` must run
-`InvariantGlobalization=false` because it hosts `Arch.Sql`, while the other two force
-invariant. A real culture-dependent formatting bug (`:P0` rendering `"75 %"` instead of
-`"75%"`) sat exposed through all of Phase 5 with `golden.sh` green and `dotnet test`
-green, because nothing compared cross-process output.
+`tools/golden.sh` used to run only `Arch.Code` and `Arch.Sql` **directly**, never
+`Arch.Cli`. It now also runs a third fixture (`CrossLink/ShopTest`, both a `.csproj` and a
+`.sql` file) through `src/Arch.Cli/Arch.Cli.csproj` in combined mode — exercising
+`Runner.cs`, `HubPage`, `CrossLink`, `DedupeVendorAssets` — plus a fourth run of
+`arch landscape` over the results. So a real change to any of those IS now caught by
+`bash tools/golden.sh` like everything else.
 
-So if you touched anything that formats numbers, dates, or percentages — or added a
-project — also run:
-
-```bash
-dotnet run --project src/Arch.Cli -- tests/Arch.Code.Tests/Fixtures/SampleRepo \
-  --out work/check --no-open
-diff -r --strip-trailing-cr work/check golden/code
-```
-
-Expect differences **only** in the timestamp and absolute-path lines (golden's
-`normalise()` does not run on `work/check`). Anything else is a real divergence.
+What this still does not give you: `Arch.Cli` runs with `InvariantGlobalization=false`
+(it hosts `Arch.Sql`), while `Arch.Code`/`Arch.Sql` standalone force invariant — and this
+machine's own locale is still whatever it is on every run, so a culture-dependent
+formatting bug (`:P0` rendering `"75 %"` instead of `"75%"`) only shows up here if this
+machine's culture would actually produce the difference. A real fix for that needs a
+non-English-locale run, which `golden.sh` does not attempt. If you touched anything that
+formats numbers, dates, or percentages, that risk is still yours to reason about
+separately — the fixture coverage gap is closed, the locale-coverage gap is not.
 
 ## The fixture path trap
 

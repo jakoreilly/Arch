@@ -21,8 +21,11 @@ src/Arch.Core/    Html, Crumbs, PageShell, Glossary, SiteAssets, ModelJson,
                     IAnalysisProvider/Detection, and the shared assets (site.css/js)
 src/Arch.Code/    namespace Arch.Code.*, assets-code overlay
 src/Arch.Sql/     namespace Arch.Sql.*,  assets-sql overlay
+src/Arch.Sql.Format/     dependency-free T-SQL formatter, packaged standalone as sqlfmt-tsql
+src/Arch.Sql.Format.Cli/ the sqlfmt-tsql dotnet tool
 src/Arch.Cli/     the unified exe: Entry (the verb table), Runner, HubPage, CrossLink
-tests/            Arch.Code.Tests (289), Arch.Sql.Tests (183), Arch.Cli.Tests (22)
+tests/            Arch.Code.Tests (365), Arch.Sql.Tests (185), Arch.Cli.Tests (57),
+                    Arch.Sql.Format.Tests (16)
 tools/golden.sh   the byte-identical-output regression net
 ```
 
@@ -42,13 +45,17 @@ of truth instead.
 
 ```bash
 dotnet build Arch.slnx --nologo     # 0 warnings, 0 errors
-dotnet test  Arch.slnx --nologo     # 494 passed (~90s — not a hang)
+dotnet test  Arch.slnx --nologo     # 623 passed (~90s — not a hang)
 bash tools/golden.sh                # GOLDEN OK
 bash tools/golden.sh accept         # re-baseline (golden/ is gitignored; regenerate after a clone)
 ```
 
 **Use the `arch-verify` skill before committing.** Golden has a protocol — never accept a
-baseline on top of the change you are verifying — and it cannot see `Arch.Cli` at all.
+baseline on top of the change you are verifying. `tools/golden.sh` now also runs a combined-mode
+`Arch.Cli` fixture and `arch landscape` over the results (`cli`/`landscape` runs), so it is no
+longer blind to `Runner.cs`, `HubPage`, `CrossLink`, or the landscape join — check
+`tools/golden.sh`'s own header comment for the current mode list (`check` / `accept` /
+`manifest` / `manifest-check`) before assuming it still can't.
 
 **Use the `arch-site-design` skill before touching generated markup or styling.**
 

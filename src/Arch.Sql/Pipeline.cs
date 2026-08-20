@@ -88,7 +88,11 @@ public static class Pipeline
         var model = new SqlModel
         {
             RootName = rootName,
-            SourcePath = options.SourcePath,
+            // --redact-source-path: see the matching comment on Arch.Code's Pipeline. For a
+            // `connect` run, options.SourcePath is already just the database name (ConnectOptions
+            // sets SourcePath = dbName, never a filesystem path), so this only changes anything
+            // on the file-scan path.
+            SourcePath = options.RedactSourcePath ? rootName : options.SourcePath,
             Files = files,
             Objects = objects,
             ForeignKeys = foreignKeys,
@@ -99,6 +103,7 @@ public static class Pipeline
             Server = connServer,
             Catalog = connCatalog,
             SchemaVersion = SchemaVersions.Current,
+            ToolVersion = typeof(SqlModel).Assembly.GetName().Version?.ToString() ?? "",
         };
 
         model = DependencyResolver.Resolve(model);

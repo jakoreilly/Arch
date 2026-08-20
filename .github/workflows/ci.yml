@@ -1,0 +1,111 @@
+name: Build, test, and verify determinism
+
+# plan.md Phase 4: golden.sh's diff-based check only ever ran locally (golden/ is gitignored)
+# and never on Linux. tools/golden.manifest is the CI-portable form — a small, committable
+# <sha256> <path> list — checked here on both OSes so a Linux-specific regression (like the
+# Windows-only kernel32 hardlink path DedupeVendorAssets used to hit unguarded) cannot land
+# unnoticed just because pages.yml only ever ran on windows-latest.
+#
+# MERGE BLOCKING IS OPT-IN AND OFF BY DEFAULT. Every step below always RUNS and always
+# reports — but with blocking off a failure is an annotation plus a job-summary line and the
+# job still ends green, so this workflow cannot gate a merge. Turn it on once the signal has
+# been trusted for a while:
+#
+#   - permanently: repository variable ARCH_BLOCK_MERGE = "true"
+#     (Settings -> Secrets and variables -> Actions -> Variables)
+#   - for one run:  Run workflow -> "Block the merge on failure" = true
+#
+# Adding this job to branch protection as a required status check ALSO blocks merges,
+# independently of this switch: the knob controls whether the job goes red, not what the
+# repository does with a red job.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      block_merge:
+        description: "Block the merge on failure (fail the job instead of only annotating)"
+        type: boolean
+        default: false
+
+jobs:
+  build-test-verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      # The dispatch input wins on a manual run; otherwise the repository variable decides;
+      # unset means "false". Compared as a STRING everywhere below — a workflow_dispatch
+      # boolean and a repository variable arrive as different types, and 'true' is the only
+      # spelling both agree on.
+      BLOCK_MERGE: ${{ (github.event_name == 'workflow_dispatch' && inputs.block_merge) && 'true' || vars.ARCH_BLOCK_MERGE || 'false' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history — GitHistory.cs shells out to `git log` for evolution/hotspots
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.300"
+
+      - name: git safe.directory
+        shell: bash
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # continue-on-error is the inverse of BLOCK_MERGE on each gate step: with blocking off
+      # the step's outcome is still recorded (steps.<id>.outcome, read by Summary below), it
+      # just does not fail the job. `if: always()` on the later steps so one failure does not
+      # hide the others — seeing everything at once is the whole point of an advisory run.
+      - name: Build
+        id: build
+        continue-on-error: ${{ env.BLOCK_MERGE != 'true' }}
+        run: dotnet build Arch.slnx --nologo -c Release
+
+      - name: Test
+        id: test
+        if: always()
+        continue-on-error: ${{ env.BLOCK_MERGE != 'true' }}
+        run: dotnet test Arch.slnx --nologo -c Release --no-build
+
+      - name: Verify determinism against the committed manifest
+        id: determinism
+        if: always()
+        continue-on-error: ${{ env.BLOCK_MERGE != 'true' }}
+        shell: bash
+        run: bash tools/golden.sh manifest-check
+
+      # With blocking off a failed step leaves the job green, which is exactly how a real
+      # failure goes unnoticed for a month. This step is the compensating control: every
+      # outcome goes to the run summary and each failure raises a ::warning:: annotation, so
+      # the result is visible on the run page without being merge-blocking.
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### Arch CI (${{ matrix.os }})"
+            echo ""
+            echo "| step | outcome |"
+            echo "|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          failed=0
+          for entry in "Build:${{ steps.build.outcome }}" \
+                       "Test:${{ steps.test.outcome }}" \
+                       "Determinism:${{ steps.determinism.outcome }}"; do
+            name="${entry%%:*}"; outcome="${entry#*:}"
+            echo "| $name | $outcome |" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$outcome" = "failure" ]; then
+              failed=1
+              echo "::warning title=$name failed::Merge blocking is off (ARCH_BLOCK_MERGE is not 'true'), so this did not fail the job."
+            fi
+          done
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$failed" = "1" ]; then
+            echo "Merge blocking: **off** — the failures above did not fail this job. Set the repository variable \`ARCH_BLOCK_MERGE\` to \`true\` to make them blocking." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "All checks passed (merge blocking: \`$BLOCK_MERGE\`)." >> "$GITHUB_STEP_SUMMARY"
+          fi

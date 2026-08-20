@@ -334,6 +334,32 @@ which GitHub code scanning and similar dashboards ingest directly.
 `--baseline <model.json>` (SQL) and `arch sql diff` turn a previous run's `model.json`
 into a drift report — commit the baseline, diff each build against it.
 
+### Ready-made pipelines
+
+`templates/` holds three files. `arch-ci.sh` is a POSIX shell script that owns the whole
+contract — which flags to pass, what to do with each exit code, where the content hash goes.
+`arch.gitlab-ci.yml` and `arch.github-workflow.yml` are thin wrappers that do nothing except
+supply their own forge's coordinates and call it. Supporting a third CI system is about ten
+lines of its own YAML, not a reimplementation of the contract.
+
+Both wrappers take the same inputs:
+
+| Input | Default | What it does |
+|---|---|---|
+| `path` | `.` | Folder to analyse |
+| `fail_on` | `secrets,cycles` | Gate list; an empty string disables gating entirely |
+| `block_merge` | `false` | Whether a non-zero Arch result fails the job |
+| `extra_args` | `""` | Extra flags, word-split |
+
+**`block_merge` is off by default.** With it off a tripped gate still prints its reason, still
+uploads the site that explains it, and still writes the content hash — the job simply exits 0.
+Adding Arch to a pipeline is therefore never, by itself, a new merge gate. Turn it on per repo
+once that team has read a few real reports and agrees with them.
+
+The one place the two genuinely differ is the SARIF log. GitHub code scanning ingests it
+directly and annotates the pull-request diff; GitLab reads its own Code Quality shape and not
+SARIF, so there the same file is an artifact for a converter to pick up.
+
 ### Publishing only when something changed
 
 `model.json` carries a **`contentHash`** — a SHA-256 of the analysis — and one per file
