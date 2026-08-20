@@ -44,6 +44,12 @@ public sealed record SqlModel
     /// via ModelUpgrader. Appended LAST on every record so byte-identical round-tripping
     /// (reflection serialization preserves declaration order) is never disturbed by future fields.</summary>
     public int SchemaVersion { get; init; }
+
+    /// <summary>The Arch version that wrote this file. Informational only, for an estate
+    /// dashboard that wants to show which repos are on a stale toolchain — never branched on:
+    /// SchemaVersion above is the compatibility signal. "" on a model built before this field
+    /// existed. Matches the equivalent field on Arch.Code's ProjectModel.</summary>
+    public string ToolVersion { get; init; } = "";
 }
 
 /// <summary>One actor-&gt;target CRUD relationship. Ops is a subset of the letters "CRUD", or "?" for

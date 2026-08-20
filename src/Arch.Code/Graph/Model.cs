@@ -5,7 +5,25 @@ namespace Arch.Code.Graph;
 public sealed record ProjectModel
 {
     public required string RootName { get; init; }
+    /// <summary>The scan root as PUBLISHED — the full absolute path, or just the root folder
+    /// name under --redact-source-path. Rendered on the index page, in ARCHITECTURE.md and in
+    /// the wiki export, so it is what a reader of the site sees. NOT what the generator reads
+    /// source files from: see <see cref="SourceReadRoot"/>.</summary>
     public required string SourcePath { get; init; }
+    /// <summary>The real absolute scan root, never serialized. Exists because --redact-source-path
+    /// makes <see cref="SourcePath"/> a bare folder name, and FilePage still has to READ the
+    /// source off disk to render a snippet — with one field doing both jobs, turning redaction on
+    /// silently resolved a relative path against the process CWD, TryReadLines swallowed the
+    /// failure, and every snippet vanished with no diagnostic. Left empty by a model that came
+    /// back from JSON (arch from-model), which is why SourceReadRoot falls back.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string ScanRoot { get; init; } = "";
+    /// <summary>Where to read source from: the unredacted <see cref="ScanRoot"/> when the model
+    /// was built in this process, otherwise <see cref="SourcePath"/> — which is the absolute
+    /// path for any model.json written without --redact-source-path, so `arch from-model`
+    /// behaves exactly as it did before this split existed.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string SourceReadRoot => string.IsNullOrEmpty(ScanRoot) ? SourcePath : ScanRoot;
     public List<FileNode> Files { get; init; } = [];
     public List<CsprojInfo> Projects { get; init; } = [];
     public List<DbNode> Databases { get; init; } = [];
@@ -62,6 +80,35 @@ public sealed record ProjectModel
     /// <summary>Flattened DataAccessRef list across every file/type/method, for a
     /// whole-model view without walking the type tree. Additive.</summary>
     public List<DataAccessRef> DataAccess { get; init; } = [];
+
+    /// <summary>Contract version of this file's shape. Bumped only on a BREAKING change — a
+    /// removed or renamed field, or a new <c>required</c> member — never for a purely additive
+    /// one, since System.Text.Json already ignores unknown members and an older reader copes
+    /// fine with those. A federating consumer (arch landscape, a company-wide estate store)
+    /// reads this FIRST and refuses a newer major with a clear message naming both versions,
+    /// rather than failing deep inside deserialization on a missing required property, which
+    /// reads like file corruption rather than the ordinary version-skew situation it is.
+    ///
+    /// <para>Deliberately NO default initializer (bare <c>{ get; init; }</c>, defaulting to 0)
+    /// — matching the proven pattern on Arch.Sql's own SqlModel.SchemaVersion/SchemaVersions.
+    /// A default of <see cref="CurrentSchemaVersion"/> here would be wrong in exactly the case
+    /// this field exists for: System.Text.Json leaves a property at its C# initializer value
+    /// when the JSON is missing that key, so an OLD model.json (written before this field
+    /// existed) would silently deserialize claiming to BE the current version — defeating the
+    /// whole check. Absent-or-0 means version 1, not "unknown"; Pipeline.BuildModel always
+    /// stamps <see cref="CurrentSchemaVersion"/> explicitly on every model it builds, so this
+    /// bare default only ever shows up when reading someone else's older file.</para></summary>
+    public int SchemaVersion { get; init; }
+
+    /// <summary>The current contract version — the only place this number is written, so a
+    /// bump is one line and every writer/reader agrees automatically.</summary>
+    public const int CurrentSchemaVersion = 1;
+
+    /// <summary>The Arch version that wrote this file. Informational only, for an estate
+    /// dashboard that wants to show which repos are on a stale toolchain — never branched on:
+    /// <see cref="SchemaVersion"/> is the compatibility signal. "" on a model built before this
+    /// field existed.</summary>
+    public string ToolVersion { get; init; } = "";
 }
 
 /// <summary>One business capability: what a human asserted, plus what the scan actually found

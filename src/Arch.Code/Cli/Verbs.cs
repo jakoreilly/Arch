@@ -1,3 +1,4 @@
+using System.Globalization;
 using Arch.Code.Analysis;
 using Arch.Code.Diff;
 using Arch.Code.Graph;
@@ -60,9 +61,14 @@ internal static class Verbs
         ISet<string>? onlySet = only is null ? null
             : new HashSet<string>(only.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase);
         var sites = SiteDiscovery.Discover(parent, lOut, diags, onlySet);
-        Console.Error.WriteLine($"arch: landscape found {sites.Count} site(s) under {parent}");
-        var landscape = LandscapeModelBuilder.Build(sites) with { Diagnostics = diags };
-        var lIndex = LandscapeGenerator.Generate(landscape, lOut, 60, DateTime.Now.ToString("yyyy-MM-dd"), title);
+        // Phase 8: a SQL-only site (arch sql / archsql / arch connect) carries no ProjectModel to
+        // federate as a "site" the same way, but its own Server+Catalog can VERIFY a database a
+        // code site only knows by connection-string name — see LandscapeModelBuilder.BuildDatabases.
+        var sqlSites = SiteDiscovery.DiscoverSqlSites(parent, lOut, onlySet);
+        Console.Error.WriteLine($"arch: landscape found {sites.Count} site(s) under {parent}"
+            + (sqlSites.Count > 0 ? $" ({sqlSites.Count} SQL-only)" : ""));
+        var landscape = LandscapeModelBuilder.Build(sites, sqlSites) with { Diagnostics = diags };
+        var lIndex = LandscapeGenerator.Generate(landscape, lOut, 60, DateTime.UtcNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), title);
         Console.Error.WriteLine($"arch: landscape written to {lOut}");
 
         if (lOpen)
@@ -104,7 +110,7 @@ internal static class Verbs
 
         dOut = Path.GetFullPath(dOut ?? $"diff-{oldModel.RootName}-{newModel.RootName}", Directory.GetCurrentDirectory());
         var diffResult = ModelDiff.Compute(oldModel, newModel);
-        var dIndex = DiffReport.Write(diffResult, dOut, DateTime.Now.ToString("yyyy-MM-dd"));
+        var dIndex = DiffReport.Write(diffResult, dOut, DateTime.UtcNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         Console.Error.WriteLine($"arch: diff written to {dOut} "
             + $"({diffResult.AddedFiles.Count} added, {diffResult.RemovedFiles.Count} removed, {diffResult.ChangedFiles.Count} changed)");
 
@@ -146,7 +152,7 @@ internal static class Verbs
         catch (Exception ex) { Console.Error.WriteLine($"error: could not read model: {ex.Message}"); return 1; }
 
         fmOut = Path.GetFullPath(fmOut ?? $"site-{fmModel.RootName}", Directory.GetCurrentDirectory());
-        var fmOn = DateTime.Now.ToString("yyyy-MM-dd");
+        var fmOn = DateTime.UtcNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         // Source snippets are omitted: the model carries no source text, so a rebuilt-from-archive
         // site is faithful in every other respect. showComplexity is data-driven and stays on.
         var fmIndex = SiteGenerator.Generate(fmModel, fmOut, fmMax, fmOn, showComplexity: true, showSnippets: false, wiki: fmWiki);
@@ -173,7 +179,7 @@ internal static class Verbs
         Console.Error.WriteLine($"arch: {model.Files.Count} files, {model.Projects.Count} projects, " +
             $"{model.FileDependencies.Count} file links, {model.Calls.Count} call links, {model.Diagnostics.Count} diagnostics");
 
-        var generatedOn = DateTime.Now.ToString("yyyy-MM-dd");
+        var generatedOn = DateTime.UtcNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         var indexPath = SiteGenerator.Generate(model, options.OutDir, options.MaxNodes, generatedOn,
             options.ShowComplexity, options.ShowSnippets, options.Wiki);
         Console.Error.WriteLine($"arch: site written to {options.OutDir}");
