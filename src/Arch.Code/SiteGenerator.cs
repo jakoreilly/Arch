@@ -24,6 +24,13 @@ public static class SiteGenerator
         // copy.
         var ctx = SiteContext.Build(model);
 
+        // NAMING RULE: the title passed here, the last breadcrumb, and the page's label in
+        // PageTemplate.NavSections are the same string. They used to drift — packages.html was
+        // "Dependencies & Stack" in the sidebar, "External Dependencies" in the browser tab and
+        // "Packages" in the breadcrumb, three names for one page — and the tab title is how a
+        // reader finds their way back to a page from history or a crowded tab bar. A page's <h1>
+        // may still elaborate ("Method Call Graph" under a "Call Graph" nav entry): it has the
+        // width and the context that a 230px sidebar and a tab strip do not.
         WritePage(outDir, "index.html", "Overview", model, "index.html", "",
             Html.Crumbs((null, "Overview")),
             IndexPage.Body(ctx, maxNodes, generatedOn));
@@ -52,15 +59,15 @@ public static class SiteGenerator
             Html.Crumbs(("index.html", "Overview"), (null, "Dependency Direction")),
             LayeringPage.Body(model));
 
-        WritePage(outDir, "metrics.html", "Architecture Metrics", model, "metrics.html", "",
+        WritePage(outDir, "metrics.html", "Metrics", model, "metrics.html", "",
             Html.Crumbs(("index.html", "Overview"), (null, "Metrics")),
             MetricsPage.Body(ctx));
 
-        WritePage(outDir, "scorecard.html", "Architecture Scorecard", model, "scorecard.html", "",
+        WritePage(outDir, "scorecard.html", "Scorecard", model, "scorecard.html", "",
             Html.Crumbs(("index.html", "Overview"), (null, "Scorecard")),
             ScorecardPage.Body(model));
 
-        WritePage(outDir, "refactor.html", "Refactoring Backlog", model, "refactor.html", "",
+        WritePage(outDir, "refactor.html", "Refactoring", model, "refactor.html", "",
             Html.Crumbs(("index.html", "Overview"), (null, "Refactoring")),
             RefactorPage.Body(model));
 
@@ -76,8 +83,8 @@ public static class SiteGenerator
             Html.Crumbs(("index.html", "Overview"), (null, "Call Graph")),
             CallsPage.Body(model, maxNodes));
 
-        WritePage(outDir, "packages.html", "External Dependencies", model, "packages.html", "",
-            Html.Crumbs(("index.html", "Overview"), (null, "Packages")),
+        WritePage(outDir, "packages.html", "Dependencies & Stack", model, "packages.html", "",
+            Html.Crumbs(("index.html", "Overview"), (null, "Dependencies & Stack")),
             PackagesPage.Body(model));
 
         WritePage(outDir, "config.html", "Config & Secrets", model, "config.html", "",
@@ -88,7 +95,7 @@ public static class SiteGenerator
             Html.Crumbs(("index.html", "Overview"), (null, "Ops & Network")),
             OpsPage.Body(model));
 
-        WritePage(outDir, "hotspots.html", "Hotspots & Metrics", model, "hotspots.html", "",
+        WritePage(outDir, "hotspots.html", "Hotspots", model, "hotspots.html", "",
             Html.Crumbs(("index.html", "Overview"), (null, "Hotspots")),
             HotspotsPage.Body(ctx, showComplexity));
 
@@ -115,7 +122,11 @@ public static class SiteGenerator
         Parallel.ForEach(model.Files, file =>
         {
             var crumbs = Html.Crumbs(("../index.html", "Overview"), ("../structure.html", "Structure"), (null, file.RelPath));
-            var html = PageTemplate.Render(file.RelPath, model.RootName, "", "../", crumbs, FilePage.Body(ctx, file, maxNodes, showComplexity, showSnippets), navItems: null, sourceLink: model.SourceLink);
+            // activeHref "structure.html", not "": a file page is reached from Structure, and an
+            // empty activeHref left every nav entry unhighlighted, so drilling into a file lost
+            // all sense of place in the sidebar. Nav hrefs are relative and relRoot is applied
+            // separately, so the un-prefixed href is what matches here.
+            var html = PageTemplate.Render(file.RelPath, model.RootName, "structure.html", "../", crumbs, FilePage.Body(ctx, file, maxNodes, showComplexity, showSnippets), navItems: null, sourceLink: model.SourceLink);
             File.WriteAllText(Path.Combine(outDir, "files", file.Slug + ".html"), html, Utf8NoBom);
         });
 

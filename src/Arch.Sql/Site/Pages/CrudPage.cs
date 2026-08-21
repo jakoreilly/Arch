@@ -34,7 +34,17 @@ write tables, their operations appear here.</p>
         }
 
         var byId = ctx.ById;
-        sb.Append("""<input class="filter-input" type="search" data-filter-target="#crud-rows" placeholder="Filter by table or actor…" autocomplete="off" spellcheck="false"> <span class="filter-count"></span>""");
+
+        // "What writes to this table" is the question this page exists for, so the count of tables
+        // that are written at all — and of actors whose targets could not be resolved — belongs
+        // above the matrix, not inferred from scrolling it.
+        sb.Append(Ui.Tiles(
+            (entries.Select(e => e.Target).Distinct(StringComparer.Ordinal).Count().ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Tables touched"),
+            (entries.Select(e => e.Actor).Distinct(StringComparer.Ordinal).Count().ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Actors"),
+            (entries.Count(e => e.Ops.Contains('C') || e.Ops.Contains('U') || e.Ops.Contains('D')).ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Write relationships"),
+            (blindSpots.Count.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Unresolvable actors")));
+
+        sb.Append(Ui.FilterBox("#crud-rows", "Filter by table or actor…"));
 
         if (entries.Count == 0)
         {
@@ -42,7 +52,9 @@ write tables, their operations appear here.</p>
         }
         else
         {
-            sb.Append("""<table class="grid"><tr><th>Table</th><th>Actor</th><th>Ops</th><th>File</th></tr><tbody id="crud-rows">""");
+            // Was <table class="grid"> with a bare header <tr> and no <thead>, which is what kept
+            // this table unsortable: the sorter requires a thead/tbody pair and bails without one.
+            sb.Append("""<table class="grid sortable" data-page-size="100"><thead><tr><th>Table</th><th>Actor</th><th>Ops</th><th>File</th></tr></thead><tbody id="crud-rows">""");
             foreach (var e in entries.OrderBy(e => e.Target, StringComparer.Ordinal).ThenBy(e => e.Actor, StringComparer.Ordinal))
             {
                 var target = byId.GetValueOrDefault(e.Target);

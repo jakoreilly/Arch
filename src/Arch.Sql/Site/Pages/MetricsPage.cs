@@ -11,6 +11,21 @@ public static class MetricsPage
         sb.Append("<h1>Metrics</h1>");
         sb.Append("""<p class="lede">Coupling (fan-in/fan-out) and procedure complexity across the scanned schema.</p>""");
 
+        // The four figures the rest of the page ranks. Without them a reader has to read two
+        // top-15 tables and a cycle list to answer "is this schema tightly coupled or not".
+        var programmable = model.Objects.Where(o => o.Kind is "procedure" or "function" or "trigger").ToList();
+        var avgComplexity = programmable.Count == 0 ? 0d : programmable.Average(o => o.Cyclomatic);
+        // Computed once: the tile below reports the cycle count and AppendCycles lists the cycles
+        // themselves, and this is a strongly-connected-components pass over the whole graph.
+        var insight = Analysis.GraphInsights.Compute(model);
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        sb.Append(Ui.Tiles(
+            ((ctx.FanIn.Count == 0 ? 0 : ctx.FanIn.Values.Max()).ToString("N0", inv), "Highest fan-in"),
+            ((ctx.FanOut.Count == 0 ? 0 : ctx.FanOut.Values.Max()).ToString("N0", inv), "Highest fan-out"),
+            (avgComplexity.ToString("F1", inv), "Avg complexity"),
+            ((programmable.Count == 0 ? 0 : programmable.Max(o => o.Cyclomatic)).ToString("N0", inv), "Peak complexity"),
+            (insight.Cycles.Count.ToString("N0", inv), "Dependency cycles")));
+
         sb.Append("<div class=\"two-col\">");
         RankTable(sb, "Most depended-on (fan-in)", "Objects many other objects reference. Changes here ripple widest.", ctx.FanIn, ctx);
         RankTable(sb, "Most dependencies (fan-out)", "Objects that reference the most other objects.", ctx.FanOut, ctx);
@@ -20,21 +35,20 @@ public static class MetricsPage
         if (procs.Count > 0)
         {
             sb.Append("<h2>Most complex procedures / functions / triggers</h2>");
-            sb.Append($"""<table class="grid"><tr><th>Object</th><th>Cyclomatic {Glossary.Info("cyclomatic-sql")}</th></tr>""");
+            sb.Append($"""<table class="grid sortable"><thead><tr><th>Object</th><th>Cyclomatic {Glossary.Info("cyclomatic-sql")}</th></tr></thead><tbody>""");
             foreach (var o in procs)
             {
                 sb.Append($"""<tr><td><a href="object.html?id={Uri.EscapeDataString(o.Id)}">{Html.Encode(o.Schema)}.{Html.Encode(o.Name)}</a></td><td>{o.Cyclomatic}</td></tr>""");
             }
-            sb.Append("</table>");
+            sb.Append("</tbody></table>");
         }
 
-        AppendCycles(sb, ctx);
+        AppendCycles(sb, ctx, insight);
         return sb.ToString();
     }
 
-    private static void AppendCycles(StringBuilder sb, SiteContext ctx)
+    private static void AppendCycles(StringBuilder sb, SiteContext ctx, Analysis.GraphInsights.Insight insight)
     {
-        var insight = Analysis.GraphInsights.Compute(ctx.Model);
         sb.Append("<h2>Dependency cycles</h2>");
         sb.Append("""<p class="note">Groups of objects that transitively depend on each other (strongly-connected components). Cycles make change and testing harder — a change anywhere in the loop can ripple through all of it.</p>""");
         if (insight.Cycles.Count == 0)
@@ -61,12 +75,12 @@ public static class MetricsPage
     private static void RankTable(StringBuilder sb, string title, string blurb, Dictionary<string, int> counts, SiteContext ctx)
     {
         sb.Append($"<div><h2>{Html.Encode(title)}</h2><p class=\"note\">{Html.Encode(blurb)}</p>");
-        sb.Append("""<table class="grid"><tr><th>Object</th><th>Count</th></tr>""");
+        sb.Append("""<table class="grid sortable"><thead><tr><th>Object</th><th>Count</th></tr></thead><tbody>""");
         foreach (var (id, count) in counts.OrderByDescending(kv => kv.Value).Take(15))
         {
             if (!ctx.ById.TryGetValue(id, out var o)) { continue; }
             sb.Append($"""<tr><td><a href="object.html?id={Uri.EscapeDataString(o.Id)}">{Html.Encode(o.Schema)}.{Html.Encode(o.Name)}</a></td><td>{count}</td></tr>""");
         }
-        sb.Append("</table></div>");
+        sb.Append("</tbody></table></div>");
     }
 }

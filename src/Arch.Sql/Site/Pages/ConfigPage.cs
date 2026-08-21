@@ -17,12 +17,17 @@ public static class ConfigPage
             return sb.ToString();
         }
 
-        sb.Append("""<table class="grid"><tr><th>File</th><th>Finding</th></tr>""");
+        sb.Append(Ui.Tiles(
+            (withCred.Count.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Files with a credential"),
+            (ctx.Model.Files.Count.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Files scanned")));
+
+        sb.Append("""<table class="grid sortable"><thead><tr><th>File</th><th>Finding</th></tr></thead><tbody>""");
         foreach (var f in withCred)
         {
             sb.Append($"""<tr><td><a href="files/{f.Slug}.html">{Html.Encode(f.RelPath)}</a></td><td><span class="badge warn">Credential in DDL</span></td></tr>""");
         }
-        sb.Append("</table>");
+        sb.Append("</tbody></table>");
+        sb.Append("""<p class="note">Only the fact and the location are reported. Arch never copies a credential value into any generated file — open the listed file in your own editor to see it.</p>""");
         return sb.ToString();
     }
 }

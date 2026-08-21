@@ -23,6 +23,19 @@ schema affects every site marked below.</p>
             return sb.ToString();
         }
 
+        // The point of this page in one row of figures: how much of the estate's data layer is
+        // shared, and how much of that sharing is confirmed rather than name-matched.
+        sb.Append(Ui.Tiles(
+            (model.Databases.Count.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Databases"),
+            (model.Databases.Count(d => d.SiteIds.Count >= 2).ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Shared by 2+ sites"),
+            (model.Databases.Count(d => d.Verified).ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Verified matches"),
+            (model.Sites.Count.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Sites in this estate")));
+
+        // One column per site, so this table grows sideways with the estate and was the one wide
+        // table on the landscape site with nothing to scroll it — past a handful of sites it pushed
+        // the whole page horizontally. .matrix-wrap is the existing container for exactly this
+        // (see ModulesPage's coupling matrix).
+        sb.Append("<div class=\"matrix-wrap\">");
         sb.Append("<table class=\"grid\"><thead><tr><th>Database</th><th>Server</th><th>Catalog</th>");
         foreach (var s in model.Sites) { sb.Append($"<th>{Html.Encode(s.Id)}</th>"); }
         sb.Append("</tr></thead><tbody>");
@@ -40,11 +53,20 @@ schema affects every site marked below.</p>
             sb.Append($"<tr><td>{Html.Encode(db.Label)}{shared}{verified}</td><td>{Html.Encode(db.Server)}</td><td>{Html.Encode(db.Catalog)}</td>");
             foreach (var s in model.Sites)
             {
-                sb.Append(db.SiteIds.Contains(s.Id) ? "<td style=\"text-align:center\">✓</td>" : "<td></td>");
+                // The bare ✓ carried the whole meaning of the cell visually and announced as
+                // "check mark" with no subject to a screen reader, since the column header is a
+                // site id in a matrix. The sr-only span names what the tick asserts.
+                sb.Append(db.SiteIds.Contains(s.Id)
+                    ? $"<td style=\"text-align:center\"><span class=\"sr-only\">Used by {Html.Encode(s.Id)}</span>✓</td>"
+                    : "<td></td>");
             }
             sb.Append("</tr>");
         }
-        sb.Append("</tbody></table>");
+        sb.Append("</tbody></table></div>");
+        sb.Append("<p class=\"note\">A <span class=\"badge\">shared</span> database is named by two or more sites. "
+                + "A <span class=\"badge ok\">verified match</span> was additionally confirmed against a SQL site's own "
+                + "server + catalog in this estate; everything else is a name match, not proof that two sites reach the "
+                + "same physical instance.</p>");
         return sb.ToString();
     }
 }

@@ -1,5 +1,6 @@
 using System.Text;
 using Arch.Sql.Analysis;
+using Arch.Sql.Model;
 
 namespace Arch.Sql.Site.Pages;
 
@@ -32,17 +33,34 @@ a file scan or a login without the needed permission leaves this page empty.</p>
             return sb.ToString();
         }
 
-        AppendHeaps(sb, ctx);
-        AppendDuplicates(sb, ctx);
-        AppendUnused(sb, ctx);
+        // Each of these walks the whole index catalog, and the KPI row needs exactly the counts
+        // the sections below go on to print — so compute once here and thread them through
+        // rather than having tile and section each run the analysis. UnusedIndexes keeps the
+        // Runtime.Available guard both callers already applied.
+        var heaps = IndexAnalysis.Heaps(model);
+        var duplicates = IndexAnalysis.DuplicateIndexes(model);
+        List<IndexAnalysis.UnusedIndex> unused = model.Runtime.Available ? IndexAnalysis.UnusedIndexes(model) : [];
+
+        // Four sections, four figures, above them — this page used to open straight into "Heap
+        // tables" with no indication of whether the other three sections held anything, so a
+        // reader had to scroll past three empty states to find out there was nothing to do.
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        sb.Append(Ui.Tiles(
+            (heaps.Count.ToString("N0", inv), "Heap tables"),
+            (duplicates.Count.ToString("N0", inv), "Duplicate / overlapping"),
+            (model.Runtime.Available ? unused.Count.ToString("N0", inv) : "—", "Never read"),
+            (model.Objects.Where(o => o.Kind == "table").Sum(o => o.RowCount).ToString("N0", inv), "Rows across all tables")));
+
+        AppendHeaps(sb, ctx, heaps);
+        AppendDuplicates(sb, ctx, duplicates);
+        AppendUnused(sb, ctx, unused);
         AppendLargestTables(sb, ctx);
         return sb.ToString();
     }
 
-    private static void AppendHeaps(StringBuilder sb, SiteContext ctx)
+    private static void AppendHeaps(StringBuilder sb, SiteContext ctx, List<DbObject> heaps)
     {
         sb.Append("<h2>Heap tables (no clustered index)</h2>");
-        var heaps = IndexAnalysis.Heaps(ctx.Model);
         if (heaps.Count == 0)
         {
             sb.Append("""<div class="panel empty-state"><p>No heap tables found — every table with a recorded index has a clustered one.</p></div>""");
@@ -56,10 +74,9 @@ a file scan or a login without the needed permission leaves this page empty.</p>
         sb.Append("</tbody></table>");
     }
 
-    private static void AppendDuplicates(StringBuilder sb, SiteContext ctx)
+    private static void AppendDuplicates(StringBuilder sb, SiteContext ctx, List<IndexAnalysis.DuplicatePair> pairs)
     {
         sb.Append("<h2>Duplicate / overlapping indexes</h2>");
-        var pairs = IndexAnalysis.DuplicateIndexes(ctx.Model);
         if (pairs.Count == 0)
         {
             sb.Append("""<div class="panel empty-state"><p>No duplicate or overlapping indexes found.</p></div>""");
@@ -75,7 +92,7 @@ a file scan or a login without the needed permission leaves this page empty.</p>
         sb.Append("</tbody></table>");
     }
 
-    private static void AppendUnused(StringBuilder sb, SiteContext ctx)
+    private static void AppendUnused(StringBuilder sb, SiteContext ctx, List<IndexAnalysis.UnusedIndex> unused)
     {
         sb.Append("<h2>Unused indexes</h2>");
         if (!ctx.Model.Runtime.Available)
@@ -83,7 +100,6 @@ a file scan or a login without the needed permission leaves this page empty.</p>
             sb.Append("""<div class="panel empty-state"><p>Unused-index detection needs runtime data from a live connection with the required permission.</p></div>""");
             return;
         }
-        var unused = IndexAnalysis.UnusedIndexes(ctx.Model);
         if (unused.Count == 0)
         {
             sb.Append("""<div class="panel empty-state"><p>No unused indexes found.</p></div>""");

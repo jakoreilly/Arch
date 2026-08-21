@@ -15,6 +15,19 @@ another, and which methods call across site boundaries. Cross-service calls are 
 type name), so treat them as leads rather than proof.</p>
 """);
 
+        // Two sections that are each often empty, so the counts go first: "0 package edges, 0 calls"
+        // is a finding about the estate, and a reader should not have to scroll two empty states to
+        // reach it.
+        sb.Append(Ui.Tiles(
+            (model.PackageEdges.Count.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Package edges"),
+            (model.ServiceCalls.Count.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Cross-service links"),
+            (model.ServiceCalls.Sum(c => c.Count).ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Cross-service calls"),
+            (model.ServiceCalls.Select(c => c.FromSiteId)
+                 .Concat(model.ServiceCalls.Select(c => c.ToSiteId))
+                 .Concat(model.PackageEdges.Select(e => e.FromSiteId))
+                 .Concat(model.PackageEdges.Select(e => e.ToSiteId))
+                 .Distinct(StringComparer.Ordinal).Count().ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Sites involved")));
+
         sb.Append("<h2>Package dependencies</h2>");
         if (model.PackageEdges.Count == 0)
         {
