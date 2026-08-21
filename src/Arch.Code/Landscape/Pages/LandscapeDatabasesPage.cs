@@ -57,7 +57,7 @@ schema affects every site marked below.</p>
                 // "check mark" with no subject to a screen reader, since the column header is a
                 // site id in a matrix. The sr-only span names what the tick asserts.
                 sb.Append(db.SiteIds.Contains(s.Id)
-                    ? $"<td style=\"text-align:center\"><span class=\"sr-only\">Used by {Html.Encode(s.Id)}</span>✓</td>"
+                    ? $"<td style=\"text-align:center\"><span class=\"sr-only\">Used by {Html.Encode(s.Id)}</span><span aria-hidden=\"true\">✓</span></td>"
                     : "<td></td>");
             }
             sb.Append("</tr>");
