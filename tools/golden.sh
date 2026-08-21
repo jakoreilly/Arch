@@ -62,6 +62,13 @@ normalise() {
   # the three $esc_* patterns above match. Left alone, the developer's home directory survives
   # normalisation and gets hashed into tools/golden.manifest — which then only ever matches on
   # the one machine that generated it. Same shape as the "ref" and "toolVersion" clauses.
+  # The branch name reaches the output a second time, as prose rather than as a field.
+  # GitRemote.Detect's diagnostic ("Source links point at <base> (<ref>), derived from the
+  # git remote") lands in model.json's diagnostics array AND in the Overview page's
+  # diagnostics panel; neither is a "ref": "..." field, so the two ref clauses below sail
+  # straight past it. Left alone the CURRENT BRANCH NAME gets hashed into the committed
+  # tools/golden.manifest, and `manifest-check` then fails for everyone not standing on the
+  # branch the manifest happened to be generated from — CI on master first of all.
   find "$dir" -type f \( -name '*.html' -o -name '*.xhtml' -o -name '*.json' \
                       -o -name '*.md' -o -name '*.js' \) -print0 |
     while IFS= read -r -d '' f; do
@@ -75,6 +82,7 @@ normalise() {
         -e 's#"totalCommits": [0-9]\{1,\}#"totalCommits": <COMMITS>#g' \
         -e 's#"ref": "[^"]*"#"ref": "<REF>"#g' \
         -e 's#"ref":"[^"]*"#"ref":"<REF>"#g' \
+        -e 's#\(Source links point at [^ )]*\) ([^)]*)#\1 (<REF>)#g' \
         -e 's#"toolVersion": "[^"]*"#"toolVersion": "<TOOL>"#g' \
         -e 's#"toolVersion":"[^"]*"#"toolVersion":"<TOOL>"#g' \
         -e 's#<div class="num">[0-9]\{1,\}</div><div class="lbl">Commits in history</div>#<div class="num">\&lt;COMMITS\&gt;</div><div class="lbl">Commits in history</div>#g' \
@@ -147,7 +155,10 @@ if [ "$MODE" = "manifest-check" ]; then
       rel="${f#"$WORK"/}"
       printf '%s  %s\n' "$(tr -d '\r' < "$f" | sha256sum | cut -d' ' -f1)" "$rel"
     done | LC_ALL=C sort -k2 > "$ACTUAL"
-  if diff tools/golden.manifest "$ACTUAL"; then
+  # --strip-trailing-cr as a second line of defence behind the eol=lf pin in .gitattributes:
+  # this file is regenerated with LF, and a CRLF checkout of the committed copy would
+  # otherwise report all 173 lines as changed.
+  if diff --strip-trailing-cr tools/golden.manifest "$ACTUAL"; then
     echo "GOLDEN OK (manifest)"
     exit 0
   else

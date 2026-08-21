@@ -798,6 +798,10 @@
         group.hidden = !any;
       });
       if (countEl) { countEl.textContent = q.length === 0 ? "" : visible + " of " + total + " shown"; }
+      // Tell any paginated table over these rows to re-page against the new match set. Without
+      // this, a match beyond the page boundary keeps the inline display:none pagination gave it
+      // and stays invisible even though it was counted above.
+      document.dispatchEvent(new CustomEvent("arch:filtered"));
     });
   });
 
@@ -2112,7 +2116,14 @@
       // With no page size the table isn't paginated; leave row visibility alone so a co-located
       // filter (.filter-input) that hides non-matching rows is not overridden on sort.
       if (pageSize <= 0) { return; }
-      var all = rows();
+      // Position is counted among the rows the FILTER left visible, not the raw DOM index.
+      // Pagination hides with an inline display and the filter hides with the [hidden]
+      // attribute; inline style wins, so indexing by DOM position meant a filter match
+      // sitting past the page boundary kept the display:none pagination gave it on load and
+      // never appeared — while .filter-count still counted it as shown. Filtering also
+      // re-runs this (see the arch:filtered listener below) so "Show all (N more)" describes
+      // the match set rather than the whole table.
+      var all = rows().filter(function (tr) { return !tr.hidden; });
       all.forEach(function (tr, i) {
         tr.style.display = (showingAll || i < pageSize) ? "" : "none";
       });
@@ -2140,10 +2151,15 @@
     headers.forEach(function (th, idx) {
       th.classList.add("sortable-th");
       th.setAttribute("tabindex", "0");
-      // role + aria-sort: the sort state was carried only by a CSS ::after arrow and a colour
-      // change, so a screen reader had no way to know a column was sorted, or which way.
-      th.setAttribute("role", "button");
+      // aria-sort: the sort state was carried only by a CSS ::after arrow and a colour change,
+      // so a screen reader had no way to know a column was sorted, or which way.
+      // Deliberately NOT role="button" — that replaces <th>'s implicit columnheader role,
+      // which is both what associates this header with its column's cells and the only role
+      // aria-sort is defined for, so setting it silenced the very announcement it was added
+      // to provide. tabindex plus the keydown handler below make the header operable without
+      // touching its role, and the title gives the affordance a discoverable name.
       th.setAttribute("aria-sort", "none");
+      th.title = "Sort by this column";
       var dir = 1;
       function sort() {
         var all = rows();
@@ -2162,6 +2178,14 @@
       }
       th.addEventListener("click", sort);
       th.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); sort(); } });
+    });
+
+    // A co-located .filter-input has just changed which rows are visible, so the page window
+    // has to be recomputed over what survived. Collapsing back to the first page is the right
+    // default: the user narrowed the set to look at the top of it.
+    document.addEventListener("arch:filtered", function () {
+      showingAll = false;
+      applyPagination();
     });
 
     applyPagination();

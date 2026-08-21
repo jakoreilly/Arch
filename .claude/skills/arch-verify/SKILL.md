@@ -1,6 +1,6 @@
 ---
 name: arch-verify
-description: Verify a change to the Arch repo — build, the 623-test suite, and the tools/golden.sh byte-identical-output net (which now also runs a combined-mode Arch.Cli fixture and arch landscape, not just Arch.Code/Arch.Sql directly), including the stash/accept/pop protocol that keeps the golden baseline honest. Use before committing anything in this repo, and whenever generated site output might have changed (site.css, site.js, PageShell, any Site/Pages/*.cs, model.json fields).
+description: Verify a change to the Arch repo — build, the 630-test suite, and the tools/golden.sh byte-identical-output net (which now also runs a combined-mode Arch.Cli fixture and arch landscape, not just Arch.Code/Arch.Sql directly), including the stash/accept/pop protocol that keeps the golden baseline honest. Use before committing anything in this repo, and whenever generated site output might have changed (site.css, site.js, PageShell, any Site/Pages/*.cs, model.json fields).
 allowed-tools: Bash, PowerShell, Read, Edit, Grep, Glob
 ---
 
@@ -12,7 +12,7 @@ cannot**. Run all three.
 
 ```bash
 dotnet build Arch.slnx --nologo        # expect 0 warnings, 0 errors
-dotnet test  Arch.slnx --nologo        # expect 623 passed, 0 failed  (~90s, not a hang)
+dotnet test  Arch.slnx --nologo        # expect 630 passed, 0 failed  (~90s, not a hang)
 bash tools/golden.sh                   # expect GOLDEN OK
 ```
 

@@ -12,7 +12,7 @@ public static class GuidePage
         ("er.html", "ER Diagram", "Tables and their foreign-key relationships."),
         ("relationships.html", "Relationships", "Likely relationships between tables inferred from column-naming patterns rather than declared foreign keys — a lead to confirm, not a fact."),
         ("dependencies.html", "Dependencies", "Which objects reference which — procedures calling procedures, views selecting from tables, and so on."),
-        ("graph.html", "3D Graph", "The whole schema as an interactive force-directed 3D graph; click a node to focus its neighbourhood."),
+        ("graph.html", "Graph (3D)", "The whole schema as an interactive force-directed 3D graph; click a node to focus its neighbourhood."),
         ("crud.html", "CRUD Matrix", "Which procedures/triggers/views Create, Read, Update or Delete each table."),
         ("lint.html", "Lint", "SonarQube-style findings: security, correctness, performance and maintainability issues."),
         ("scorecard.html", "Scorecard", "A worst-wins health grade across the same signals as Lint, at a glance."),
@@ -51,8 +51,8 @@ schema in the <a href="graph.html">3D Graph</a>.</p>
 
 <h2>What each page shows</h2>
 <table class="grid">
-<tr><th>Page</th><th>What it shows</th></tr>
-{{rows}}
+<thead><tr><th>Page</th><th>What it shows</th></tr></thead>
+<tbody>{{rows}}</tbody>
 </table>
 
 <h2>How this site was built</h2>

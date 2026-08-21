@@ -38,7 +38,7 @@ public static class SiteGenerator
         WritePage(outDir, "er.html", "ER Diagram", model, "er.html", "", Html.Crumbs((null, "ER Diagram")), ErPage.Body(ctx, maxNodes), searchIndexHtml);
         WritePage(outDir, "relationships.html", "Relationships", model, "relationships.html", "", Html.Crumbs((null, "Relationships")), RelationshipsPage.Body(ctx, maxNodes), searchIndexHtml);
         WritePage(outDir, "dependencies.html", "Dependencies", model, "dependencies.html", "", Html.Crumbs((null, "Dependencies")), DependenciesPage.Body(ctx, maxNodes), searchIndexHtml);
-        WritePage(outDir, "graph.html", "3D Graph", model, "graph.html", "", Html.Crumbs((null, "3D Graph")), GraphPage.Body(ctx), graph3dScripts);
+        WritePage(outDir, "graph.html", "Graph (3D)", model, "graph.html", "", Html.Crumbs((null, "Graph (3D)")), GraphPage.Body(ctx), graph3dScripts);
         WritePage(outDir, "crud.html", "CRUD Matrix", model, "crud.html", "", Html.Crumbs((null, "CRUD Matrix")), Pages.CrudPage.Body(ctx), searchIndexHtml);
         WritePage(outDir, "impact.html", "Impact", model, "impact.html", "", Html.Crumbs((null, "Impact")), Pages.ImpactPage.Body(ctx), searchIndexHtml);
         WritePage(outDir, "lint.html", "Lint", model, "lint.html", "", Html.Crumbs((null, "Lint")), LintPage.Body(ctx), searchIndexHtml);
@@ -48,7 +48,7 @@ public static class SiteGenerator
         WritePage(outDir, "indexes.html", "Indexes", model, "indexes.html", "", Html.Crumbs((null, "Indexes")), IndexesPage.Body(ctx), searchIndexHtml);
         WritePage(outDir, "drift.html", "Schema Diff", model, "drift.html", "", Html.Crumbs((null, "Schema Diff")), DriftPage.Body(drift), searchIndexHtml);
         WritePage(outDir, "config.html", "Config & Secrets", model, "config.html", "", Html.Crumbs((null, "Config & Secrets")), ConfigPage.Body(ctx), searchIndexHtml);
-        WritePage(outDir, "object.html", "Object", model, "", "", Html.Crumbs(("objects.html", "Objects"), (null, "Object")), Pages.ObjectPage.Body(), graphPayloadScripts);
+        WritePage(outDir, "object.html", "Object", model, "objects.html", "", Html.Crumbs(("objects.html", "Objects"), (null, "Object")), Pages.ObjectPage.Body(), graphPayloadScripts);
 
         Directory.CreateDirectory(Path.Combine(outDir, "files"));
         var fileSearchIndexHtml = SearchIndex.ScriptSrc("../");
@@ -58,7 +58,7 @@ public static class SiteGenerator
         Parallel.ForEach(model.Files, file =>
         {
             var crumbs = Html.Crumbs(("../objects.html", "Objects"), (null, file.RelPath));
-            var html = PageTemplate.Render(file.RelPath, model.RootName, "", "../", crumbs, ObjectFilePage.Body(ctx, file), fileSearchIndexHtml);
+            var html = PageTemplate.Render(file.RelPath, model.RootName, "objects.html", "../", crumbs, ObjectFilePage.Body(ctx, file), fileSearchIndexHtml);
             File.WriteAllText(Path.Combine(outDir, "files", file.Slug + ".html"), html, Utf8NoBom);
         });
 

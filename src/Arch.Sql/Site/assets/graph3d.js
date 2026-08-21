@@ -41,8 +41,17 @@
     }
     return schemaColor[f];
   }
-  var KIND_COLORS = { table: "#2f6fab", view: "#b7791f", procedure: "#6b46c1", function: "#2e7d32", trigger: "#c0392b" };
-  function colorForKind(k) { return KIND_COLORS[k] || "#8a8a8a"; }
+  // Tokens, not literals — the kind palette was five hardcoded light-theme hexes, so switching
+  // to the dark theme re-themed the background and the edges (linkColor already reads tokens)
+  // and left the nodes on their light values. The MutationObserver at the bottom of this file
+  // re-runs applyChannels on a theme change, so reading the tokens here is all it takes for the
+  // nodes to follow, and for the swatch legend on the page (which names the same tokens) to keep
+  // telling the truth in both themes.
+  var KIND_TOKENS = { table: "--cat-1", view: "--cat-2", procedure: "--diagram-db", function: "--ok", trigger: "--danger" };
+  function colorForKind(k) {
+    var token = KIND_TOKENS[k];
+    return (token && cssVar(token)) || MUTED() || "#8a8a8a";
+  }
 
   var hopsEl = document.getElementById("g3d-hops");
   var hopsValEl = document.getElementById("g3d-hops-val");

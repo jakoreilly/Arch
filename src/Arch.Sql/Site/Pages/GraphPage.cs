@@ -11,15 +11,29 @@ public static class GraphPage
     {
         if (ctx.Model.Objects.Count == 0)
         {
-            return """
-<h1>3D Graph</h1>
-<div class="panel empty-state"><div class="big">🕸</div><p>No schema objects were found, so there is
-nothing to plot. See <a href="objects.html">Objects</a>.</p></div>
-""";
+            return "<h1>Graph (3D)</h1>"
+                 + Ui.EmptyState("🕸", "No schema objects were found, so there is nothing to plot. "
+                                    + "See <a href=\"objects.html\">Objects</a>.");
         }
 
-        return """
-<h1>3D Graph</h1>
+        // Swatch legend rather than the sentence of prose this page used to end with ("table blue,
+        // view amber, procedure purple…"). Prose makes the reader hold a colour name in their head
+        // and match it against a canvas by eye; a swatch is the comparison. The tokens named here
+        // are the same ones graph3d.js's KIND_TOKENS reads, so the two cannot drift, and both
+        // follow a theme switch.
+        var kindLegend = Ui.SwatchLegend("What the node colours mean (Kind)", true,
+            ("--cat-1", "Table"),
+            ("--cat-2", "View"),
+            ("--diagram-db", "Procedure"),
+            ("--ok", "Function"),
+            ("--danger", "Trigger"));
+        var edgeLegend = Ui.SwatchLegend("What the edge colours mean", false,
+            ("--warn", "Write (insert / update / delete)"),
+            ("--danger", "Cascading foreign key"),
+            ("--accent", "Other reference"));
+
+        return $$"""
+<h1>Graph (3D)</h1>
 <p class="lede">The whole schema as an interactive 3D force graph. Drag to orbit, scroll to zoom,
 click a node to focus its neighbourhood and fly to it (Esc or background click clears). Node size is
 fan-in + fan-out; colour is coupling by default. Search or press a node to open it, trace its impact,
@@ -47,9 +61,12 @@ or hop to a neighbour. Everything runs in your browser — nothing is fetched.</
   <div id="graph3d-canvas" class="graph3d-canvas"></div>
   <aside id="graph3d-panel" class="graph3d-panel" hidden></aside>
 </div>
-<p class="note">Colour legend — Coupling: blue (low) → red (high fan-in+out). Kind: table blue, view
-amber, procedure purple, function green, trigger red. Edges: writes amber, cascade FKs red, other
-references blue. Large graphs settle over a few seconds; use "Hide unconnected" to cut noise.</p>
+{{kindLegend}}
+{{edgeLegend}}
+<p class="note">In the default <strong>Coupling</strong> mode colour is a scale, not a category:
+blue is low fan-in+fan-out, red is high. Switch the Colour control to <strong>Kind</strong> for the
+swatches above, or to <strong>Schema</strong> for one colour per schema. Large graphs settle over a
+few seconds; use "Hide unconnected" to cut the noise.</p>
 """;
     }
 }

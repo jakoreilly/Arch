@@ -16,3 +16,9 @@
 # Vendored viewer libraries (mermaid, 3d-force-graph) are third-party bundles and
 # should not skew the repository's language statistics.
 **/assets/lib/** linguist-vendored=true
+
+# tools/golden.manifest is generated with LF and compared line-by-line against a freshly
+# generated LF file. Left to `text=auto` it checks out CRLF wherever autocrlf is on, and
+# every one of its 173 lines then reads as changed — the determinism gate failing for a
+# reason that has nothing to do with determinism. Pinned, like the shell scripts above.
+tools/golden.manifest text eol=lf

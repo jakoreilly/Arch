@@ -24,7 +24,7 @@ src/Arch.Sql/     namespace Arch.Sql.*,  assets-sql overlay
 src/Arch.Sql.Format/     dependency-free T-SQL formatter, packaged standalone as sqlfmt-tsql
 src/Arch.Sql.Format.Cli/ the sqlfmt-tsql dotnet tool
 src/Arch.Cli/     the unified exe: Entry (the verb table), Runner, HubPage, CrossLink
-tests/            Arch.Code.Tests (365), Arch.Sql.Tests (185), Arch.Cli.Tests (57),
+tests/            Arch.Code.Tests (365), Arch.Sql.Tests (192), Arch.Cli.Tests (57),
                     Arch.Sql.Format.Tests (16)
 tools/golden.sh   the byte-identical-output regression net
 ```
@@ -45,7 +45,7 @@ of truth instead.
 
 ```bash
 dotnet build Arch.slnx --nologo     # 0 warnings, 0 errors
-dotnet test  Arch.slnx --nologo     # 623 passed (~90s — not a hang)
+dotnet test  Arch.slnx --nologo     # 630 passed (~90s — not a hang)
 bash tools/golden.sh                # GOLDEN OK
 bash tools/golden.sh accept         # re-baseline (golden/ is gitignored; regenerate after a clone)
 ```
@@ -75,12 +75,12 @@ longer blind to `Runner.cs`, `HubPage`, `CrossLink`, or the landscape join — c
 - **`.gitignore` ignores `*.md` by default** and re-includes named docs one by one. A new
   Markdown file is silently untracked until you add a `!` line for it — `git status` will
   not mention it at all. Check with `git check-ignore -v <file>`.
-- **There are two `SiteGenerator.cs` files, and only one is live.**
-  `src/Arch.Code/SiteGenerator.cs` (`Arch.Code.SiteGenerator`) is the one every caller uses.
-  `src/Arch.Code/Site/SiteGenerator.cs` (`Arch.Code.Site.SiteGenerator`) is an unreferenced
-  stale copy that already lacks the Evolution and Explore pages. Adding a page to the wrong
-  one compiles cleanly, passes every test, and silently does nothing. Grep for the caller
-  (`SiteGenerator.Generate`) before editing either. **Deleting the dead copy is worth doing.**
+- **There is one `SiteGenerator.cs` per provider, and only one.** `src/Arch.Code/SiteGenerator.cs`
+  (`Arch.Code.SiteGenerator`) is the code site's generator. A second, stale
+  `src/Arch.Code/Site/SiteGenerator.cs` used to sit beside it; it was deleted once `Arch.Cli`'s
+  cross-link re-render — the one caller that still bound to it, because `Arch.Cli`'s namespace
+  does not enclose `Arch.Code` — was pointed at the live one. If you find yourself adding a
+  second generator, that is the bug, not the fix.
 
 ## Environment
 

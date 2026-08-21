@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Arch.Code.Graph;
-using Arch.Code.Rendering;
 using Arch.Core.Serialization;
 
 namespace Arch.Code.Site;
@@ -9,28 +8,12 @@ namespace Arch.Code.Site;
 /// local asset references only (works from file:// with no network).</summary>
 public static class PageTemplate
 {
-    public static readonly (string Href, string Title, string Icon)[] Nav =
-    [
-        ("index.html", "Overview", "◈"),
-        ("guide.html", "Guide", "📖"),
-        ("structure.html", "Structure", "🗀"),
-        ("dependencies.html", "Dependencies", "⇄"),
-        ("modules.html", "Modules", "⬡"),
-        ("layers.html", "Layering", "≡"),
-        ("metrics.html", "Metrics", "📐"),
-        ("scorecard.html", "Scorecard", "✔"),
-        ("graph.html", "Graph (3D)", "🕸"),
-        ("types.html", "Types & Members", "❖"),
-        ("api.html", "API Surface", "⧉"),
-        ("calls.html", "Call Graph", "☎"),
-        ("packages.html", "Packages", "📦"),
-        ("config.html", "Config & Secrets", "🔑"),
-        ("ops.html", "Ops & Network", "🌐"),
-        ("hotspots.html", "Hotspots", "◉"),
-    ];
-
-    /// <summary>Sidebar navigation grouped into sections (order = display order). Keeps the
-    /// flat <see cref="Nav"/> for callers/tests that just need the hrefs.</summary>
+    /// <summary>Sidebar navigation grouped into sections (order = display order) — the single
+    /// source of truth for every page's label. A page's title and last breadcrumb in
+    /// <c>SiteGenerator</c> use the same string as its entry here; see the naming rule there.
+    /// A flat, ungrouped copy of this table used to live alongside it for "callers that just
+    /// need the hrefs"; nothing read it, and it had silently gone stale (no brief/explore/trace/
+    /// refactor/evolution, and layers.html still labelled "Layering"). One table only.</summary>
     public static readonly (string Section, (string Href, string Title, string Icon)[] Items)[] NavSections =
     [
         ("Start", [("index.html", "Overview", "◈"), ("brief.html", "System Brief", "📄"), ("guide.html", "Guide", "📖")]),

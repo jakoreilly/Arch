@@ -25,7 +25,22 @@ coupling is a candidate for a clearer module boundary.</p>
             return sb.ToString();
         }
 
-        sb.Append("""<input class="filter-input" type="search" data-filter-target="#domain-rows" placeholder="Filter domains…" autocomplete="off" spellcheck="false"> <span class="filter-count"></span>""");
+        // The headline the table cannot give at a glance: how many domains there are, and how much
+        // of the dependency traffic crosses between them rather than staying inside one. A high
+        // cross-domain share is the whole reason to read the rest of this page.
+        var internalEdges = result.Domains.Sum(d => d.InternalEdges);
+        var crossEdges = result.CrossEdges.Sum(e => e.Count);
+        var totalEdges = internalEdges + crossEdges;
+        var crossPct = totalEdges == 0 ? "0%"
+            : (100.0 * crossEdges / totalEdges).ToString("F0", System.Globalization.CultureInfo.InvariantCulture) + "%";
+        sb.Append(Ui.Tiles(
+            (result.Domains.Count.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Domains"),
+            (result.Domains.Max(d => d.ObjectCount).ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Largest domain (objects)"),
+            (internalEdges.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Edges within a domain"),
+            (crossEdges.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), "Edges across domains"),
+            (crossPct, "Cross-domain share")));
+
+        sb.Append(Ui.FilterBox("#domain-rows", "Filter domains…"));
         sb.Append("""<table class="grid sortable" data-page-size="30"><thead><tr><th>Domain</th><th>Objects</th><th>Tables</th><th>Procs/fns/triggers</th><th>Internal edges</th><th>Outgoing (cross-domain)</th><th>Incoming (cross-domain)</th></tr></thead><tbody id="domain-rows">""");
         foreach (var d in result.Domains)
         {

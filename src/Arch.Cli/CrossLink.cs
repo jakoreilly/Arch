@@ -1,7 +1,6 @@
 using Arch.Code.Cli;
 using Arch.Code.Graph;
 using Arch.Code.Scanning;
-using Arch.Code.Site;
 using Arch.Sql.Model;
 
 namespace Arch.Cli;
@@ -30,7 +29,11 @@ internal static class CrossLink
         var options = CliOptions.Parse(codeArgs, out _)
             ?? throw new InvalidOperationException("Arch.Cli: cross-link re-parse of the code provider's own args failed.");
         var generatedOn = DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
-        SiteGenerator.Generate(updated, options.OutDir, options.MaxNodes, generatedOn,
+        // Fully qualified: Arch.Cli's namespace does not enclose Arch.Code, so the short name
+        // does not resolve here. This re-render is the SECOND write of the code site in a combined
+        // run — Runner has already written it once — so it must go through the same generator, or
+        // the two passes disagree about what the site contains.
+        Arch.Code.SiteGenerator.Generate(updated, options.OutDir, options.MaxNodes, generatedOn,
             options.ShowComplexity, options.ShowSnippets, options.Wiki);
         return joined;
     }
