@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 470" width="900" height="470" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, sans-serif">
+  <defs>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5eb3ff"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#52d18b"/></marker>
+    <marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#93a1b3"/></marker>
+  </defs>
+
+  <rect width="900" height="470" rx="14" fill="#0e1116"/>
+
+  <!-- input -->
+  <rect x="24" y="176" width="150" height="96" rx="12" fill="#161b23" stroke="#2a323f"/>
+  <text x="40" y="200" fill="#e6edf3" font-size="13" font-weight="650" font-family="ui-monospace, monospace">arch &lt;folder&gt;</text>
+  <text x="40" y="222" fill="#93a1b3" font-size="10.5">a repo · a scripts dir ·</text>
+  <text x="40" y="236" fill="#93a1b3" font-size="10.5">a live SQL Server</text>
+  <text x="40" y="256" fill="#5b6878" font-size="10">no config, no project load</text>
+
+  <!-- detect -->
+  <rect x="206" y="192" width="120" height="64" rx="10" fill="#161b23" stroke="#2a323f"/>
+  <text x="266" y="219" fill="#e6edf3" font-size="12" font-weight="650" text-anchor="middle">detect</text>
+  <text x="266" y="235" fill="#5b6878" font-size="9.5" text-anchor="middle">what's in here?</text>
+
+  <!-- code analyser -->
+  <rect x="358" y="40" width="248" height="168" rx="12" fill="#161b23" stroke="#5eb3ff" stroke-opacity=".4"/>
+  <text x="374" y="63" fill="#e6edf3" font-size="12.5" font-weight="650">Arch.Code</text>
+  <text x="374" y="79" fill="#93a1b3" font-size="10">parses C# with Roslyn — no build</text>
+  <line x1="374" y1="88" x2="590" y2="88" stroke="#2a323f"/>
+  <text x="374" y="106" fill="#93a1b3" font-size="10">dependency graph (3d-force-graph)</text>
+  <text x="374" y="122" fill="#93a1b3" font-size="10">module map · metrics · hotspots</text>
+  <text x="374" y="138" fill="#93a1b3" font-size="10">git evolution over time</text>
+  <text x="374" y="162" fill="#5b6878" font-size="9.5">connection strings found here →</text>
+  <text x="374" y="175" fill="#5b6878" font-size="9.5">matched to the SQL catalog, by shape only</text>
+  <text x="374" y="194" fill="#5b6878" font-size="9.5">passwords never reach a generated file</text>
+
+  <!-- sql analyser -->
+  <rect x="358" y="224" width="248" height="168" rx="12" fill="#161b23" stroke="#52d18b" stroke-opacity=".4"/>
+  <text x="374" y="247" fill="#e6edf3" font-size="12.5" font-weight="650">Arch.Sql</text>
+  <text x="374" y="263" fill="#93a1b3" font-size="10">parses .sql with ScriptDom, or reads a</text>
+  <text x="374" y="277" fill="#93a1b3" font-size="10">live server — read-only connection</text>
+  <line x1="374" y1="286" x2="590" y2="286" stroke="#2a323f"/>
+  <text x="374" y="304" fill="#93a1b3" font-size="10">schema inventory · ER diagram (mermaid)</text>
+  <text x="374" y="320" fill="#93a1b3" font-size="10">CRUD matrix · lint · impact analysis</text>
+  <text x="374" y="344" fill="#5b6878" font-size="9.5">arch sql diff — fail CI on a breaking change</text>
+  <text x="374" y="360" fill="#5b6878" font-size="9.5">arch sql impact &lt;object&gt; — what breaks if this changes</text>
+
+  <!-- core + output -->
+  <rect x="638" y="120" width="238" height="128" rx="12" fill="#12171f" stroke="#2a323f"/>
+  <text x="654" y="142" fill="#93a1b3" font-size="11" font-weight="600" letter-spacing=".07em">Arch.Core</text>
+  <text x="654" y="162" fill="#93a1b3" font-size="10">one page shell, model serialisation,</text>
+  <text x="654" y="176" fill="#93a1b3" font-size="10">shared assets — both analysers write</text>
+  <text x="654" y="190" fill="#93a1b3" font-size="10">through it</text>
+  <text x="654" y="212" fill="#5b6878" font-size="9.5">writes a hub page when both apply,</text>
+  <text x="654" y="225" fill="#5b6878" font-size="9.5">cross-linking code ↔ SQL</text>
+
+  <rect x="638" y="264" width="238" height="88" rx="12" fill="#161b23" stroke="#52d18b" stroke-opacity=".45"/>
+  <text x="654" y="286" fill="#e6edf3" font-size="12.5" font-weight="650">offline static site</text>
+  <text x="654" y="304" fill="#93a1b3" font-size="10">no CDN, no network calls</text>
+  <text x="654" y="318" fill="#93a1b3" font-size="10">opens straight from file://</text>
+  <text x="654" y="338" fill="#52d18b" font-size="9.5">deterministic — same input, same bytes out</text>
+
+  <!-- landscape -->
+  <rect x="358" y="410" width="380" height="48" rx="10" fill="#161b23" stroke="#2a323f"/>
+  <text x="374" y="431" fill="#e6edf3" font-size="11.5" font-weight="650" font-family="ui-monospace, monospace">arch landscape &lt;parent&gt;</text>
+  <text x="374" y="448" fill="#93a1b3" font-size="10">federates every site already generated under a folder into one estate view</text>
+
+  <!-- arrows -->
+  <path d="M174 220 L202 220" stroke="#93a1b3" stroke-width="2" marker-end="url(#m)"/>
+  <path d="M326 212 L354 130" stroke="#5eb3ff" stroke-width="2" marker-end="url(#b)"/>
+  <path d="M326 236 L354 300" stroke="#52d18b" stroke-width="2" marker-end="url(#g)"/>
+  <path d="M606 120 L634 160" stroke="#5eb3ff" stroke-width="2" marker-end="url(#b)"/>
+  <path d="M606 300 L634 210" stroke="#52d18b" stroke-width="2" marker-end="url(#g)"/>
+  <path d="M757 352 L620 410" stroke="#93a1b3" stroke-width="2" marker-end="url(#m)"/>
+
+  <!-- banner -->
+  <text x="24" y="458" fill="#93a1b3" font-size="10.5">read-only — Arch only ever reads the folder it's pointed at, and a connection it opens is read-only.</text>
+</svg>

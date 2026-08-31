@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" width="900" height="300" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, sans-serif">
+  <rect width="900" height="300" rx="14" fill="#0e1116"/>
+
+  <text x="24" y="34" fill="#93a1b3" font-size="11.5" font-weight="600" letter-spacing=".07em">WHAT COMES OUT — ONE SELF-CONTAINED SITE PER FOLDER</text>
+
+  <rect x="24" y="48" width="280" height="200" rx="12" fill="#161b23" stroke="#5eb3ff" stroke-opacity=".4"/>
+  <text x="42" y="72" fill="#e6edf3" font-size="12.5" font-weight="650">from code</text>
+  <text x="42" y="96" fill="#93a1b3" font-size="10.5">dependency graph — force-directed, 3D</text>
+  <text x="42" y="114" fill="#93a1b3" font-size="10.5">module map with fan-in / fan-out</text>
+  <text x="42" y="132" fill="#93a1b3" font-size="10.5">metrics: size, complexity, churn</text>
+  <text x="42" y="150" fill="#93a1b3" font-size="10.5">hotspots — complex and often-changed</text>
+  <text x="42" y="168" fill="#93a1b3" font-size="10.5">git evolution over the repo's history</text>
+  <text x="42" y="192" fill="#5b6878" font-size="9.5">reads source only — never compiles it,</text>
+  <text x="42" y="205" fill="#5b6878" font-size="9.5">never needs the target framework installed</text>
+
+  <rect x="316" y="48" width="280" height="200" rx="12" fill="#161b23" stroke="#52d18b" stroke-opacity=".4"/>
+  <text x="334" y="72" fill="#e6edf3" font-size="12.5" font-weight="650">from SQL</text>
+  <text x="334" y="96" fill="#93a1b3" font-size="10.5">schema inventory — tables, views, procs</text>
+  <text x="334" y="114" fill="#93a1b3" font-size="10.5">ER diagram (mermaid)</text>
+  <text x="334" y="132" fill="#93a1b3" font-size="10.5">CRUD matrix — which proc touches what</text>
+  <text x="334" y="150" fill="#93a1b3" font-size="10.5">lint findings</text>
+  <text x="334" y="168" fill="#93a1b3" font-size="10.5">impact analysis — what breaks if X changes</text>
+  <text x="334" y="192" fill="#5b6878" font-size="9.5">from .sql scripts, or a live server over a</text>
+  <text x="334" y="205" fill="#5b6878" font-size="9.5">read-only connection</text>
+
+  <rect x="608" y="48" width="268" height="200" rx="12" fill="#161b23" stroke="#2a323f"/>
+  <text x="626" y="72" fill="#e6edf3" font-size="12.5" font-weight="650">when there's both, or many</text>
+  <text x="626" y="96" fill="#93a1b3" font-size="10.5">a hub page tying the two together</text>
+  <text x="626" y="114" fill="#93a1b3" font-size="10.5">code ↔ SQL cross-links, matched</text>
+  <text x="626" y="128" fill="#93a1b3" font-size="10.5">by connection-string shape</text>
+  <text x="626" y="150" fill="#93a1b3" font-size="10.5">arch landscape — an estate view</text>
+  <text x="626" y="164" fill="#93a1b3" font-size="10.5">over every site under a parent dir</text>
+  <text x="626" y="186" fill="#93a1b3" font-size="10.5">arch sql diff — a reviewable delta,</text>
+  <text x="626" y="200" fill="#93a1b3" font-size="10.5">CI-failable on a breaking change</text>
+
+  <text x="24" y="278" fill="#93a1b3" font-size="10.5">No CDN, no analytics, no network. Two vendored MIT libraries (mermaid, 3d-force-graph) travel inside the site so it works from file://.</text>
+</svg>
